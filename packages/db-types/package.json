@@ -1,0 +1,16 @@
+{
+  "name": "@prapp/db-types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "typescript": "^5"
+  }
+}

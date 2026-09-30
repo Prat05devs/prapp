@@ -1,0 +1,172 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens from the Stitch design system "Obsidian & Emerald Minimalist"
+ * (stitch_viral_media_pr_network/obsidian_emerald_minimalist/DESIGN.md).
+ * Light only: the system is built on a pure white canvas.
+ */
+:root {
+  /* shadcn/ui semantic variables, mapped onto the Stitch palette */
+  --radius: 0.5rem;
+  --background: #ffffff;
+  --foreground: #111111;
+  --card: #ffffff;
+  --card-foreground: #111111;
+  --popover: #ffffff;
+  --popover-foreground: #111111;
+  --primary: #111111;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f5f6;
+  --secondary-foreground: #111111;
+  --muted: #f8f9fa;
+  --muted-foreground: #71717a;
+  --accent: #f8f9fa;
+  --accent-foreground: #111111;
+  --destructive: #ba1a1a;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #111111;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Surfaces */
+  --color-canvas: #ffffff;
+  --color-subtle: #f8f9fa;
+  --color-elevated: #f4f5f6;
+  --color-hairline: #e5e7eb;
+  --color-divider: #eeeeee;
+
+  /* Text */
+  --color-ink: #111111;
+  --color-ink-soft: #18181b;
+  --color-body: #444748;
+  --color-slate: #71717a;
+  --color-faint: #a1a1aa;
+
+  /* Emerald accent: scarce, for CTAs, live dots and key highlights */
+  --color-emerald: #10b981;
+  --color-emerald-strong: #006c49;
+  --color-emerald-deep: #065f46;
+  --color-emerald-tint: #ecfdf5;
+  --color-emerald-soft: #6cf8bb;
+
+  /* Semantic */
+  --color-danger: #ba1a1a;
+  --color-danger-tint: #ffdad6;
+  --color-danger-deep: #93000a;
+  --color-warn: #b45309;
+  --color-warn-tint: #fef3c7;
+  --color-warn-deep: #92400e;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-manrope), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  /* Type scale */
+  --text-display: 56px;
+  --text-display--line-height: 64px;
+  --text-display--letter-spacing: -0.03em;
+  --text-display--font-weight: 700;
+  --text-display-mobile: 36px;
+  --text-display-mobile--line-height: 42px;
+  --text-display-mobile--letter-spacing: -0.025em;
+  --text-display-mobile--font-weight: 700;
+  --text-headline-lg: 40px;
+  --text-headline-lg--line-height: 48px;
+  --text-headline-lg--letter-spacing: -0.025em;
+  --text-headline-lg--font-weight: 600;
+  --text-headline-lg-mobile: 28px;
+  --text-headline-lg-mobile--line-height: 34px;
+  --text-headline-lg-mobile--letter-spacing: -0.02em;
+  --text-headline-lg-mobile--font-weight: 600;
+  --text-headline-md: 28px;
+  --text-headline-md--line-height: 36px;
+  --text-headline-md--letter-spacing: -0.02em;
+  --text-headline-md--font-weight: 600;
+  --text-headline-sm: 20px;
+  --text-headline-sm--line-height: 28px;
+  --text-headline-sm--letter-spacing: -0.015em;
+  --text-headline-sm--font-weight: 600;
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+  --text-body-lg--letter-spacing: -0.01em;
+  --text-body-md: 15px;
+  --text-body-md--line-height: 24px;
+  --text-body-md--letter-spacing: -0.005em;
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 20px;
+  --text-label-md: 14px;
+  --text-label-md--line-height: 20px;
+  --text-label-md--font-weight: 500;
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--letter-spacing: 0.01em;
+  --text-label-sm--font-weight: 500;
+  --text-code: 12px;
+  --text-code--line-height: 18px;
+  --text-code--letter-spacing: -0.01em;
+  --text-code--font-weight: 500;
+
+  --shadow-float: 0 4px 20px -2px rgba(17, 17, 17, 0.05);
+
+  --animate-indeterminate: indeterminate 1.4s ease-in-out infinite;
+  @keyframes indeterminate {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(250%);
+    }
+  }
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 24px;
+}
+
+::selection {
+  background: var(--color-emerald);
+  color: #ffffff;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--color-ink);
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 20;
+  line-height: 1;
+  user-select: none;
+}

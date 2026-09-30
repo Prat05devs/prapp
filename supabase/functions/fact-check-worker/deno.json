@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@^2.117.2",
+    "@mozilla/readability": "npm:@mozilla/readability@^0.6.0",
+    "linkedom": "npm:linkedom@^0.18.13",
+    "zod": "npm:zod@^4.6.5",
+    "libphonenumber-js": "npm:libphonenumber-js@^1"
+  }
+}

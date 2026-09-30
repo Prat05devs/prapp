@@ -1,0 +1,22 @@
+{
+  "name": "@prapp/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "vitest": "^4"
+  },
+  "dependencies": {
+    "libphonenumber-js": "^1.13.14",
+    "zod": "^4.6.5"
+  }
+}

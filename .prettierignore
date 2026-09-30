@@ -1,0 +1,17 @@
+node_modules
+.next
+.expo
+.turbo
+dist
+coverage
+pnpm-lock.yaml
+packages/db-types/src/database.ts
+supabase/.temp
+supabase/.branches
+
+# Locked spec: never reformat
+CONTEXT.md
+docs/
+# Generated / tool-owned
+apps/mobile/assets/
+apps/web/AGENTS.md
