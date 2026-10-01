@@ -1,4 +1,4 @@
-// Edge Function environment. SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
+// Edge Function environment. Supabase injects the project URL and platform API keys.
 export function env(name: string): string | undefined {
   const v = Deno.env.get(name);
   return v && v.trim() ? v : undefined;

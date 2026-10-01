@@ -74,11 +74,16 @@ All variables are in `.env.example`. Optional ones can stay blank until you have
 | Push                                           | `EXPO_ACCESS_TOKEN` (recommended) + an EAS project id (`eas init`)                                      |
 | Google sign-in                                 | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, Supabase Google provider        |
 
+Use Supabase's current `sb_publishable_…` key in the public web/mobile variables and its
+`sb_secret_…` key only in the server variable. The legacy anon/service-role variables remain
+fallbacks for the local stack; never expose a secret key to a browser or mobile build.
+
 ## Before launch (P8)
 
 - Supabase project in Mumbai; `supabase db push`; set the four Vault secrets
   (`project_url`, `service_role_key`, `site_url`, `cron_secret`: see the header of
-  `supabase/migrations/20260928000000_jobs_and_webhooks.sql`); deploy both Edge Functions.
+  `supabase/migrations/20260928000000_jobs_and_webhooks.sql`). Despite the historical Vault
+  name, store the current secret API key in `service_role_key`; deploy both Edge Functions.
 - Vercel Pro (region `bom1`); Razorpay live keys + webhook (events in LLD §9.7) pointing at
   `/api/webhooks/razorpay`; auto-capture on.
 - Custom SMTP for Supabase Auth; edit the Magic Link template to show `{{ .Token }}`; OTP expiry 600 s.

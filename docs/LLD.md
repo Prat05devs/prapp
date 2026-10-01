@@ -116,8 +116,8 @@ Commit `.env.example` with these names. `NEXT_PUBLIC_*` and `EXPO_PUBLIC_*` are 
 | Name | Where | Purpose |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | web | Supabase URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | web | anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | web server, edge fns | service role (server only) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | web | publishable key |
+| `SUPABASE_SECRET_KEY` | web server | secret API key (server only) |
 | `NEXT_PUBLIC_SITE_URL` | web | e.g. `https://example.in` |
 | `RAZORPAY_KEY_ID` | web server | also sent to the /pay page (public by design) |
 | `RAZORPAY_KEY_SECRET` | web server | signature verification + API |
@@ -131,7 +131,7 @@ Commit `.env.example` with these names. `NEXT_PUBLIC_*` and `EXPO_PUBLIC_*` are 
 | `SEARXNG_URL` | edge fn | optional self-hosted search fallback |
 | `EMAIL_API_KEY`, `EMAIL_FROM` | edge fn, web server | transactional email |
 | `EXPO_ACCESS_TOKEN` | edge fn | Expo push (recommended) |
-| `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` | mobile | Supabase |
+| `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | mobile | Supabase |
 | `EXPO_PUBLIC_API_URL` | mobile | = site URL |
 | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | mobile | Google sign-in |
 

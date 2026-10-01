@@ -25,11 +25,9 @@ function assertLocalSupabase(rawUrl: string) {
 
 async function cleanupIntegrationData() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceRoleKey) {
-    throw new Error(
-      'Integration cleanup needs NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY',
-    );
+    throw new Error('Integration cleanup needs NEXT_PUBLIC_SUPABASE_URL and a Supabase secret key');
   }
   assertLocalSupabase(url);
 

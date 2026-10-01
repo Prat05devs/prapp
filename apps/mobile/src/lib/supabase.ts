@@ -10,7 +10,7 @@ const env = appEnv();
 /** Customer-only client (anon key + user session). RLS applies to everything it does. */
 export const supabase = createClient<Database>(
   env.EXPO_PUBLIC_SUPABASE_URL,
-  env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+  env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
       // Web (expo start --web) has no SecureStore; supabase-js falls back to localStorage.

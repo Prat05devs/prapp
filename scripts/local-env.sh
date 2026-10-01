@@ -4,14 +4,20 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 if [ -f .env ]; then echo ".env exists, not overwriting"; exit 0; fi
-eval "$(pnpm exec supabase status -o env 2>/dev/null | grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=')"
-python3 - "$API_URL" "$ANON_KEY" "$SERVICE_ROLE_KEY" <<'PY'
+eval "$(pnpm exec supabase status -o env 2>/dev/null | grep -E '^(API_URL|PUBLISHABLE_KEY|SECRET_KEY|ANON_KEY|SERVICE_ROLE_KEY)=')"
+PUBLIC_KEY="${PUBLISHABLE_KEY:-${ANON_KEY:-}}"
+PRIVATE_KEY="${SECRET_KEY:-${SERVICE_ROLE_KEY:-}}"
+if [ -z "$PUBLIC_KEY" ] || [ -z "$PRIVATE_KEY" ]; then
+  echo "Could not read local Supabase API keys"
+  exit 1
+fi
+python3 - "$API_URL" "$PUBLIC_KEY" "$PRIVATE_KEY" <<'PY'
 import re, secrets, sys
 api, anon, service = sys.argv[1:4]
 vals = {
-    'NEXT_PUBLIC_SUPABASE_URL': api, 'NEXT_PUBLIC_SUPABASE_ANON_KEY': anon, 'SUPABASE_SERVICE_ROLE_KEY': service,
+    'NEXT_PUBLIC_SUPABASE_URL': api, 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY': anon, 'SUPABASE_SECRET_KEY': service,
     'CHECKOUT_TOKEN_SECRET': secrets.token_hex(32), 'CRON_SECRET': secrets.token_hex(24),
-    'EXPO_PUBLIC_SUPABASE_URL': api, 'EXPO_PUBLIC_SUPABASE_ANON_KEY': anon,
+    'EXPO_PUBLIC_SUPABASE_URL': api, 'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY': anon,
 }
 out = []
 for line in open('.env.example').read().splitlines():

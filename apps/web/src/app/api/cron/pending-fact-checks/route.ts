@@ -24,7 +24,7 @@ export const POST = handleApi(async (req: Request) => {
     await fetch(`${publicEnv().NEXT_PUBLIC_SUPABASE_URL}/functions/v1/fact-check-worker`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${supabaseServerEnv().SUPABASE_SERVICE_ROLE_KEY}`,
+        apikey: supabaseServerEnv().SUPABASE_SECRET_KEY,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ mode: 'sweep' }),

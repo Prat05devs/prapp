@@ -11,7 +11,7 @@ import { supabaseServerEnv } from '@/server/env';
 export function createServiceClient() {
   return createClient<Database>(
     publicEnv().NEXT_PUBLIC_SUPABASE_URL,
-    supabaseServerEnv().SUPABASE_SERVICE_ROLE_KEY,
+    supabaseServerEnv().SUPABASE_SECRET_KEY,
     { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } },
   );
 }

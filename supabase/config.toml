@@ -394,6 +394,14 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
+# These functions are service-to-service endpoints. They validate a Supabase secret API
+# key in the `apikey` header themselves instead of using the legacy JWT gateway check.
+[functions.fact-check-worker]
+verify_jwt = false
+
+[functions.send-notifications]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 

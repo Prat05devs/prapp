@@ -7,7 +7,7 @@ import { parseEnv } from '@/lib/env';
 // fails the build because of 'server-only'.
 // Validated lazily per group so a route only needs the secrets it uses.
 
-const supabaseSchema = z.object({ SUPABASE_SERVICE_ROLE_KEY: z.string().min(1) });
+const supabaseSchema = z.object({ SUPABASE_SECRET_KEY: z.string().min(1) });
 
 const razorpaySchema = z.object({
   RAZORPAY_KEY_ID: z.string().min(1),
@@ -38,7 +38,11 @@ export function paymentsMode(): PaymentsMode {
   return parsePaymentsMode(process.env.PAYMENTS_MODE);
 }
 
-export const supabaseServerEnv = lazy(supabaseSchema);
+export function supabaseServerEnv() {
+  return parseEnv(supabaseSchema, {
+    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+  });
+}
 export const razorpayEnv = lazy(razorpaySchema);
 export const cronEnv = lazy(cronSchema);
 export const emailEnv = lazy(emailSchema);

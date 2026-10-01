@@ -5,7 +5,7 @@ import { parsePaymentsMode } from '@prapp/shared';
 // Each must be referenced literally so Expo can inline it.
 const schema = z.object({
   EXPO_PUBLIC_SUPABASE_URL: z.url(),
-  EXPO_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+  EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   EXPO_PUBLIC_API_URL: z.url(),
   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: z.string().optional(),
   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: z.string().optional(),
@@ -21,7 +21,8 @@ export function appEnv(): AppEnv {
   if (cached) return cached;
   const result = schema.safeParse({
     EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
-    EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+      process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
     EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
     EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || undefined,
     EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || undefined,

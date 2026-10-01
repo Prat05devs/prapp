@@ -10,7 +10,8 @@ import { createServiceClient } from '@/server/supabase/service';
 export const service = createServiceClient();
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const anon =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export type TestUser = {
   id: string;
