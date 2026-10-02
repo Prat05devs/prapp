@@ -1,4 +1,4 @@
-# prapp (name TBD)
+# NewsVio
 
 Fact checker + self-serve PR publishing. Web (Next.js), app (Expo), backend on Supabase, payments via Razorpay.
 
