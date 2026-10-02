@@ -1,6 +1,6 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { BRAND_NAME } from '@prapp/shared';
-import { Icon } from '@/components/icon';
 import { buttonVariants } from '@/components/ui';
 import { getCurrentUser } from '@/server/session';
 import { NavLink } from './nav-link';
@@ -8,9 +8,7 @@ import { NavLink } from './nav-link';
 export function BrandMark() {
   return (
     <Link href="/" className="flex shrink-0 items-center gap-2.5">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink text-white">
-        <Icon name="verified" size={18} />
-      </span>
+      <Image src="/brand-mark.png" alt="" width={32} height={32} priority className="rounded-lg" />
       <span className="flex flex-col">
         <span className="font-display text-[17px] leading-none font-bold tracking-tight text-ink">
           {BRAND_NAME}
@@ -49,9 +47,14 @@ export async function SiteHeader() {
               <span className="max-w-32 truncate">{me.fullName || 'Account'}</span>
             </Link>
           ) : (
-            <Link href="/login" className={buttonVariants({ size: 'sm' })}>
-              Sign in
-            </Link>
+            <>
+              <Link href="/login" className={buttonVariants({ size: 'sm', variant: 'ghost' })}>
+                Log in
+              </Link>
+              <Link href="/login?mode=signup" className={buttonVariants({ size: 'sm' })}>
+                Sign up
+              </Link>
+            </>
           )}
         </div>
       </div>

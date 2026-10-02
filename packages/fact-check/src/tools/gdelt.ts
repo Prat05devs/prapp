@@ -39,7 +39,7 @@ export async function gdeltCoverage(
     sort: 'HybridRel',
   });
   const res = await fetchImpl(`https://api.gdeltproject.org/api/v2/doc/doc?${params}`, {
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.timeout(6_000),
   });
   if (!res.ok) throw new Error(`gdelt_${res.status}`);
   const text = await res.text();

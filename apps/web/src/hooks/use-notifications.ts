@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
+import { api } from '@/lib/api';
 
 export interface NotificationItem {
   id: string;
@@ -24,11 +24,7 @@ export function useNotifications(initial: NotificationItem[]) {
     setItems((list) =>
       list.map((n) => (ids.includes(n.id) ? { ...n, read_at: n.read_at ?? now } : n)),
     );
-    await createBrowserSupabase()
-      .from('notifications')
-      .update({ read_at: now })
-      .in('id', ids)
-      .is('read_at', null);
+    await api.notifications.markRead(ids).catch(() => {});
     router.refresh();
   }
 

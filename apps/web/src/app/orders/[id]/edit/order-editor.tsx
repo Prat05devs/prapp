@@ -24,19 +24,20 @@ const SAVE_LABELS: Record<SaveState, string> = {
 export function OrderEditor({
   order,
   packages,
-  userId,
   profileComplete,
   freeCheckout,
+  paymentLink,
 }: {
   order: CustomerOrder;
   packages: CataloguePackage[];
-  userId: string;
   profileComplete: boolean;
   /** Testing phase: the order is confirmed at ₹0 instead of paid. */
   freeCheckout: boolean;
+  /** First build: pay on the razorpay.me page in a new tab. */
+  paymentLink: boolean;
 }) {
-  const ed = useOrderEditor(order, userId, profileComplete);
-  const checkout = useCheckout(order.id);
+  const ed = useOrderEditor(order, profileComplete);
+  const checkout = useCheckout(order.id, { paymentLink });
   const selected = packages.find((p) => p.id === ed.content.packageId);
   const isChangesRequested = ed.status === 'changes_requested';
   const saveOk = ed.saveState === 'saved';
@@ -86,6 +87,7 @@ export function OrderEditor({
           </Card>
           <StepHeading step="02" title="Photos" />
           <ImageSlots
+            orderId={order.id}
             images={ed.images}
             slots={ed.imageSlots}
             busy={ed.imageBusy}

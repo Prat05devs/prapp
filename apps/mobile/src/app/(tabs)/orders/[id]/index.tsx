@@ -42,6 +42,9 @@ export default function OrderScreen() {
       </Centered>
     );
   const { order, placements, refunds, reportUrl } = data;
+  const env = appEnv();
+  const payLink =
+    env.EXPO_PUBLIC_PAYMENTS_MODE === 'link' ? (env.EXPO_PUBLIC_PAYMENT_LINK_URL ?? null) : null;
   const unpaid = ['draft', 'pending_payment', 'expired'].includes(order.status);
   const edit = () => router.push({ pathname: '/orders/[id]/edit', params: { id } });
 
@@ -108,7 +111,23 @@ export default function OrderScreen() {
           <Notice title="Confirming your payment…" />
         )
       ) : null}
-      {payment && !unpaid ? (
+      {payLink && order.status === 'paid' && order.amountMinor ? (
+        <Notice
+          tone={payment === 'link' ? 'success' : 'info'}
+          title={payment === 'link' ? 'Order received: complete your payment' : 'Payment'}
+        >
+          {`Pay ${formatMoney(order.amountMinor, order.currency ?? 'INR')} on our Razorpay page and write your order number ${order.orderNumber} in the note. We check every payment and then publish your story. Already paid? Nothing more to do.`}
+        </Notice>
+      ) : null}
+      {payLink && order.status === 'paid' && order.amountMinor ? (
+        <ActionButton
+          title={`Pay ${formatMoney(order.amountMinor, order.currency ?? 'INR')} on Razorpay`}
+          variant="accent"
+          icon={ArrowUpRight}
+          onPress={() => void WebBrowser.openBrowserAsync(payLink)}
+        />
+      ) : null}
+      {payment && !unpaid && !payLink ? (
         <Notice
           tone="success"
           title={order.amountMinor === 0 ? 'Order confirmed' : 'Payment received'}

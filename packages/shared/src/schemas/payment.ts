@@ -1,13 +1,15 @@
 import type { Currency } from '../constants.ts';
 
 /**
- * 'razorpay' is the spec. 'free' is the testing phase: checkout confirms the order at ₹0
- * without Razorpay. The server's PAYMENTS_MODE decides; clients only use it for labels.
+ * 'razorpay' is the spec. 'free' (testing) confirms the order at ₹0 without Razorpay. 'link'
+ * (first build) confirms it at the package price and sends the customer to a razorpay.me page,
+ * flagged for an admin to verify. The server's PAYMENTS_MODE decides; clients only use it
+ * for labels.
  */
-export type PaymentsMode = 'razorpay' | 'free';
+export type PaymentsMode = 'razorpay' | 'free' | 'link';
 
 export function parsePaymentsMode(value: string | undefined): PaymentsMode {
-  return value === 'free' ? 'free' : 'razorpay';
+  return value === 'free' || value === 'link' ? value : 'razorpay';
 }
 
 /** POST /api/orders/:id/checkout (LLD §9.4 step 6). */
@@ -19,8 +21,11 @@ export type CheckoutResponse =
       amountMinor: number;
       currency: Currency;
     }
-  /** PAYMENTS_MODE=free: the order is already paid at ₹0; show the success screen. */
-  | { confirmed: true; amountMinor: 0; currency: Currency };
+  /**
+   * PAYMENTS_MODE=free: confirmed at ₹0, show the success screen.
+   * PAYMENTS_MODE=link: confirmed; send the customer to paymentUrl to pay amountMinor.
+   */
+  | { confirmed: true; amountMinor: number; currency: Currency; paymentUrl?: string };
 
 /** Where the hosted /pay page sends the customer back to (LLD §9.5). */
 export type CheckoutReturn = 'web' | 'app';

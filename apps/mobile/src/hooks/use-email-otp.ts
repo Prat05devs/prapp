@@ -1,13 +1,19 @@
 import { useState } from 'react';
-import { emailOtpRequestSchema, emailOtpVerifySchema } from '@prapp/shared';
+import { APP_SCHEME, emailOtpRequestSchema, emailOtpVerifySchema } from '@prapp/shared';
+import { AUTH_CALLBACK_PATH } from '@/lib/auth-link';
 import { supabase } from '@/lib/supabase';
 
-/** Email OTP sign-in (LLD §6.1). The auth listener picks up the new session. */
+export type AuthMode = 'login' | 'signup';
+
+/**
+ * Email OTP sign-in (LLD §6.1). The auth listener picks up the new session. 'login' only works
+ * for an existing account; 'signup' creates one if needed.
+ */
 export function useEmailOtp() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function requestCode(rawEmail: string): Promise<string | null> {
+  async function requestCode(rawEmail: string, mode: AuthMode = 'signup'): Promise<string | null> {
     const parsed = emailOtpRequestSchema.safeParse({ email: rawEmail });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? 'Enter a valid email');
@@ -17,11 +23,21 @@ export function useEmailOtp() {
     setError(null);
     const { error: err } = await supabase.auth.signInWithOtp({
       email: parsed.data.email,
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: mode === 'signup',
+        // Supabase's default email has a sign-in link; it opens the app and signs in.
+        emailRedirectTo: `${APP_SCHEME}://${AUTH_CALLBACK_PATH}`,
+      },
     });
     setPending(false);
     if (err) {
-      setError(err.message);
+      // GoTrue answers 'otp_disabled' / 'Signups not allowed for otp' for an unknown email.
+      const unknown = err.code === 'otp_disabled' || /signups not allowed/i.test(err.message);
+      setError(
+        mode === 'login' && unknown
+          ? 'No account uses this email yet. Choose “Create account” instead.'
+          : err.message,
+      );
       return null;
     }
     return parsed.data.email;

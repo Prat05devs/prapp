@@ -31,7 +31,8 @@ let admin: TestUser;
 let orderId: string;
 
 async function paidOrder() {
-  const { orderId: id } = await readyDraft(customer);
+  // 2 fixed portals: these tests cover swapping and links, not empty-slot assignment.
+  const { orderId: id } = await readyDraft(customer, 'it-two-portals');
   const { razorpayOrderId } = razorpayCheckout(
     await startCheckout(
       { user: { supabase: customer.db, userId: customer.id }, service, gateway: gw },

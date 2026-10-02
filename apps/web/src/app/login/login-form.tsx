@@ -1,14 +1,25 @@
 'use client';
 
 import { useState } from 'react';
+import { GoogleG } from '@/components/google-g';
 import { Icon } from '@/components/icon';
-import { Button, ErrorText, Field, Input, Separator } from '@/components/ui';
+import {
+  Button,
+  ErrorText,
+  Field,
+  Input,
+  Separator,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui';
 import { useAfterSignIn } from '@/hooks/use-after-sign-in';
-import { useEmailOtp } from '@/hooks/use-email-otp';
+import { useEmailOtp, type AuthMode } from '@/hooks/use-email-otp';
 import { useGoogleSignIn } from '@/hooks/use-google-sign-in';
 
-export function LoginForm({ next }: { next: string }) {
+export function LoginForm({ next, initialMode }: { next: string; initialMode: AuthMode }) {
   const otp = useEmailOtp();
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const google = useGoogleSignIn(next);
   const continueAfterSignIn = useAfterSignIn(next);
   const [emailInput, setEmailInput] = useState('');
@@ -18,14 +29,33 @@ export function LoginForm({ next }: { next: string }) {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-5 rounded-2xl border border-hairline bg-subtle p-5 sm:p-6">
         {otp.step === 'email' ? (
+          <Tabs value={mode} onValueChange={(v) => setMode(v as AuthMode)}>
+            <TabsList className="w-full">
+              <TabsTrigger value="login" className="flex-1">
+                Log in
+              </TabsTrigger>
+              <TabsTrigger value="signup" className="flex-1">
+                Create account
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        ) : null}
+        {otp.step === 'email' ? (
           <form
             className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              void otp.requestCode(emailInput);
+              void otp.requestCode(emailInput, mode);
             }}
           >
-            <Field label="Email" hint="We'll email you a 6-digit code. No password needed.">
+            <Field
+              label="Email"
+              hint={
+                mode === 'login'
+                  ? "We'll email you a sign-in link. No password needed."
+                  : "We'll email you a link to create your account. No password needed."
+              }
+            >
               <Input
                 type="email"
                 autoComplete="email"
@@ -36,7 +66,8 @@ export function LoginForm({ next }: { next: string }) {
               />
             </Field>
             <Button type="submit" variant="accent" size="lg" disabled={otp.pending}>
-              Send code <Icon name="arrow_forward" />
+              {mode === 'login' ? 'Send sign-in link' : 'Create account'}{' '}
+              <Icon name="arrow_forward" />
             </Button>
           </form>
         ) : (
@@ -52,7 +83,8 @@ export function LoginForm({ next }: { next: string }) {
             <p className="flex items-start gap-2 text-body-sm text-body">
               <Icon name="mail" size={16} className="mt-0.5 text-emerald-strong" />
               <span>
-                We sent a 6-digit code to <strong className="text-ink">{otp.email}</strong>. It
+                We emailed <strong className="text-ink">{otp.email}</strong>. Open the sign-in link
+                in that email in this browser, or enter the 6-digit code if the email shows one. It
                 expires in 10 minutes.
               </span>
             </p>
@@ -91,8 +123,17 @@ export function LoginForm({ next }: { next: string }) {
         onClick={google.signInWithGoogle}
         disabled={google.pending}
       >
-        Continue with Google
+        <GoogleG /> Continue with Google
       </Button>
+      <p className="text-center text-body-sm text-slate">
+        Google works for both: it creates your account the first time.
+      </p>
+      <p className="text-center text-body-sm text-slate">
+        NewsVio team member?{' '}
+        <a href="/team-login" className="text-emerald-strong underline-offset-2 hover:underline">
+          Log in with your password
+        </a>
+      </p>
       <ErrorText>{google.error}</ErrorText>
     </div>
   );

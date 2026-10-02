@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button, ErrorText, Input } from '@/components/ui';
 import { useStaffAction } from '@/hooks/use-staff-action';
 import type { AdminOrder } from '@/lib/admin/queries';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
+import { adminApi } from '@/lib/admin/api';
 
 type Placement = AdminOrder['placements'][number];
 type Portal = { id: string; name: string; domain: string };
@@ -20,7 +20,6 @@ export function PlacementRow({
   editable: boolean;
 }) {
   const action = useStaffAction();
-  const db = createBrowserSupabase();
   const [url, setUrl] = useState(p.live_url ?? '');
   const [portalId, setPortalId] = useState('');
   const [failNote, setFailNote] = useState('');
@@ -62,7 +61,11 @@ export function PlacementRow({
                 onClick={() =>
                   void action.run(
                     'link',
-                    () => db.rpc('staff_set_placement_link', { p_placement_id: p.id, p_url: url }),
+                    () =>
+                      adminApi.action('staff_set_placement_link', {
+                        p_placement_id: p.id,
+                        p_url: url,
+                      }),
                     (r) =>
                       r.data === true
                         ? `Link domain doesn't match ${p.channel === 'instagram' ? 'instagram.com' : p.portal?.domain}. Double-check.`
@@ -96,7 +99,7 @@ export function PlacementRow({
                 disabled={!portalId || action.pending !== null}
                 onClick={() =>
                   void action.run('swap', () =>
-                    db.rpc('staff_swap_placement', {
+                    adminApi.action('staff_swap_placement', {
                       p_placement_id: p.id,
                       p_new_portal_id: portalId,
                       p_reason: p.status === 'failed' ? `replaces failed portal` : 'portal chosen',
@@ -122,7 +125,7 @@ export function PlacementRow({
                   disabled={!failNote.trim() || action.pending !== null}
                   onClick={() =>
                     void action.run('fail', () =>
-                      db.rpc('staff_mark_placement_failed', {
+                      adminApi.action('staff_mark_placement_failed', {
                         p_placement_id: p.id,
                         p_note: failNote,
                       }),

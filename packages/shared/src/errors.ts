@@ -52,6 +52,9 @@ export const ERROR_MESSAGES = {
   checkout_link_expired: 'This payment link expired. Tap Pay again.',
   // DECISION: the catalogue has no generic codes for bad input, rate limits or
   // unexpected failures; the API needs them, so they are added here.
+  staff_email_taken:
+    'An account with this email already exists. Search for it below and change its role instead.',
+  user_not_staff: 'Passwords can only be set for team accounts (editors and admins).',
   validation_failed: 'Please check the highlighted fields.',
   rate_limited: 'Too many requests. Please wait a moment and try again.',
   internal_error: 'Something went wrong. Please try again.',

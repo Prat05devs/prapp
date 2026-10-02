@@ -5,10 +5,28 @@ import type {
   FactCheckSubmitInput,
   FactCheckSubmitResponse,
   CheckoutReturn,
+  CompleteProfileInput,
   MeResponse,
+  OrderContentInput,
   OrderDetailResponse,
+  OrderImageMeta,
 } from '@prapp/shared';
 import { createRequest, type ApiClientOptions } from './client';
+import type { Catalogue, CustomerOrder, OrderImage, OrderListItem } from './direct';
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  body: string;
+  data: { deep_link?: string; order_id?: string } | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+/** An image to upload: browsers pass a Blob, React Native a { uri, name, type } file part. */
+export type UploadFile = Blob | { uri: string; name: string; type: string };
+
+const enc = encodeURIComponent;
 
 /** Typed wrappers for /api/* (LLD §8). Grows phase by phase. */
 export function createApiClient(options: ApiClientOptions) {
@@ -16,6 +34,9 @@ export function createApiClient(options: ApiClientOptions) {
   return {
     me: {
       get: (signal?: AbortSignal) => request<MeResponse>('/api/me', { signal }),
+      /** Complete or edit the profile (name + phone). */
+      update: (input: CompleteProfileInput) =>
+        request<MeResponse>('/api/me', { method: 'PATCH', body: input }),
       delete: () => request<{ ok: true }>('/api/me', { method: 'DELETE' }),
     },
     factChecks: {
@@ -34,7 +55,64 @@ export function createApiClient(options: ApiClientOptions) {
         }),
       history: () => request<FactCheckHistoryItem[]>('/api/me/fact-checks'),
     },
+    catalogue: {
+      get: (signal?: AbortSignal) =>
+        request<Catalogue & { settings: Record<string, unknown> }>('/api/catalogue', { signal }),
+    },
+    notifications: {
+      list: () => request<NotificationItem[]>('/api/notifications'),
+      markRead: (ids: string[]) =>
+        request<{ ok: true }>('/api/notifications/read', { method: 'POST', body: { ids } }),
+    },
+    devices: {
+      register: (token: string, platform: 'ios' | 'android') =>
+        request<{ ok: true }>('/api/devices', { method: 'POST', body: { token, platform } }),
+      unregister: (token: string) =>
+        request<{ ok: true }>('/api/devices', { method: 'DELETE', body: { token } }),
+    },
     orders: {
+      list: () => request<OrderListItem[]>('/api/orders'),
+      /** Create a draft (LLD §9.3 step 1). */
+      create: (content: OrderContentInput) =>
+        request<{ id: string; orderNumber: string }>('/api/orders', {
+          method: 'POST',
+          body: content,
+        }),
+      /** Editor data: content, images and 1-hour thumbnail URLs keyed by storage path. */
+      edit: (id: string, signal?: AbortSignal) =>
+        request<{ order: CustomerOrder; imageUrls: Record<string, string> }>(
+          `/api/orders/${enc(id)}/edit`,
+          { signal },
+        ),
+      update: (id: string, content: OrderContentInput) =>
+        request<{ ok: true }>(`/api/orders/${enc(id)}`, { method: 'PATCH', body: content }),
+      /** Delete a draft, or cancel an order whose checkout started. */
+      discard: (id: string) =>
+        request<{ ok: true }>(`/api/orders/${enc(id)}`, { method: 'DELETE' }),
+      resubmit: (id: string, content: OrderContentInput) =>
+        request<{ ok: true }>(`/api/orders/${enc(id)}/resubmit`, {
+          method: 'POST',
+          body: content,
+        }),
+      uploadImage: (
+        id: string,
+        file: UploadFile,
+        meta: Omit<OrderImageMeta, 'sizeBytes'> & { sizeBytes?: number },
+        replaceImageId?: string,
+      ) => {
+        const form = new FormData();
+        form.append('file', file as Blob);
+        form.append('meta', JSON.stringify(meta));
+        if (replaceImageId) form.append('replaceImageId', replaceImageId);
+        return request<{ image: OrderImage; url: string | null }>(
+          `/api/orders/${enc(id)}/images`,
+          { method: 'POST', body: form },
+        );
+      },
+      removeImage: (id: string, imageId: string) =>
+        request<{ ok: true }>(`/api/orders/${enc(id)}/images/${enc(imageId)}`, {
+          method: 'DELETE',
+        }),
       get: (id: string, signal?: AbortSignal) =>
         request<OrderDetailResponse>(`/api/orders/${encodeURIComponent(id)}`, { signal }),
       /** Start or reuse a Razorpay payment (LLD §9.4). */

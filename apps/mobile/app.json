@@ -1,26 +1,29 @@
 {
   "expo": {
-    "name": "prapp",
-    "slug": "prapp",
+    "name": "NewsVio",
+    "slug": "newsvio",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "prapp",
+    "scheme": "newsvio",
     "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.prapp.app",
-      "supportsTablet": false
+      "icon": "./assets/images/icon.png",
+      "bundleIdentifier": "com.newsvio.app",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#032A73",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.prapp.app"
+      "package": "com.newsvio.app"
     },
     "web": {
       "output": "static",
@@ -33,7 +36,7 @@
         {
           "backgroundColor": "#ffffff",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 120
         }
       ],
       "expo-secure-store",
@@ -56,6 +59,13 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "description": "Fact checker and self-serve PR publishing"
+    "description": "Fact checker and self-serve PR publishing",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e8b00e5c-559b-4537-9c96-2beb0de513b7"
+      }
+    },
+    "owner": "wtsolutions5s-team"
   }
 }

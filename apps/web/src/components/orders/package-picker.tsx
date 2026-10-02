@@ -51,8 +51,8 @@ export function PackagePicker({
                   </span>
                 </span>
                 <span className="text-body-sm text-slate">
-                  {p.portalCount} news portal{p.portalCount === 1 ? '' : 's'}
-                  {p.includesInstagram ? ' + our Instagram news page' : ''} · live within{' '}
+                  {p.portalCount} high-DA news portal{p.portalCount === 1 ? '' : 's'}
+                  {p.includesInstagram ? ' + 1 Instagram collaboration post' : ''} · live within{' '}
                   {p.turnaroundHours} h
                 </span>
                 {p.description ? (

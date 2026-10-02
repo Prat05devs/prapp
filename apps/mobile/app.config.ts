@@ -1,7 +1,7 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 // Static config lives in app.json; this adds what depends on env vars.
-// DECISION: bundle ids com.prapp.app are placeholders until the app name is final (LLD §20).
+// App name NewsVio, bundle id com.newsvio.app (final, 2026-10-01).
 export default ({ config }: ConfigContext): ExpoConfig => {
   const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
   // Native Google sign-in needs the reversed iOS client ID as a URL scheme.
@@ -17,8 +17,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: config.name ?? 'prapp',
-    slug: config.slug ?? 'prapp',
+    name: config.name ?? 'NewsVio',
+    slug: config.slug ?? 'newsvio',
     plugins: [...(config.plugins ?? []), ...googlePlugin],
   };
 };

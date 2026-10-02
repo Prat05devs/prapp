@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { Json } from '@prapp/db-types';
 import { Button, ErrorText, Input } from '@/components/ui';
 import { useStaffAction } from '@/hooks/use-staff-action';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
+import { adminApi } from '@/lib/admin/api';
 
 type Setting = { key: string; value: Json; is_public: boolean; updated_at: string };
 
@@ -29,7 +29,6 @@ export function SettingsEditor({ settings }: { settings: Setting[] }) {
       settings.map((s) => [s.key, typeof s.value === 'string' ? s.value : JSON.stringify(s.value)]),
     ),
   );
-  const db = createBrowserSupabase();
 
   function save(s: Setting) {
     const raw = values[s.key] ?? '';
@@ -51,13 +50,8 @@ export function SettingsEditor({ settings }: { settings: Setting[] }) {
     }
     void action.run(
       s.key,
-      async () => {
-        const { data } = await db.auth.getUser();
-        return db
-          .from('app_settings')
-          .update({ value, updated_by: data.user?.id ?? null })
-          .eq('key', s.key);
-      },
+      () =>
+        adminApi.records('app_settings', 'update', { match: { key: s.key }, values: { value } }),
       () => 'Saved.',
     );
   }

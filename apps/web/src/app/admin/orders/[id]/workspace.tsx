@@ -8,7 +8,6 @@ import { Button, ErrorText, Input } from '@/components/ui';
 import { useStaffAction } from '@/hooks/use-staff-action';
 import { adminApi } from '@/lib/admin/api';
 import type { AdminOrder } from '@/lib/admin/queries';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
 import { PaymentPanel } from './payment-panel';
 import { PlacementRow } from './placement-row';
 
@@ -97,7 +96,6 @@ export function Workspace({
   const mine = order.assigned_to === me.id;
   const canWork = order.status === 'in_progress' && (mine || isAdmin);
   const action = useStaffAction();
-  const db = createBrowserSupabase();
   const [reason, setReason] = useState('');
   const [note, setNote] = useState('');
   const [assignee, setAssignee] = useState('');
@@ -131,7 +129,7 @@ export function Workspace({
               disabled={action.pending !== null}
               onClick={() =>
                 void action.run('claim', () =>
-                  db.rpc('staff_claim_order', { p_order_id: order.id }),
+                  adminApi.action('staff_claim_order', { p_order_id: order.id }),
                 )
               }
             >
@@ -144,7 +142,7 @@ export function Workspace({
               disabled={action.pending !== null}
               onClick={() =>
                 void action.run('release', () =>
-                  db.rpc('staff_release_order', { p_order_id: order.id }),
+                  adminApi.action('staff_release_order', { p_order_id: order.id }),
                 )
               }
             >
@@ -245,14 +243,16 @@ export function Workspace({
 
           <Section title="Customer">
             <p className="text-sm">{order.customer_name}</p>
-            <p className="text-sm">
-              <a
-                className="font-medium text-emerald-strong hover:underline"
-                href={`mailto:${order.customer_email}`}
-              >
-                {order.customer_email}
-              </a>
-            </p>
+            {order.customer_email ? (
+              <p className="text-sm">
+                <a
+                  className="font-medium text-emerald-strong hover:underline"
+                  href={`mailto:${order.customer_email}`}
+                >
+                  {order.customer_email}
+                </a>
+              </p>
+            ) : null}
             {order.customer_phone ? (
               <p className="flex gap-3 text-sm">
                 <a
@@ -315,7 +315,10 @@ export function Workspace({
                 disabled={action.pending !== null || reason.trim().length < LIMITS.reasonMin}
                 onClick={() =>
                   void action.run('changes', () =>
-                    db.rpc('staff_request_changes', { p_order_id: order.id, p_reason: reason }),
+                    adminApi.action('staff_request_changes', {
+                      p_order_id: order.id,
+                      p_reason: reason,
+                    }),
                   )
                 }
               >
@@ -421,7 +424,10 @@ export function Workspace({
               disabled={!assignee || action.pending !== null}
               onClick={() =>
                 void action.run('assign', () =>
-                  db.rpc('admin_assign_order', { p_order_id: order.id, p_editor_id: assignee }),
+                  adminApi.action('admin_assign_order', {
+                    p_order_id: order.id,
+                    p_editor_id: assignee,
+                  }),
                 )
               }
             >
@@ -442,7 +448,7 @@ export function Workspace({
                 )
                   return;
                 void action.run('reopen', () =>
-                  db.rpc('admin_reopen_order', { p_order_id: order.id }),
+                  adminApi.action('admin_reopen_order', { p_order_id: order.id }),
                 );
               }}
             >
@@ -505,8 +511,11 @@ export function Workspace({
             disabled={!note.trim() || action.pending !== null}
             onClick={() =>
               void action.run('note', async () => {
-                const r = await db.rpc('staff_add_note', { p_order_id: order.id, p_note: note });
-                if (!r.error) setNote('');
+                const r = await adminApi.action('staff_add_note', {
+                  p_order_id: order.id,
+                  p_note: note,
+                });
+                setNote('');
                 return r;
               })
             }

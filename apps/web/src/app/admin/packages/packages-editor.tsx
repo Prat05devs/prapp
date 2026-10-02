@@ -5,7 +5,7 @@ import type { Tables } from '@prapp/db-types';
 import { formatMoney, majorToMinor } from '@prapp/shared';
 import { Button, ErrorText, Field, Input } from '@/components/ui';
 import { useStaffAction } from '@/hooks/use-staff-action';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
+import { adminApi } from '@/lib/admin/api';
 
 type Pkg = Tables<'packages'>;
 type Draft = {
@@ -33,7 +33,6 @@ export function PackagesEditor({
   links: { package_id: string; portal_id: string }[];
 }) {
   const action = useStaffAction();
-  const db = createBrowserSupabase();
   const [draft, setDraft] = useState<Draft | null>(null);
   const set = (p: Partial<Draft>) => setDraft((d) => (d ? { ...d, ...p } : d));
 
@@ -90,26 +89,21 @@ export function PackagesEditor({
         return { error: { code: '23514', message: 'invalid price' } };
       }
       const saved = d.id
-        ? await db.from('packages').update(row).eq('id', d.id).select('id').single()
-        : await db.from('packages').insert(row).select('id').single();
-      if (saved.error) return saved;
-      const id = saved.data.id;
+        ? await adminApi.records('packages', 'update', { match: { id: d.id }, values: row })
+        : await adminApi.records('packages', 'insert', { values: row });
+      const id = String(saved.rows[0]?.id ?? d.id);
       const current = links.filter((l) => l.package_id === id).map((l) => l.portal_id);
       const toRemove = current.filter((pid) => !d.portalIds.includes(pid));
       const toAdd = d.portalIds.filter((pid) => !current.includes(pid));
-      if (toRemove.length) {
-        const r = await db
-          .from('package_portals')
-          .delete()
-          .eq('package_id', id)
-          .in('portal_id', toRemove);
-        if (r.error) return r;
+      for (const portal_id of toRemove) {
+        await adminApi.records('package_portals', 'delete', {
+          match: { package_id: id, portal_id },
+        });
       }
       if (toAdd.length) {
-        const r = await db
-          .from('package_portals')
-          .insert(toAdd.map((portal_id) => ({ package_id: id, portal_id })));
-        if (r.error) return r;
+        await adminApi.records('package_portals', 'insert', {
+          values: toAdd.map((portal_id) => ({ package_id: id, portal_id })),
+        });
       }
       setDraft(null);
       return { error: null };

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react-native';
 import { useState } from 'react';
 import { Alert, Linking, View } from 'react-native';
-import { ApiError, fetchPublicSettings } from '@prapp/api-client';
+import { ApiError } from '@prapp/api-client';
 import {
   ActionButton,
   ErrorText,
@@ -41,7 +41,7 @@ const str = (v: unknown) =>
 export default function ProfileScreen() {
   const { me } = useAuth();
   const { pending, signOut } = useSignOut();
-  const settings = useFocusedData(() => fetchPublicSettings(supabase));
+  const settings = useFocusedData(async () => (await api.catalogue.get()).settings);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const site = appEnv().EXPO_PUBLIC_API_URL;
   const phone = str(settings.data?.['support.phone']);

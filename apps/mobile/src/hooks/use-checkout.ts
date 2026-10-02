@@ -8,7 +8,7 @@ import { registerForPush } from '@/lib/push';
 
 /**
  * App payment (LLD §9.5): the hosted /pay page opens in an auth session; Razorpay's callback
- * redirects to prapp://payment-result, which closes the browser. If the user closes it
+ * redirects to newsvio://payment-result, which closes the browser. If the user closes it
  * manually the result is "unknown" and the order screen polls.
  */
 export function useCheckout(orderId: string) {
@@ -20,6 +20,13 @@ export function useCheckout(orderId: string) {
     setError(null);
     try {
       const res = await api.orders.checkout(orderId, 'app');
+      if (res.confirmed && res.paymentUrl) {
+        // First build: the order is recorded; the customer pays on the razorpay.me page.
+        void registerForPush().catch(() => {});
+        await WebBrowser.openBrowserAsync(res.paymentUrl);
+        router.replace({ pathname: '/orders/[id]', params: { id: orderId, payment: 'link' } });
+        return;
+      }
       if (res.confirmed) {
         // Free mode: already paid at ₹0, so skip the payment page.
         void registerForPush().catch(() => {});

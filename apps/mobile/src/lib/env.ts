@@ -10,7 +10,9 @@ const schema = z.object({
   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: z.string().optional(),
   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: z.string().optional(),
   /** Labels only; the server's PAYMENTS_MODE decides what checkout does. */
-  EXPO_PUBLIC_PAYMENTS_MODE: z.enum(['razorpay', 'free']),
+  EXPO_PUBLIC_PAYMENTS_MODE: z.enum(['razorpay', 'free', 'link']),
+  /** PAYMENTS_MODE=link: the razorpay.me page, for the order screen's pay button */
+  EXPO_PUBLIC_PAYMENT_LINK_URL: z.url().optional(),
 });
 
 export type AppEnv = z.infer<typeof schema>;
@@ -27,6 +29,7 @@ export function appEnv(): AppEnv {
     EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || undefined,
     EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || undefined,
     EXPO_PUBLIC_PAYMENTS_MODE: parsePaymentsMode(process.env.EXPO_PUBLIC_PAYMENTS_MODE),
+    EXPO_PUBLIC_PAYMENT_LINK_URL: process.env.EXPO_PUBLIC_PAYMENT_LINK_URL || undefined,
   });
   if (!result.success) {
     const names = result.error.issues.map((i) => i.path.join('.')).join(', ');

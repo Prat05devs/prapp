@@ -1,17 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ApiError,
-  cancelOrder,
-  createDraft,
-  deleteDraft,
-  removeOrderImage,
-  resubmitOrder,
-  updateDraft,
-  uploadOrderImage,
-  type CustomerOrder,
-  type OrderImage,
-} from '@prapp/api-client';
+import { ApiError, type CustomerOrder, type OrderImage } from '@prapp/api-client';
 import {
   EDITABLE_ORDER_STATUSES,
   LIMITS,
@@ -20,8 +9,8 @@ import {
   type OrderContentInput,
   type OrderStatus,
 } from '@prapp/shared';
-import { pickImage, readBytes } from '@/lib/images';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
+import { pickImage } from '@/lib/images';
 import { useAuth } from '@/providers/auth-provider';
 
 export type SaveState = 'saved' | 'saving' | 'unsaved' | 'invalid' | 'error';
@@ -51,7 +40,7 @@ export function useCreateDraft() {
     setError(null);
     setPending(true);
     try {
-      const { id } = await createDraft(supabase, input);
+      const { id } = await api.orders.create(input);
       router.push({ pathname: '/orders/[id]/edit', params: { id } });
     } catch (e) {
       setError(message(e, 'Could not save your story.'));
@@ -101,7 +90,7 @@ export function useOrderEditor(initial: CustomerOrder) {
     timer.current = setTimeout(async () => {
       setSaveState('saving');
       try {
-        await updateDraft(supabase, initial.id, next);
+        await api.orders.update(initial.id, next);
         setSaveState('saved');
       } catch (e) {
         setSaveState('error');
@@ -118,16 +107,15 @@ export function useOrderEditor(initial: CustomerOrder) {
       if (!picked) return;
       setImageBusy(position);
       const existing = images.find((i) => i.position === position);
-      if (existing) {
-        await removeOrderImage(supabase, existing);
-        setImages((l) => l.filter((i) => i.id !== existing.id));
-      }
-      const row = await uploadOrderImage(supabase, {
-        userId: me.id,
-        orderId: initial.id,
-        fileId: globalThis.crypto.randomUUID(),
-        data: await readBytes(picked.uri),
-        meta: {
+      // Multipart upload through the API; replacing removes the old image on the server.
+      const { image: row } = await api.orders.uploadImage(
+        initial.id,
+        {
+          uri: picked.uri,
+          name: picked.fileName ?? `image-${position}.jpg`,
+          type: picked.mimeType,
+        },
+        {
           mimeType: picked.mimeType,
           sizeBytes: picked.sizeBytes,
           width: picked.width,
@@ -135,7 +123,8 @@ export function useOrderEditor(initial: CustomerOrder) {
           position,
           originalFilename: picked.fileName?.slice(0, LIMITS.originalFilenameMax) ?? undefined,
         },
-      });
+        existing?.id,
+      );
       setImages((l) =>
         [...l.filter((i) => i.position !== position), row].sort((a, b) => a.position - b.position),
       );
@@ -149,7 +138,7 @@ export function useOrderEditor(initial: CustomerOrder) {
   async function removeImage(image: OrderImage) {
     setImageBusy(image.position as 1 | 2);
     try {
-      await removeOrderImage(supabase, image);
+      await api.orders.removeImage(initial.id, image.id);
       setImages((l) => l.filter((i) => i.id !== image.id));
     } catch (e) {
       setError(message(e, 'Could not remove the image.'));
@@ -172,16 +161,15 @@ export function useOrderEditor(initial: CustomerOrder) {
 
   const discard = () =>
     run(async () => {
-      if (initial.currentIntentId) await cancelOrder(supabase, initial.id);
-      else await deleteDraft(supabase, initial.id);
+      // The server deletes a draft, or cancels an order whose checkout started.
+      await api.orders.discard(initial.id);
       router.replace('/orders');
     }, 'Could not discard this draft.');
 
   const resubmit = () =>
     run(async () => {
       clearTimeout(timer.current);
-      await updateDraft(supabase, initial.id, content);
-      await resubmitOrder(supabase, initial.id);
+      await api.orders.resubmit(initial.id, content);
       router.replace({ pathname: '/orders/[id]', params: { id: initial.id } });
     }, 'Could not resubmit.');
 

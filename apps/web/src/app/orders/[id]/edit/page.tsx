@@ -25,9 +25,9 @@ export default async function EditOrderPage({ params }: PageProps<'/orders/[id]/
       <OrderEditor
         order={order}
         packages={packages}
-        userId={me.id}
         profileComplete={me.profileComplete}
         freeCheckout={paymentsMode() === 'free'}
+        paymentLink={paymentsMode() === 'link'}
       />
     </Page>
   );

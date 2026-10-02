@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { Button, ErrorText, Input } from '@/components/ui';
 import { useStaffAction } from '@/hooks/use-staff-action';
 import { adminApi } from '@/lib/admin/api';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
 
 export function AttentionActions({
   orderId,
@@ -58,7 +57,7 @@ export function AttentionActions({
           disabled={!note.trim() || action.pending !== null}
           onClick={() =>
             void action.run('clear', () =>
-              createBrowserSupabase().rpc('admin_clear_attention', {
+              adminApi.action('admin_clear_attention', {
                 p_order_id: orderId,
                 p_note: note,
               }),

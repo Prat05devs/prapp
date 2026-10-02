@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ApiError, createDraft } from '@prapp/api-client';
+import { ApiError } from '@prapp/api-client';
 import { orderContentSchema, type OrderContentInput } from '@prapp/shared';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
+import { api } from '@/lib/api';
 import { fieldErrorsFrom, type OrderFieldErrors } from '@/lib/form-errors';
 
 /** /publish: validates the story and creates the draft, then continues to images + review. */
@@ -24,7 +24,7 @@ export function useCreateDraft() {
     setError(null);
     setPending(true);
     try {
-      const { id } = await createDraft(createBrowserSupabase(), input);
+      const { id } = await api.orders.create(input);
       router.push(`/orders/${id}/edit`);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Could not save your story. Try again.');

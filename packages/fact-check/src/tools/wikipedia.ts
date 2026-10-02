@@ -12,9 +12,14 @@ export async function wikipediaContext(
 ): Promise<WikiSummary[]> {
   const f = opts.fetchImpl ?? fetch;
   const lang = opts.lang ?? 'en';
-  const headers = { 'Api-User-Agent': 'prapp-factcheck/1.0' };
+  // Wikimedia rejects requests without a descriptive User-Agent (HTTP 429/403).
+  const headers = {
+    'Api-User-Agent': 'NewsVio-FactCheck/1.0 (https://newsvio.vercel.app)',
+    'User-Agent': 'NewsVio-FactCheck/1.0 (https://newsvio.vercel.app)',
+  };
   const search = await f(
-    `https://${lang}.wikipedia.org/w/rest.php/v1/search/title?${new URLSearchParams({ q: query.slice(0, 200), limit: String(opts.limit ?? 2) })}`,
+    // Full-text search: claim keywords rarely match an article title exactly.
+    `https://${lang}.wikipedia.org/w/rest.php/v1/search/page?${new URLSearchParams({ q: query.slice(0, 200), limit: String(opts.limit ?? 2) })}`,
     { headers, signal: AbortSignal.timeout(8000) },
   );
   if (!search.ok) throw new Error(`wikipedia_${search.status}`);

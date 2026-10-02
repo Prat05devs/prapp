@@ -217,7 +217,48 @@ async function cleanupIntegrationData() {
   }
 }
 
+/** Code of a 2-portal package used by the publishing tests (the live package has 5 slots). */
+export const TEST_PACKAGE = 'it-two-portals';
+
+async function ensureTestPackage() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  assertLocalSupabase(url);
+  const service = createClient<Database>(
+    url,
+    process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } },
+  );
+  const { data: pkg, error } = await service
+    .from('packages')
+    .upsert(
+      {
+        code: TEST_PACKAGE,
+        name: 'Integration test package',
+        description: 'Two portals + Instagram (tests only)',
+        price_inr_paise: 49900,
+        portal_count: 2,
+        includes_instagram: true,
+        sort_order: 99,
+        is_active: true,
+      },
+      { onConflict: 'code' },
+    )
+    .select('id')
+    .single();
+  if (error) throw error;
+  const { data: portals, error: portalsError } = await service
+    .from('portals')
+    .select('id')
+    .lte('sort_order', 2);
+  if (portalsError) throw portalsError;
+  const links = await service
+    .from('package_portals')
+    .upsert(portals.map((p) => ({ package_id: pkg.id, portal_id: p.id })));
+  if (links.error) throw links.error;
+}
+
 export default async function setup() {
   await cleanupIntegrationData();
+  await ensureTestPackage();
   return cleanupIntegrationData;
 }
