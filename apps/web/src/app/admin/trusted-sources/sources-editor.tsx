@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { Tables } from '@prapp/db-types';
 import { Button, ErrorText, Input } from '@/components/ui';
 import { useStaffAction } from '@/hooks/use-staff-action';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
+import { adminApi } from '@/lib/admin/api';
 
 type Source = Tables<'trusted_sources'>;
 const TIERS = ['tier1', 'tier2'] as const;
@@ -12,7 +12,6 @@ const CATEGORIES = ['government', 'fact_checker', 'news', 'reference', 'other'] 
 
 export function SourcesEditor({ sources }: { sources: Source[] }) {
   const action = useStaffAction();
-  const db = createBrowserSupabase();
   const [domain, setDomain] = useState('');
   const [tier, setTier] = useState<Source['tier']>('tier1');
   const [category, setCategory] = useState<string>('news');
@@ -54,23 +53,21 @@ export function SourcesEditor({ sources }: { sources: Source[] }) {
           disabled={!domain.trim() || action.pending !== null}
           onClick={() =>
             void action.run('add', async () => {
-              const { data } = await db.auth.getUser();
-              const r = await db.from('trusted_sources').upsert({
-                domain: domain
-                  .trim()
-                  .toLowerCase()
-                  .replace(/^https?:\/\//, '')
-                  .replace(/^www\./, '')
-                  .replace(/\/.*$/, ''),
-                tier,
-                category,
-                note: note.trim() || null,
-                added_by: data.user?.id ?? null,
+              const r = await adminApi.records('trusted_sources', 'upsert', {
+                values: {
+                  domain: domain
+                    .trim()
+                    .toLowerCase()
+                    .replace(/^https?:\/\//, '')
+                    .replace(/^www\./, '')
+                    .replace(/\/.*$/, ''),
+                  tier,
+                  category,
+                  note: note.trim() || null,
+                },
               });
-              if (!r.error) {
-                setDomain('');
-                setNote('');
-              }
+              setDomain('');
+              setNote('');
               return r;
             })
           }
@@ -101,7 +98,9 @@ export function SourcesEditor({ sources }: { sources: Source[] }) {
                   className="text-xs font-medium text-danger hover:underline"
                   onClick={() =>
                     void action.run('del', () =>
-                      db.from('trusted_sources').delete().eq('domain', s.domain),
+                      adminApi.records('trusted_sources', 'delete', {
+                        match: { domain: s.domain },
+                      }),
                     )
                   }
                 >

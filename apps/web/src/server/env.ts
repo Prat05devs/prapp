@@ -38,6 +38,12 @@ export function paymentsMode(): PaymentsMode {
   return parsePaymentsMode(process.env.PAYMENTS_MODE);
 }
 
+/** PAYMENTS_MODE=link: the razorpay.me page customers are sent to (https only). */
+export function paymentLinkUrl(): string | null {
+  const raw = process.env.PAYMENT_LINK_URL?.trim();
+  return raw && /^https:\/\/razorpay\.me\/@[\w.-]+$/.test(raw) ? raw : null;
+}
+
 export function supabaseServerEnv() {
   return parseEnv(supabaseSchema, {
     SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,

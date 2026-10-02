@@ -20,7 +20,7 @@ export default async function CompleteProfilePage({
         lede="We need your name and phone number before you can place an order."
       />
       <div className="rounded-2xl border border-hairline bg-subtle p-5 sm:p-6">
-        <CompleteProfileForm userId={me.id} initialName={me.fullName} next={next} />
+        <CompleteProfileForm initialName={me.fullName} next={next} />
       </div>
     </Page>
   );

@@ -2,17 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ApiError,
-  cancelOrder,
-  deleteDraft,
-  removeOrderImage,
-  resubmitOrder,
-  updateDraft,
-  uploadOrderImage,
-  type CustomerOrder,
-  type OrderImage,
-} from '@prapp/api-client';
+import { ApiError, type CustomerOrder, type OrderImage } from '@prapp/api-client';
 import {
   EDITABLE_ORDER_STATUSES,
   LIMITS,
@@ -21,8 +11,8 @@ import {
   type OrderContentInput,
   type OrderStatus,
 } from '@prapp/shared';
+import { api } from '@/lib/api';
 import { prepareImage } from '@/lib/images';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
 import { fieldErrorsFrom, type OrderFieldErrors } from '@/lib/form-errors';
 import { useDebouncedCallback } from './use-debounced-callback';
 
@@ -45,9 +35,9 @@ function message(e: unknown, fallback: string) {
 
 /**
  * Edit a draft (or a changes_requested order): autosave, images, review.
- * All writes go straight to Supabase under RLS; triggers enforce the rules (LLD §9.3).
+ * Every write goes through the API, which runs it as the user (RLS + triggers, LLD §9.3).
  */
-export function useOrderEditor(initial: CustomerOrder, userId: string, profileComplete: boolean) {
+export function useOrderEditor(initial: CustomerOrder, profileComplete: boolean) {
   const router = useRouter();
   const [content, setContent] = useState<OrderContentInput>(() => contentFrom(initial));
   const [images, setImages] = useState<OrderImage[]>(initial.images);
@@ -64,7 +54,7 @@ export function useOrderEditor(initial: CustomerOrder, userId: string, profileCo
   const autosave = useDebouncedCallback(async (next: OrderContentInput) => {
     setSaveState('saving');
     try {
-      await updateDraft(createBrowserSupabase(), initial.id, next);
+      await api.orders.update(initial.id, next);
       setSaveState('saved');
     } catch (e) {
       setSaveState('error');
@@ -96,18 +86,11 @@ export function useOrderEditor(initial: CustomerOrder, userId: string, profileCo
     setError(null);
     try {
       const prepared = await prepareImage(file);
-      const db = createBrowserSupabase();
       const existing = images.find((i) => i.position === position);
-      if (existing) {
-        await removeOrderImage(db, existing); // replace = delete row + object, then upload
-        setImages((list) => list.filter((i) => i.id !== existing.id));
-      }
-      const row = await uploadOrderImage(db, {
-        userId,
-        orderId: initial.id,
-        fileId: crypto.randomUUID(),
-        data: prepared.file,
-        meta: {
+      const { image: row } = await api.orders.uploadImage(
+        initial.id,
+        prepared.file,
+        {
           mimeType: prepared.mimeType,
           sizeBytes: prepared.file.size,
           width: prepared.width,
@@ -115,7 +98,8 @@ export function useOrderEditor(initial: CustomerOrder, userId: string, profileCo
           position,
           originalFilename: prepared.originalFilename,
         },
-      });
+        existing?.id, // replace: the server removes the old image first
+      );
       setImages((list) =>
         [...list.filter((i) => i.position !== position), row].sort(
           (a, b) => a.position - b.position,
@@ -134,7 +118,7 @@ export function useOrderEditor(initial: CustomerOrder, userId: string, profileCo
     setImageBusy(image.position as 1 | 2);
     setError(null);
     try {
-      await removeOrderImage(createBrowserSupabase(), image);
+      await api.orders.removeImage(initial.id, image.id);
       setImages((list) => list.filter((i) => i.id !== image.id));
     } catch (e) {
       setError(message(e, 'Could not remove the image.'));
@@ -158,10 +142,10 @@ export function useOrderEditor(initial: CustomerOrder, userId: string, profileCo
 
   const discardDraft = () =>
     run(
-      () =>
-        initial.currentIntentId
-          ? cancelOrder(createBrowserSupabase(), initial.id) // was checked out once: keep the record
-          : deleteDraft(createBrowserSupabase(), initial.id),
+      // The server deletes a draft, or cancels an order whose checkout started (keeps the record).
+      async () => {
+        await api.orders.discard(initial.id);
+      },
       () => {
         router.replace('/orders');
         router.refresh();
@@ -174,8 +158,7 @@ export function useOrderEditor(initial: CustomerOrder, userId: string, profileCo
     run(
       async () => {
         autosave.cancel();
-        await updateDraft(createBrowserSupabase(), initial.id, content);
-        await resubmitOrder(createBrowserSupabase(), initial.id);
+        await api.orders.resubmit(initial.id, content);
       },
       () => {
         router.replace(`/orders/${initial.id}`);

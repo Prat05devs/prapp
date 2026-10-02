@@ -6,16 +6,8 @@ import { Icon } from '@/components/icon';
 import { Button, ErrorText, Field, Input, NativeSelect, NativeSelectOption } from '@/components/ui';
 import { useCompleteProfile } from '@/hooks/use-complete-profile';
 
-export function CompleteProfileForm({
-  userId,
-  initialName,
-  next,
-}: {
-  userId: string;
-  initialName: string;
-  next: string;
-}) {
-  const { pending, fieldErrors, error, submit } = useCompleteProfile(userId, next);
+export function CompleteProfileForm({ initialName, next }: { initialName: string; next: string }) {
+  const { pending, fieldErrors, error, submit } = useCompleteProfile(next);
   const countries = useMemo(() => phoneCountries(), []);
   const [fullName, setFullName] = useState(initialName);
   const [country, setCountry] = useState<string>(DEFAULT_PHONE_COUNTRY);

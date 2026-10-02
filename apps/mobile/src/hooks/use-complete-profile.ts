@@ -1,16 +1,12 @@
 import { useState } from 'react';
-import {
-  completeProfileSchema,
-  errorCodeFromDb,
-  errorMessage,
-  type CompleteProfileInput,
-} from '@prapp/shared';
-import { supabase } from '@/lib/supabase';
+import { ApiError } from '@prapp/api-client';
+import { completeProfileSchema, type CompleteProfileInput } from '@prapp/shared';
+import { api } from '@/lib/api';
 import { useAuth } from '@/providers/auth-provider';
 
 export type FieldErrors = Partial<Record<'fullName' | 'phone' | 'country', string>>;
 
-/** Saves name + phone directly under RLS (column grants allow only these fields). */
+/** Saves name + phone through PATCH /api/me (runs as the user under RLS). */
 export function useCompleteProfile() {
   const { me, refreshMe } = useAuth();
   const [pending, setPending] = useState(false);
@@ -32,13 +28,11 @@ export function useCompleteProfile() {
     setFieldErrors({});
     setError(null);
     setPending(true);
-    const { error: err } = await supabase
-      .from('profiles')
-      .update({ full_name: parsed.data.fullName, phone: parsed.data.phone })
-      .eq('id', me.id);
-    if (err) {
+    try {
+      await api.me.update(parsed.data);
+    } catch (e) {
       setPending(false);
-      setError(errorMessage(errorCodeFromDb(err)));
+      setError(e instanceof ApiError ? e.message : 'Could not save your details.');
       return false;
     }
     await refreshMe(); // profileComplete flips → the router guard moves to the tabs

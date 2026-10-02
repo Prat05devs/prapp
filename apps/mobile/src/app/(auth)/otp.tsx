@@ -19,12 +19,12 @@ export default function OtpScreen() {
 
   return (
     <Screen>
-      <PageHeader title="Enter the code" />
+      <PageHeader title="Check your email" />
       <View className="flex-row items-start gap-2 rounded-xl border border-hairline bg-subtle p-4">
         <Icon as={Mail} size={16} className="mt-0.5 text-emerald-strong" />
         <Text className="flex-1 text-body-sm text-body">
-          We sent a 6-digit code to <Text className="font-sans-semibold text-ink">{email}</Text>. It
-          expires in 10 minutes.
+          We emailed <Text className="font-sans-semibold text-ink">{email}</Text>. Tap the sign-in
+          link in that email on this phone, or enter the 6-digit code if the email shows one.
         </Text>
       </View>
 

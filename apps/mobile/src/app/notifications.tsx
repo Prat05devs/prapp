@@ -5,26 +5,15 @@ import { formatIST } from '@prapp/shared';
 import { Icon, Text } from '@/components/ui';
 import { useFocusedData } from '@/hooks/use-async';
 import { openDeepLink } from '@/lib/links';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 // In-app notification list (LLD §12). Tapping marks it read and opens its deep link.
 export default function NotificationsScreen() {
-  const list = useFocusedData(async () => {
-    const { data } = await supabase
-      .from('notifications')
-      .select('id, title, body, data, read_at, created_at')
-      .order('created_at', { ascending: false })
-      .limit(100);
-    return data ?? [];
-  });
+  const list = useFocusedData(() => api.notifications.list());
 
   async function open(n: { id: string; read_at: string | null; data: unknown }) {
-    if (!n.read_at)
-      await supabase
-        .from('notifications')
-        .update({ read_at: new Date().toISOString() })
-        .eq('id', n.id);
+    if (!n.read_at) await api.notifications.markRead([n.id]).catch(() => {});
     await openDeepLink((n.data as { deep_link?: string } | null)?.deep_link, (href) =>
       router.push(href),
     );

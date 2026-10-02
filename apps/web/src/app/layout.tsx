@@ -15,7 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'prapp',
+  title: 'NewsVio',
   description: 'Fact checker and self-serve PR publishing',
 };
 

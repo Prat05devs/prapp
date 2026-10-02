@@ -34,7 +34,9 @@ export function createRequest(options: ApiClientOptions): ApiRequest {
 
   return async function request<T>(path: string, init: RequestOptions = {}): Promise<T> {
     const headers: Record<string, string> = { Accept: 'application/json' };
-    if (init.body !== undefined) headers['Content-Type'] = 'application/json';
+    // FormData (file uploads) sets its own multipart boundary.
+    const isForm = typeof FormData !== 'undefined' && init.body instanceof FormData;
+    if (init.body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
     const token = await options.getAccessToken?.();
     if (token) headers.Authorization = `Bearer ${token}`;
 
@@ -43,7 +45,12 @@ export function createRequest(options: ApiClientOptions): ApiRequest {
       res = await doFetch(`${baseUrl}${path}`, {
         method: init.method ?? 'GET',
         headers,
-        body: init.body === undefined ? undefined : JSON.stringify(init.body),
+        body:
+          init.body === undefined
+            ? undefined
+            : isForm
+              ? (init.body as FormData)
+              : JSON.stringify(init.body),
         credentials: 'include',
         signal: init.signal,
       });

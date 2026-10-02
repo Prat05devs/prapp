@@ -4,7 +4,7 @@ import { hmacSha256Hex, safeEqual } from '@/server/razorpay';
 
 // /pay/<token>: base64url(JSON payload) + "." + HMAC (LLD §9.4 step 5, §15).
 // DECISION: the payload also carries `r` (web | app) so the callback knows whether to
-// redirect to /orders/:id or to prapp://payment-result (LLD §9.6 step 4).
+// redirect to /orders/:id or to newsvio://payment-result (LLD §9.6 step 4).
 
 export interface CheckoutTokenPayload {
   orderId: string;

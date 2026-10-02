@@ -20,6 +20,8 @@ export type ToolName =
   | 'claim_extraction'
   | 'gemini_search'
   | 'searxng'
+  | 'google_news'
+  | 'fact_checker_search'
   | 'gdelt'
   | 'wikipedia'
   | 'llm_judge';

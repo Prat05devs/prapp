@@ -3,8 +3,8 @@
 // if you change one side, change the other in a new migration.
 
 // DECISION: app name / brand is TBD (LLD §20); every user-facing mention reads this.
-export const BRAND_NAME = 'prapp';
-export const APP_SCHEME = 'prapp';
+export const BRAND_NAME = 'NewsVio';
+export const APP_SCHEME = 'newsvio';
 export const DISPLAY_TIMEZONE = 'Asia/Kolkata';
 
 export const APP_ROLES = ['user', 'editor', 'admin'] as const;
@@ -153,6 +153,8 @@ export const FC_TOOL_LABELS: Record<string, string> = {
   claim_extraction: 'Identified the checkable claims',
   gemini_search: 'Searched live web sources with Gemini + Google Search',
   searxng: 'Searched live web sources',
+  google_news: 'Searched Indian and international news coverage (Google News)',
+  fact_checker_search: 'Searched Indian fact-checkers (PIB, Alt News, BOOM, Factly and others)',
   gdelt: 'Checked news coverage via GDELT',
   wikipedia: 'Looked up background on Wikipedia',
   llm_judge: 'Compared the claim with the evidence found',

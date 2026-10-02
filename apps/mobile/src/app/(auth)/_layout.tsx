@@ -11,6 +11,7 @@ export default function AuthLayout() {
     <Stack initialRouteName="sign-in" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="sign-in" />
       <Stack.Screen name="otp" />
+      <Stack.Screen name="auth-callback" />
     </Stack>
   );
 }

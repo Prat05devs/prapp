@@ -2,7 +2,6 @@ import { useLocalSearchParams } from 'expo-router';
 import { CircleCheck, Info, Lock, ShieldCheck, Trash2 } from 'lucide-react-native';
 import { View } from 'react-native';
 import type { CustomerOrder } from '@prapp/api-client';
-import { getOrder } from '@prapp/api-client';
 import { DECLARATION_TEXT, FEATURE_CONSENT_TEXT, formatMoney } from '@prapp/shared';
 import { ImageSlots } from '@/components/image-slots';
 import { PackagePicker } from '@/components/package-picker';
@@ -26,7 +25,7 @@ import { useCatalogue } from '@/hooks/use-catalogue';
 import { useCheckout } from '@/hooks/use-checkout';
 import { useOrderEditor, type SaveState } from '@/hooks/use-order-editor';
 import { appEnv } from '@/lib/env';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 
 const SAVE: Record<SaveState, string> = {
   saved: 'All changes saved',
@@ -38,7 +37,7 @@ const SAVE: Record<SaveState, string> = {
 
 export default function EditOrderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const order = useFocusedData(() => getOrder(supabase, id), id);
+  const order = useFocusedData(async () => (await api.orders.edit(id)).order, id);
   if (!order.data)
     return (
       <Centered>
@@ -105,6 +104,7 @@ function Editor({ order }: { order: CustomerOrder }) {
       <View className="gap-4">
         <StepHeading step="02" title="Photos" />
         <ImageSlots
+          orderId={order.id}
           images={ed.images}
           busy={ed.imageBusy}
           editable={ed.editable}

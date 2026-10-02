@@ -11,30 +11,49 @@ import {
   Panel,
   Screen,
   Separator,
+  Tabs,
+  TabsList,
+  TabsTrigger,
   Text,
 } from '@/components/ui';
-import { useEmailOtp } from '@/hooks/use-email-otp';
+import { useEmailOtp, type AuthMode } from '@/hooks/use-email-otp';
+import { GoogleG } from '@/components/google-g';
 import { useGoogleSignIn } from '@/hooks/use-google-sign-in';
 
 export default function SignInScreen() {
   const google = useGoogleSignIn();
   const otp = useEmailOtp();
   const [email, setEmail] = useState('');
+  const [mode, setMode] = useState<AuthMode>('login');
 
   return (
     <Screen>
       <View className="gap-4">
         <LivePill>Fact check · Publish</LivePill>
         <PageHeader
-          title="Welcome"
+          title="Welcome to NewsVio"
           lede="Check forwards for free, and publish your story on our news portals."
         />
       </View>
 
       <Panel tone="subtle">
+        <Tabs value={mode} onValueChange={(v) => setMode(v as AuthMode)}>
+          <TabsList className="mr-0 w-full">
+            <TabsTrigger value="login" className="flex-1">
+              <Text>Log in</Text>
+            </TabsTrigger>
+            <TabsTrigger value="signup" className="flex-1">
+              <Text>Create account</Text>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
         <Field
           label="Email"
-          hint="We'll email you a 6-digit code. No password needed."
+          hint={
+            mode === 'login'
+              ? "We'll email you a sign-in link. No password needed."
+              : "We'll email you a link to create your account."
+          }
           value={email}
           onChangeText={setEmail}
           placeholder="you@example.com"
@@ -44,12 +63,12 @@ export default function SignInScreen() {
           textContentType="emailAddress"
         />
         <ActionButton
-          title="Send code"
+          title={mode === 'login' ? 'Send sign-in link' : 'Create account'}
           variant="accent"
           icon={ArrowRight}
           loading={otp.pending}
           onPress={async () => {
-            const sentTo = await otp.requestCode(email);
+            const sentTo = await otp.requestCode(email, mode);
             if (sentTo) router.push({ pathname: '/otp', params: { email: sentTo } });
           }}
         />
@@ -65,6 +84,7 @@ export default function SignInScreen() {
           </View>
           <ActionButton
             title="Continue with Google"
+            leading={<GoogleG />}
             variant="outline"
             onPress={() => void google.signInWithGoogle()}
             loading={google.pending}

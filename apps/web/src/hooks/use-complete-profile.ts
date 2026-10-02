@@ -2,18 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  completeProfileSchema,
-  errorCodeFromDb,
-  errorMessage,
-  type CompleteProfileInput,
-} from '@prapp/shared';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
+import { ApiError } from '@prapp/api-client';
+import { completeProfileSchema, type CompleteProfileInput } from '@prapp/shared';
+import { api } from '@/lib/api';
 
 export type FieldErrors = Partial<Record<'fullName' | 'phone' | 'country', string>>;
 
 /** Saves name + phone directly under RLS (column grants allow only these fields). */
-export function useCompleteProfile(userId: string, next: string) {
+export function useCompleteProfile(next: string) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -33,15 +29,14 @@ export function useCompleteProfile(userId: string, next: string) {
     setFieldErrors({});
     setError(null);
     setPending(true);
-    const { error: err } = await createBrowserSupabase()
-      .from('profiles')
-      .update({ full_name: parsed.data.fullName, phone: parsed.data.phone })
-      .eq('id', userId);
-    setPending(false);
-    if (err) {
-      setError(errorMessage(errorCodeFromDb(err)));
+    try {
+      await api.me.update(parsed.data);
+    } catch (e) {
+      setPending(false);
+      setError(e instanceof ApiError ? e.message : 'Could not save your details.');
       return false;
     }
+    setPending(false);
     router.replace(next);
     router.refresh();
     return true;

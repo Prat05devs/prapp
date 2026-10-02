@@ -6,8 +6,7 @@ insert into public.portals (name, domain, homepage_url, da_score, category, sort
 on conflict (domain) do nothing;
 
 insert into public.packages (code, name, description, price_inr_paise, price_usd_cents, portal_count, includes_instagram, sort_order) values
-  ('starter', 'Starter', 'Your story on 2 news portals + our Instagram news page', 49900, 500, 2, true, 1),
-  ('plus',    'Plus',    'Your story on 3 news portals + our Instagram news page', 99900, null, 3, true, 2)
+  ('starter', 'Story Package', 'Your story on 5 high-DA news portals + 1 Instagram collaboration post', 49900, 500, 5, true, 1)
 on conflict (code) do nothing;
 
 insert into public.package_portals (package_id, portal_id)

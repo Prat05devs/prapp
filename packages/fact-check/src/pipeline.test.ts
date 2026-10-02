@@ -39,10 +39,14 @@ function fakeSearch(evidence: Evidence[]): WebSearch {
 }
 
 /** Routes the tools' HTTP calls: fact check API, GDELT, Wikipedia, liveness checks. */
-function fakeFetch(opts: { factChecks?: unknown[] } = {}): typeof fetch {
+function fakeFetch(opts: { factChecks?: unknown[]; newsRss?: string } = {}): typeof fetch {
   return (async (input: RequestInfo | URL) => {
     const url = String(input);
     if (url.includes('factchecktools')) return Response.json({ claims: opts.factChecks ?? [] });
+    if (url.includes('news.google.com/rss'))
+      return new Response(
+        url.includes('site%3A') ? '<rss></rss>' : (opts.newsRss ?? '<rss></rss>'),
+      );
     if (url.includes('gdeltproject')) return Response.json({ articles: [] });
     if (url.includes('wikipedia.org/w/rest.php')) return Response.json({ pages: [] });
     return new Response('ok', { status: 200 });
@@ -153,7 +157,8 @@ describe('runFactCheck', () => {
   it('judges with trusted evidence and records the model', async () => {
     const r = await runFactCheck(textInput, deps());
     expect(r.verdict).toBe('likely_false');
-    expect(r.confidence).toBe('high');
+    // One publisher caps confidence at medium; "high" needs two independent ones.
+    expect(r.confidence).toBe('medium');
     expect(r.claims[0]?.isGovernmentRelated).toBe(true);
     expect(r.claims[0]?.sources[0]).toMatchObject({
       url: 'https://pib.gov.in/release/1',
@@ -165,6 +170,27 @@ describe('runFactCheck', () => {
       model: 'gemini-test',
     });
     expect(r.summary).toBe('Official sources say no such ban is planned.');
+  });
+
+  it('confirms recent news from two reliable publishers found on Google News', async () => {
+    const item = (title: string, publisher: string, site: string) =>
+      `<item><title>${title} - ${publisher}</title><link>https://news.google.com/rss/articles/${site}</link>` +
+      `<pubDate>Thu, 01 Oct 2026 09:18:36 GMT</pubDate><source url="https://www.${site}">${publisher}</source></item>`;
+    const r = await runFactCheck(
+      textInput,
+      deps({
+        searches: [],
+        fetchImpl: fakeFetch({
+          newsRss: `<rss><channel>${item('RBI denies note ban', 'The Hindu', 'thehindu.com')}${item('No note ban: PIB', 'PIB', 'pib.gov.in')}</channel></rss>`,
+        }),
+      }),
+    );
+    expect(r.verdict).toBe('likely_false');
+    expect(r.confidence).toBe('high');
+    expect(r.claims[0]?.sources.map((s) => s.domain)).toEqual(
+      expect.arrayContaining(['thehindu.com', 'pib.gov.in']),
+    );
+    expect(r.toolRuns.find((t) => t.tool === 'google_news')?.status).toBe('ok');
   });
 
   it('is unverified when only unknown-tier evidence exists', async () => {

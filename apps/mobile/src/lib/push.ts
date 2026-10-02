@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { supabase } from './supabase';
+import { api } from './api';
 
 let registeredToken: string | null = null;
 
@@ -34,16 +34,14 @@ export async function registerForPush(): Promise<void> {
   const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
   if (!projectId) return; // needs an EAS project (eas init) for push tokens
   const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-  const { error } = await supabase.rpc('register_device_token', {
-    p_token: token,
-    p_platform: Platform.OS === 'ios' ? 'ios' : 'android',
-  });
-  if (!error) registeredToken = token;
+  // POST /api/devices runs register_device_token as the user (moves the token between accounts).
+  await api.devices.register(token, Platform.OS === 'ios' ? 'ios' : 'android');
+  registeredToken = token;
 }
 
 /** On sign-out: stop pushes to this device for the old account (LLD §6.3). */
 export async function unregisterPush(): Promise<void> {
   if (!registeredToken) return;
-  await supabase.from('device_tokens').delete().eq('expo_push_token', registeredToken);
+  await api.devices.unregister(registeredToken).catch(() => {});
   registeredToken = null;
 }

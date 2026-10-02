@@ -2,18 +2,20 @@ import { Image } from 'expo-image';
 import { CircleCheck, Upload } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
-import { signedImageUrls, type OrderImage } from '@prapp/api-client';
+import type { OrderImage } from '@prapp/api-client';
 import { Icon, Text } from '@/components/ui';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { COLORS } from '@/lib/theme';
 
 export function ImageSlots({
+  orderId,
   images,
   busy,
   editable,
   onPick,
   onRemove,
 }: {
+  orderId: string;
   images: OrderImage[];
   busy: 1 | 2 | null;
   editable: boolean;
@@ -25,14 +27,15 @@ export function ImageSlots({
   useEffect(() => {
     if (!key) return;
     let cancelled = false;
-    signedImageUrls(supabase, key.split('|')).then(
-      (u) => !cancelled && setUrls(u),
+    // Signed thumbnail URLs come from the API (GET /api/orders/:id/edit).
+    api.orders.edit(orderId).then(
+      (r) => !cancelled && setUrls(r.imageUrls),
       () => {},
     );
     return () => {
       cancelled = true;
     };
-  }, [key]);
+  }, [orderId, key]);
 
   return (
     <View className="gap-3">

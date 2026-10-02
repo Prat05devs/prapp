@@ -1,5 +1,12 @@
 import { EXTRACT_PROMPT, JUDGE_PROMPT, OCR_PROMPT, toExtracted, toJudgement } from './prompts.ts';
-import { QuotaExhaustedError, type Evidence, type LLM, type WebSearch } from './types.ts';
+import {
+  QuotaExhaustedError,
+  TransientLlmError,
+  retryAfterMs,
+  type Evidence,
+  type LLM,
+  type WebSearch,
+} from './types.ts';
 
 // Gemini API (free tier) over REST, so it runs in Deno and Node alike.
 const BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -20,13 +27,26 @@ async function generate(
   body: unknown,
   fetchImpl: typeof fetch,
 ): Promise<GeminiResponse> {
-  const res = await fetchImpl(`${BASE}/${encodeURIComponent(model)}:generateContent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(30_000),
-  });
-  if (res.status === 429) throw new QuotaExhaustedError('gemini');
+  let res: Response;
+  try {
+    res = await fetchImpl(`${BASE}/${encodeURIComponent(model)}:generateContent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30_000),
+    });
+  } catch (e) {
+    throw new TransientLlmError('gemini', 1000, e instanceof Error ? e.message : 'network');
+  }
+  if (res.status === 429) {
+    // Per-minute limits come with a RetryInfo delay; per-day limits mean "done for today".
+    const text = await res.text();
+    if (/PerDay|per day/i.test(text)) throw new QuotaExhaustedError('gemini');
+    const delay = /"retryDelay":\s*"([\d.]+)s"/.exec(text)?.[1];
+    throw new TransientLlmError('gemini', retryAfterMs(delay, 5000), 'rate limited');
+  }
+  if (res.status === 503 || res.status === 500)
+    throw new TransientLlmError('gemini', 3000, `gemini_${res.status}`);
   if (!res.ok) throw new Error(`gemini_${res.status}: ${(await res.text()).slice(0, 200)}`);
   return (await res.json()) as GeminiResponse;
 }

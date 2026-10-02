@@ -5,6 +5,7 @@ import { Icon } from '@/components/icon';
 import { useSignedUrls } from '@/hooks/use-signed-urls';
 
 export function ImageSlots({
+  orderId,
   images,
   slots,
   busy,
@@ -12,6 +13,7 @@ export function ImageSlots({
   onPick,
   onRemove,
 }: {
+  orderId: string;
   images: OrderImage[];
   slots: (1 | 2)[];
   busy: 1 | 2 | null;
@@ -19,7 +21,10 @@ export function ImageSlots({
   onPick: (file: File, position: 1 | 2) => void;
   onRemove: (image: OrderImage) => void;
 }) {
-  const urls = useSignedUrls(images.map((i) => i.storagePath));
+  const urls = useSignedUrls(
+    orderId,
+    images.map((i) => i.storagePath),
+  );
   const filled = slots.filter((s) => images.some((i) => i.position === s)).length;
   return (
     <section className="flex flex-col gap-3">

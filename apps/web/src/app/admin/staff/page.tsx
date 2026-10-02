@@ -1,5 +1,6 @@
 import { requireStaffPage } from '@/server/admin-session';
 import { createServerSupabase } from '@/server/supabase/server';
+import { AddStaffForm } from './add-staff-form';
 import { StaffEditor } from './staff-editor';
 
 export default async function StaffPage({ searchParams }: PageProps<'/admin/staff'>) {
@@ -25,6 +26,7 @@ export default async function StaffPage({ searchParams }: PageProps<'/admin/staf
   return (
     <main className="flex flex-col gap-4">
       <h1 className="font-display text-headline-md text-ink">Staff</h1>
+      <AddStaffForm />
       <form className="flex gap-2" action="/admin/staff">
         <input
           name="q"

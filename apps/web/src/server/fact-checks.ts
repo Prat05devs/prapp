@@ -15,6 +15,9 @@ import { AppError, throwDbError } from '@/server/api';
 import type { ServiceSupabase } from '@/server/service-types';
 
 const CACHE_DAYS = 7;
+const UNVERIFIED_CACHE_MS = 60 * 60_000;
+/** Deploy time of the Google News evidence pipeline; older results are not reused. */
+const PIPELINE_SINCE = '2026-10-01T18:00:00Z';
 
 async function settingInt(
   service: ServiceSupabase,
@@ -77,7 +80,12 @@ export async function submitFactCheck(
   }
 
   // 4. Cache: a full check of the same input in the last 7 days (does not use the limit).
-  const since = new Date(Date.now() - CACHE_DAYS * 86_400_000).toISOString();
+  //    "Unverified" is reused for an hour only: coverage of breaking news grows quickly.
+  //    Results from before the news-search checker (PIPELINE_SINCE) are never reused.
+  const since = new Date(
+    Math.max(Date.now() - CACHE_DAYS * 86_400_000, Date.parse(PIPELINE_SINCE)),
+  ).toISOString();
+  const unverifiedSince = new Date(Date.now() - UNVERIFIED_CACHE_MS).toISOString();
   const { data: cached } = await service
     .from('fact_checks')
     .select('id')
@@ -85,6 +93,7 @@ export async function submitFactCheck(
     .eq('status', 'done')
     .eq('mode', 'full')
     .gte('created_at', since)
+    .or(`verdict.neq.unverified,created_at.gte.${unverifiedSince}`)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();

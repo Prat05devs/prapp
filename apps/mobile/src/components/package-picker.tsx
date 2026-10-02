@@ -46,8 +46,8 @@ export function PackagePicker({
                   </Text>
                 </View>
                 <Text variant="muted">
-                  {p.portalCount} news portal{p.portalCount === 1 ? '' : 's'}
-                  {p.includesInstagram ? ' + our Instagram news page' : ''} · live within{' '}
+                  {p.portalCount} high-DA news portal{p.portalCount === 1 ? '' : 's'}
+                  {p.includesInstagram ? ' + 1 Instagram collaboration post' : ''} · live within{' '}
                   {p.turnaroundHours} h
                 </Text>
                 {selected ? (

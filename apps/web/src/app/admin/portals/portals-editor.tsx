@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { Tables } from '@prapp/db-types';
 import { Button, ErrorText, Field, Input } from '@/components/ui';
 import { useStaffAction } from '@/hooks/use-staff-action';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
+import { adminApi } from '@/lib/admin/api';
 import { prepareImage } from '@/lib/images';
 
 type Portal = Tables<'portals'>;
@@ -39,7 +39,6 @@ export function PortalsEditor({
   supabaseUrl: string;
 }) {
   const action = useStaffAction();
-  const db = createBrowserSupabase();
   const [draft, setDraft] = useState<Draft | null>(null);
   const set = (p: Partial<Draft>) => setDraft((d) => (d ? { ...d, ...p } : d));
 
@@ -60,9 +59,9 @@ export function PortalsEditor({
     };
     return action.run('save', async () => {
       const r = d.id
-        ? await db.from('portals').update(row).eq('id', d.id)
-        : await db.from('portals').insert(row);
-      if (!r.error) setDraft(null);
+        ? await adminApi.records('portals', 'update', { match: { id: d.id }, values: row })
+        : await adminApi.records('portals', 'insert', { values: row });
+      setDraft(null);
       return r;
     });
   }
@@ -70,12 +69,11 @@ export function PortalsEditor({
   async function uploadLogo(portal: Portal, file: File) {
     await action.run('logo', async () => {
       const img = await prepareImage(file);
-      const path = `portals/${portal.id}.jpg`;
-      const up = await db.storage
-        .from('public-assets')
-        .upload(path, img.file, { upsert: true, contentType: img.mimeType });
-      if (up.error) return { error: { message: up.error.message } };
-      return db.from('portals').update({ logo_path: path }).eq('id', portal.id);
+      const { path } = await adminApi.upload(img.file, 'portals', portal.id);
+      return adminApi.records('portals', 'update', {
+        match: { id: portal.id },
+        values: { logo_path: path },
+      });
     });
   }
 

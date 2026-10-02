@@ -27,6 +27,8 @@ export interface CheckoutDeps {
   gateway?: RazorpayGateway;
   /** Default 'razorpay'. */
   mode?: PaymentsMode;
+  /** PAYMENTS_MODE=link: where the customer pays */
+  paymentUrl?: string | null;
   now?: Date;
 }
 
@@ -102,6 +104,18 @@ export async function startCheckout(
     });
     if (freeError) throwDbError(freeError);
     return { confirmed: true, amountMinor: 0, currency };
+  }
+
+  // DECISION: first build (PAYMENTS_MODE=link): confirm at the package price, flagged for an
+  // admin to verify, and hand back the razorpay.me page where the customer pays.
+  if (deps.mode === 'link') {
+    if (!deps.paymentUrl) throw new AppError('internal_error');
+    const { error: linkError } = await service.rpc('svc_confirm_link_order', {
+      p_order_id: order.id,
+      p_package_snapshot: snapshot as Json,
+    });
+    if (linkError) throwDbError(linkError);
+    return { confirmed: true, amountMinor, currency, paymentUrl: deps.paymentUrl };
   }
 
   const gateway = deps.gateway;

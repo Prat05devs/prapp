@@ -1,0 +1,9 @@
+# The website deploy needs the monorepo sources only, never native or build output.
+apps/mobile/ios
+apps/mobile/android
+apps/mobile/.expo
+**/node_modules
+**/.next
+**/.turbo
+supabase/.temp
+supabase/.branches

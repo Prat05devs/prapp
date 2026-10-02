@@ -1,8 +1,9 @@
 'use client';
 
-import { ErrorText } from '@/components/ui';
+import { staffPasswordSchema } from '@prapp/shared';
+import { ErrorText, Notice } from '@/components/ui';
+import { adminApi } from '@/lib/admin/api';
 import { useStaffAction } from '@/hooks/use-staff-action';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
 
 type Person = {
   id: string;
@@ -23,11 +24,11 @@ export function StaffEditor({
   meId: string;
 }) {
   const action = useStaffAction();
-  const db = createBrowserSupabase();
   return (
     <section className="flex flex-col gap-2">
       <h2 className="font-medium">{title}</h2>
       <ErrorText>{action.error}</ErrorText>
+      {action.notice ? <Notice tone="success">{action.notice}</Notice> : null}
       <table className="w-full text-left text-sm">
         <thead className="font-mono text-[11px] tracking-wider text-slate uppercase">
           <tr>
@@ -35,6 +36,7 @@ export function StaffEditor({
             <th>Email</th>
             <th>Role</th>
             <th>Active</th>
+            <th>Login</th>
           </tr>
         </thead>
         <tbody>
@@ -52,7 +54,7 @@ export function StaffEditor({
                   disabled={action.pending !== null}
                   onChange={(e) =>
                     void action.run('role', () =>
-                      db.rpc('admin_set_role', {
+                      adminApi.action('admin_set_role', {
                         p_user_id: p.id,
                         p_role: e.target.value as Person['role'],
                       }),
@@ -71,13 +73,40 @@ export function StaffEditor({
                   disabled={action.pending !== null}
                   onChange={(e) =>
                     void action.run('active', () =>
-                      db.rpc('admin_set_staff_active', {
+                      adminApi.action('admin_set_staff_active', {
                         p_user_id: p.id,
                         p_active: e.target.checked,
                       }),
                     )
                   }
                 />
+              </td>
+              <td>
+                {p.role === 'editor' || p.role === 'admin' ? (
+                  <button
+                    type="button"
+                    className="text-label-sm text-emerald-strong underline-offset-2 hover:underline disabled:opacity-50"
+                    disabled={action.pending !== null}
+                    onClick={() => {
+                      const password = window.prompt(
+                        `New password for ${p.email} (at least 10 characters):`,
+                      );
+                      if (password === null) return;
+                      const parsed = staffPasswordSchema.safeParse(password);
+                      if (!parsed.success) {
+                        action.setError(parsed.error.issues[0]?.message ?? 'Invalid password');
+                        return;
+                      }
+                      void action.run(
+                        'password',
+                        () => adminApi.setStaffPassword(p.id, parsed.data),
+                        () => `Password updated for ${p.email}.`,
+                      );
+                    }}
+                  >
+                    Set password
+                  </button>
+                ) : null}
               </td>
             </tr>
           ))}

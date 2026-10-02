@@ -4,8 +4,9 @@ import { formatIST, formatMoney } from '@prapp/shared';
 import { Icon } from '@/components/icon';
 import { OrderTimeline } from '@/components/orders/order-timeline';
 import { StatusBadge } from '@/components/orders/status-badge';
-import { Badge, Card, Eyebrow, Notice, Page } from '@/components/ui';
+import { Badge, buttonVariants, Card, Eyebrow, Notice, Page } from '@/components/ui';
 import { AppError } from '@/server/api';
+import { paymentLinkUrl, paymentsMode } from '@/server/env';
 import { loadOrderDetail } from '@/server/orders';
 import { requireCompleteUser } from '@/server/session';
 import { createServerSupabase } from '@/server/supabase/server';
@@ -22,6 +23,8 @@ export default async function OrderPage({ params, searchParams }: PageProps<'/or
   });
   const { order, placements, refunds } = detail;
   const payment = typeof sp.payment === 'string' ? sp.payment : null;
+  // First build (PAYMENTS_MODE=link): payments are made on razorpay.me and checked by an admin.
+  const payLink = paymentsMode() === 'link' && order.status === 'paid' ? paymentLinkUrl() : null;
   const reason = typeof sp.reason === 'string' ? sp.reason : null;
 
   const facts: [string, string][] = [
@@ -77,7 +80,31 @@ export default async function OrderPage({ params, searchParams }: PageProps<'/or
         </dl>
       </Card>
 
-      {payment ? (
+      {payLink && order.amountMinor ? (
+        <Notice
+          tone={payment === 'link' ? 'success' : 'info'}
+          title={payment === 'link' ? 'Order received: complete your payment' : 'Payment'}
+        >
+          <span className="flex flex-col gap-3">
+            <span>
+              Pay <strong>{formatMoney(order.amountMinor, order.currency ?? 'INR')}</strong> on our
+              Razorpay page and write your order number{' '}
+              <strong className="font-mono">{order.orderNumber}</strong> in the note. We check every
+              payment and then publish your story. Already paid? Nothing more to do.
+            </span>
+            <a
+              href={payLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ variant: 'accent', className: 'self-start' })}
+            >
+              Pay {formatMoney(order.amountMinor, order.currency ?? 'INR')} on Razorpay{' '}
+              <Icon name="link" />
+            </a>
+          </span>
+        </Notice>
+      ) : null}
+      {payment && !payLink ? (
         <PaymentBanner
           orderId={order.id}
           status={order.status}

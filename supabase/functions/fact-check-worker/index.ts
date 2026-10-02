@@ -46,6 +46,18 @@ function buildProviders(): { llms: LLM[]; searches: WebSearch[] } {
       }),
     );
   }
+  // Extra free models with their own rate limits, used when the ones above are busy.
+  if (gemini) llms.push(geminiLLM({ apiKey: gemini, model: lite, ocrModel: lite }));
+  if (groq) {
+    llms.push(
+      openAiCompatibleLLM({
+        provider: 'groq',
+        baseUrl: 'https://api.groq.com/openai/v1',
+        apiKey: groq,
+        model: env('GROQ_FALLBACK_MODEL') ?? 'qwen/qwen3.8-27b',
+      }),
+    );
+  }
   const cfToken = env('CLOUDFLARE_AI_TOKEN');
   const cfAccount = env('CLOUDFLARE_ACCOUNT_ID');
   if (cfToken && cfAccount) {

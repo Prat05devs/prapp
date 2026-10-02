@@ -2,7 +2,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
-
+  
   "public": {
           Tables: {
             "app_settings": {
@@ -298,7 +298,7 @@ isOneToOne: false
                     "code"?: string,"created_at"?: string,"description"?: string | null,"id"?: string,"includes_instagram"?: boolean,"is_active"?: boolean,"name"?: string,"portal_count"?: number,"price_inr_paise"?: number,"price_usd_cents"?: number | null,"sort_order"?: number,"turnaround_hours"?: number,"updated_at"?: string
                   }
                   Relationships: [
-
+                    
                   ]
                 },"payment_intents": {
                   Row: {
@@ -355,7 +355,7 @@ isOneToOne: false
                     "category"?: string | null,"created_at"?: string,"da_score"?: number | null,"domain"?: string,"homepage_url"?: string,"id"?: string,"is_active"?: boolean,"logo_path"?: string | null,"name"?: string,"show_publicly"?: boolean,"sort_order"?: number,"updated_at"?: string
                   }
                   Relationships: [
-
+                    
                   ]
                 },"profiles": {
                   Row: {
@@ -368,7 +368,7 @@ isOneToOne: false
                     "avatar_url"?: string | null,"created_at"?: string,"email"?: string,"full_name"?: string,"id"?: string,"is_active"?: boolean,"phone"?: string | null,"role"?: Database["public"]['Enums']["app_role"],"updated_at"?: string
                   }
                   Relationships: [
-
+                    
                   ]
                 },"provider_usage": {
                   Row: {
@@ -381,7 +381,7 @@ isOneToOne: false
                     "calls"?: number,"daily_quota"?: number | null,"day"?: string,"model"?: string,"provider"?: string
                   }
                   Relationships: [
-
+                    
                   ]
                 },"refunds": {
                   Row: {
@@ -469,7 +469,7 @@ isOneToOne: false
                     "count"?: number,"day"?: string,"key"?: string,"scope"?: string
                   }
                   Relationships: [
-
+                    
                   ]
                 },"webhook_events": {
                   Row: {
@@ -482,7 +482,7 @@ isOneToOne: false
                     "error"?: string | null,"event_id"?: string,"event_type"?: string,"payload"?: NonNullable<Json>,"processed_at"?: string | null,"received_at"?: string
                   }
                   Relationships: [
-
+                    
                   ]
                 }
           }
@@ -585,6 +585,50 @@ isOneToOne: false
 { Args: { "p_id": string,"p_result": Json }; Returns: undefined
                            },
 "svc_confirm_free_order":
+{ Args: { "p_order_id": string,"p_package_snapshot": Json }; Returns: {
+              "amount_minor": number | null,
+"assigned_to": string | null,
+"attention_reason": string | null,
+"body": string,
+"changes_requested_reason": string | null,
+"checkout_started_at": string | null,
+"claimed_at": string | null,
+"created_at": string,
+"currency": string | null,
+"current_intent_id": string | null,
+"customer_email": string | null,
+"customer_name": string | null,
+"customer_phone": string | null,
+"deadline_at": string | null,
+"deadline_warned_at": string | null,
+"declaration_accepted_at": string | null,
+"delay_notified_at": string | null,
+"feature_consent": boolean,
+"headline": string,
+"id": string,
+"instagram_handle": string | null,
+"needs_attention": boolean,
+"order_number": string,
+"package_id": string,
+"package_snapshot": Json | null,
+"paid_at": string | null,
+"paid_payment_id": string | null,
+"published_at": string | null,
+"rejection_reason": string | null,
+"report_path": string | null,
+"report_status": Database["public"]['Enums']["report_status"],
+"report_version": number,
+"status": Database["public"]['Enums']["order_status"],
+"updated_at": string,
+"user_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "orders"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"svc_confirm_link_order":
 { Args: { "p_order_id": string,"p_package_snapshot": Json }; Returns: {
               "amount_minor": number | null,
 "assigned_to": string | null,
@@ -808,3 +852,4 @@ export const Constants = {
           }
         }
 } as const
+

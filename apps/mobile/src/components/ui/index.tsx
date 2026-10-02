@@ -268,6 +268,7 @@ export function ErrorText({ children }: { children?: string | null }) {
 export function ActionButton({
   title,
   icon,
+  leading,
   loading,
   disabled,
   variant = 'default',
@@ -277,6 +278,8 @@ export function ActionButton({
 }: Omit<ButtonProps, 'children'> & {
   title: string;
   icon?: LucideIcon;
+  /** shown before the title, e.g. a brand mark */
+  leading?: ReactNode;
   loading?: boolean;
 }) {
   const light = variant === 'default' || variant === 'accent' || variant === 'destructive';
@@ -292,6 +295,7 @@ export function ActionButton({
         <ActivityIndicator color={light ? '#ffffff' : COLORS.ink} />
       ) : (
         <>
+          {leading}
           <Text>{title}</Text>
           {icon ? <Icon as={icon} size={16} /> : null}
         </>

@@ -33,9 +33,15 @@ const TEXT_MAX = 10_000;
 
 /** The steps the pipeline runs for each kind of input (LLD §11.2), shown while it works. */
 const STEPS: Record<Mode, string[]> = {
-  text: ['claim_extraction', 'google_fact_check', 'gemini_search', 'gdelt', 'llm_judge'],
-  url: ['fetch_url', 'rdap', 'claim_extraction', 'google_fact_check', 'gemini_search', 'llm_judge'],
-  image: ['ocr', 'claim_extraction', 'google_fact_check', 'gemini_search', 'llm_judge'],
+  text: [
+    'claim_extraction',
+    'google_fact_check',
+    'fact_checker_search',
+    'google_news',
+    'llm_judge',
+  ],
+  url: ['fetch_url', 'rdap', 'claim_extraction', 'google_fact_check', 'google_news', 'llm_judge'],
+  image: ['ocr', 'claim_extraction', 'google_fact_check', 'google_news', 'llm_judge'],
 };
 
 export function FactChecker({

@@ -5,7 +5,7 @@ import type { Tables } from '@prapp/db-types';
 import { Button, ErrorText, Field, Input } from '@/components/ui';
 import { useStaffAction } from '@/hooks/use-staff-action';
 import { prepareImage } from '@/lib/images';
-import { createBrowserSupabase } from '@/lib/supabase/browser';
+import { adminApi } from '@/lib/admin/api';
 
 type Story = Tables<'showcase_stories'>;
 
@@ -17,7 +17,6 @@ export function ShowcaseEditor({
   supabaseUrl: string;
 }) {
   const action = useStaffAction();
-  const db = createBrowserSupabase();
   const [title, setTitle] = useState('');
   const [portalName, setPortalName] = useState('');
   const [url, setUrl] = useState('https://');
@@ -25,31 +24,22 @@ export function ShowcaseEditor({
 
   async function add() {
     await action.run('add', async () => {
-      const { data: me } = await db.auth.getUser();
-      const ins = await db
-        .from('showcase_stories')
-        .insert({
+      const ins = await adminApi.records('showcase_stories', 'insert', {
+        values: {
           title: title.trim(),
           portal_name: portalName.trim(),
           url: url.trim(),
           sort_order: (stories.at(-1)?.sort_order ?? 0) + 1,
-          created_by: me.user?.id ?? null,
-        })
-        .select('id')
-        .single();
-      if (ins.error) return ins;
-      if (file) {
+        },
+      });
+      const id = String(ins.rows[0]?.id ?? '');
+      if (file && id) {
         const img = await prepareImage(file);
-        const path = `showcase/${ins.data.id}.jpg`;
-        const up = await db.storage
-          .from('public-assets')
-          .upload(path, img.file, { upsert: true, contentType: img.mimeType });
-        if (up.error) return { error: { message: up.error.message } };
-        const u = await db
-          .from('showcase_stories')
-          .update({ image_path: path })
-          .eq('id', ins.data.id);
-        if (u.error) return u;
+        const { path } = await adminApi.upload(img.file, 'showcase', id);
+        await adminApi.records('showcase_stories', 'update', {
+          match: { id },
+          values: { image_path: path },
+        });
       }
       setTitle('');
       setPortalName('');
@@ -64,15 +54,14 @@ export function ShowcaseEditor({
     const b = stories[i + dir];
     if (!a || !b) return;
     void action.run('move', async () => {
-      const r1 = await db
-        .from('showcase_stories')
-        .update({ sort_order: b.sort_order })
-        .eq('id', a.id);
-      if (r1.error) return r1;
-      return db
-        .from('showcase_stories')
-        .update({ sort_order: a.sort_order === b.sort_order ? a.sort_order + dir : a.sort_order })
-        .eq('id', b.id);
+      await adminApi.records('showcase_stories', 'update', {
+        match: { id: a.id },
+        values: { sort_order: b.sort_order },
+      });
+      return adminApi.records('showcase_stories', 'update', {
+        match: { id: b.id },
+        values: { sort_order: a.sort_order === b.sort_order ? a.sort_order + dir : a.sort_order },
+      });
     });
   }
 
@@ -132,10 +121,10 @@ export function ShowcaseEditor({
                 checked={s.is_visible}
                 onChange={(e) =>
                   void action.run('vis', () =>
-                    db
-                      .from('showcase_stories')
-                      .update({ is_visible: e.target.checked })
-                      .eq('id', s.id),
+                    adminApi.records('showcase_stories', 'update', {
+                      match: { id: s.id },
+                      values: { is_visible: e.target.checked },
+                    }),
                   )
                 }
               />
@@ -163,8 +152,8 @@ export function ShowcaseEditor({
               onClick={() => {
                 if (!confirm('Remove this story?')) return;
                 void action.run('del', async () => {
-                  if (s.image_path) await db.storage.from('public-assets').remove([s.image_path]);
-                  return db.from('showcase_stories').delete().eq('id', s.id);
+                  if (s.image_path) await adminApi.removeUpload(s.image_path).catch(() => {});
+                  return adminApi.records('showcase_stories', 'delete', { match: { id: s.id } });
                 });
               }}
             >

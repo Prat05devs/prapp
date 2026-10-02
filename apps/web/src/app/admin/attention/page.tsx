@@ -10,6 +10,8 @@ const REASONS: Record<string, string> = {
   partial_delivery_refund_due: 'Published partially: partial refund due',
   deadline_missed: 'Deadline missed',
   dispute_opened: 'Chargeback / dispute opened',
+  verify_payment_link:
+    'Paid via razorpay.me: find the payment (order number in the note) in the Razorpay dashboard, then clear',
 };
 
 export default async function AttentionPage() {

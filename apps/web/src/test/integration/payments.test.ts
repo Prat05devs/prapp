@@ -152,6 +152,39 @@ describe('free checkout (PAYMENTS_MODE=free, testing phase)', () => {
   });
 });
 
+describe('payment link checkout (PAYMENTS_MODE=link, first build)', () => {
+  const link = (paymentUrl: string | null = 'https://razorpay.me/@newsvio') =>
+    startCheckout({ ...deps(), gateway: undefined, mode: 'link', paymentUrl }, orderId, 'web');
+
+  it('confirms at the package price, flags it for an admin and returns the payment page', async () => {
+    expect(await link()).toEqual({
+      confirmed: true,
+      amountMinor: 49900,
+      currency: 'INR',
+      paymentUrl: 'https://razorpay.me/@newsvio',
+    });
+    expect(gw.calls).toHaveLength(0);
+    const order = await orderRow(orderId);
+    expect(order).toMatchObject({
+      status: 'paid',
+      amount_minor: 49900,
+      needs_attention: true,
+      attention_reason: 'verify_payment_link',
+    });
+    expect(await paymentsOf(orderId)).toHaveLength(0);
+    const { data: notes } = await service
+      .from('notifications')
+      .select('type, title')
+      .eq('user_id', user.id);
+    expect(notes).toContainEqual({ type: 'order_paid', title: 'Order received' });
+  });
+
+  it('refuses to confirm without a configured payment page', async () => {
+    await expect(link(null)).rejects.toMatchObject({ code: 'internal_error' });
+    expect((await orderRow(orderId)).status).toBe('draft');
+  });
+});
+
 describe('callback (LLD §9.6)', () => {
   it('marks paid after verifying the signature and fetching the payment', async () => {
     const { checkoutUrl, razorpayOrderId } = await checkout();
@@ -166,10 +199,14 @@ describe('callback (LLD §9.6)', () => {
     expect(order.status).toBe('paid');
     expect(order.deadline_at).not.toBeNull();
     const placements = await placementsOf(orderId);
-    expect(placements.map((x) => x.channel).sort()).toEqual(['instagram', 'portal', 'portal']);
+    // Story Package: 5 portal slots + 1 Instagram post
+    expect(placements.map((x) => x.channel).sort()).toEqual([
+      'instagram',
+      ...Array<string>(5).fill('portal'),
+    ]);
   });
 
-  it('redirects the app to prapp://payment-result', async () => {
+  it('redirects the app to newsvio://payment-result', async () => {
     const { checkoutUrl, razorpayOrderId } = await checkout('app');
     const p = gw.pay(razorpayOrderId);
     const target = await handlePaymentCallback(
@@ -177,7 +214,7 @@ describe('callback (LLD §9.6)', () => {
       checkoutFields(checkoutUrl),
       successForm(razorpayOrderId, p.id),
     );
-    expect(target).toBe(`prapp://payment-result?status=success&order=${orderId}`);
+    expect(target).toBe(`newsvio://payment-result?status=success&order=${orderId}`);
   });
 
   it('row 10: captures an authorized payment', async () => {
@@ -246,7 +283,7 @@ describe('webhooks (LLD §9.7)', () => {
     expect(first.body).toBe('ok');
     expect(again.body).toBe('duplicate');
     expect(await paymentsOf(orderId)).toHaveLength(1);
-    expect(await placementsOf(orderId)).toHaveLength(3);
+    expect(await placementsOf(orderId)).toHaveLength(6);
   });
 
   it('rejects a bad signature', async () => {

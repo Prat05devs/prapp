@@ -4,13 +4,14 @@ import type { Evidence, ExtractedClaims, LLM, WebSearch } from './providers/type
 import { AllProvidersExhaustedError, LlmRouter, type QuotaStore } from './router.ts';
 import { TIER_RANK, tierFor, type TrustedSources } from './sources.ts';
 import { fetchArticle } from './tools/article.ts';
-import { gdeltCoverage } from './tools/gdelt.ts';
+import { gdeltCoverage, keywordQuery } from './tools/gdelt.ts';
 import {
   isLikelySameClaim,
   searchClaims,
   searchImage,
   type ExistingFactCheck,
 } from './tools/google-fact-check.ts';
+import { searchFactCheckers, searchNews, type NewsItem } from './tools/google-news.ts';
 import { isAlive } from './tools/http.ts';
 import { domainAgeDays } from './tools/rdap.ts';
 import { wikipediaContext } from './tools/wikipedia.ts';
@@ -47,7 +48,7 @@ export interface PipelineDeps {
 }
 
 const GEMINI_THROTTLE_RATIO = 0.8;
-const MAX_EVIDENCE = 8;
+const MAX_EVIDENCE = 10;
 
 class Recorder {
   runs: ToolRun[] = [];
@@ -139,6 +140,27 @@ function toSource(url: string, trusted: TrustedSources, extra: Partial<SourceOut
     publishedAt: null,
     ...extra,
   };
+}
+
+/** English query first, then one in the claim's language; keyword fallback without an LLM. */
+function claimQueries(
+  claim: { text: string; queries?: string[] },
+  language: string,
+): { q: string; lang: string }[] {
+  const given = claim.queries ?? [];
+  const out: { q: string; lang: string }[] = [];
+  if (given[0]) out.push({ q: given[0], lang: 'en' });
+  if (given[1] && language !== 'en') out.push({ q: given[1], lang: language });
+  if (!out.length) out.push({ q: keywordQuery(claim.text, 8), lang: language });
+  return out.filter((x) => x.q.trim().length > 2);
+}
+
+function titleKey(title: string | null): string {
+  return (title ?? '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .slice(0, 80);
 }
 
 export async function runFactCheck(
@@ -316,7 +338,9 @@ export async function runFactCheck(
     }
     const strongMatch = rated.length > 0;
 
-    // 4. Evidence (in parallel). Skip web search if an existing fact check already matched.
+    // 4. Evidence (in parallel). News search is free and always runs; the generic web search
+    //    is skipped when an existing fact check already matched.
+    const queries = claimQueries(claim, language);
     const searchWeb = async (): Promise<Evidence[]> => {
       for (const s of deps.searches) {
         if (s.provider === 'gemini_search' && !(await deps.quota.use('gemini', s.model ?? ''))) {
@@ -324,7 +348,7 @@ export async function runFactCheck(
           continue;
         }
         const tool: ToolName = s.provider === 'gemini_search' ? 'gemini_search' : 'searxng';
-        const found = await rec.track(tool, () => s.find(claim.text, language), {
+        const found = await rec.track(tool, () => s.find(queries[0]?.q ?? claim.text, language), {
           model: s.model,
           summary: (ev) => `${ev.length} source(s) cited`,
         });
@@ -332,12 +356,38 @@ export async function runFactCheck(
       }
       return [];
     };
+    // One query at a time per search: bursts from a shared cloud address get throttled.
+    const searchAllNews = async (): Promise<NewsItem[]> => {
+      const out: NewsItem[] = [];
+      for (const x of queries)
+        out.push(...(await searchNews(x.q, { language: x.lang, fetchImpl: f, max: 10 })));
+      return out;
+    };
+    const searchAllFactCheckers = async (): Promise<NewsItem[]> => {
+      const out: NewsItem[] = [];
+      for (const x of queries)
+        out.push(...(await searchFactCheckers(x.q, { language: x.lang, fetchImpl: f })));
+      return out.map((e) => ({ ...e, isFactCheck: true }));
+    };
     if (strongMatch && index === 0)
       rec.skip('gemini_search', 'an existing fact check already covers this claim');
-    const [web, gdelt] = await Promise.all([
-      !strongMatch && searchAllowed ? searchWeb() : Promise.resolve([] as Evidence[]),
+    const [web, news, checkers, gdelt] = await Promise.all([
+      !strongMatch && searchAllowed && deps.searches.length
+        ? searchWeb()
+        : Promise.resolve([] as Evidence[]),
       rec
-        .track('gdelt', () => gdeltCoverage(claim.text, f), {
+        .track('google_news', searchAllNews, {
+          summary: (n) =>
+            `${n.length} news report(s) from ${new Set(n.map((x) => x.domain)).size} outlet(s)`,
+        })
+        .then((n) => n ?? []),
+      rec
+        .track('fact_checker_search', searchAllFactCheckers, {
+          summary: (n) => `${n.length} fact-check article(s)`,
+        })
+        .then((n) => n ?? []),
+      rec
+        .track('gdelt', () => gdeltCoverage(queries[0]?.q ?? claim.text, f), {
           summary: (c) => `${c.length} article(s) in the last 30 days`,
         })
         .then((c) =>
@@ -346,39 +396,63 @@ export async function runFactCheck(
             title: a.title,
             snippet: null,
             domain: a.domain,
+            publishedAt: a.seenAt,
           })),
         ),
     ]);
     const wiki = await rec.track(
       'wikipedia',
-      () => wikipediaContext(claim.text, { lang: language === 'hi' ? 'hi' : 'en', fetchImpl: f }),
+      () => wikipediaContext(queries[0]?.q ?? claim.text, { lang: 'en', fetchImpl: f }),
       { summary: (w) => w.map((x) => x.title).join(', ') || 'no article' },
     );
 
-    // 5. Score: trusted tiers first, drop dead links; the LLM may cite only these URLs.
+    // 5. Score: fact-check articles first, then trusted tiers, then recency. One item per
+    //    headline; the LLM may cite only these URLs.
     const seen = new Set(sources.map((s) => s.url));
+    const seenTitles = new Set<string>();
     const unique: Evidence[] = [];
-    for (const e of [...web, ...gdelt]) {
-      if (!seen.has(e.url)) {
-        seen.add(e.url);
-        unique.push(e);
-      }
+    for (const e of [...checkers, ...news, ...web, ...gdelt]) {
+      const key = titleKey(e.title);
+      if (seen.has(e.url) || (key && seenTitles.has(key))) continue;
+      seen.add(e.url);
+      if (key) seenTitles.add(key);
+      unique.push({ ...e, tier: tierFor(e.domain, deps.trusted) });
     }
+    const time = (e: Evidence) => (e.publishedAt ? Date.parse(e.publishedAt) || 0 : 0);
     const candidates = unique
       .sort(
         (a, b) =>
-          TIER_RANK[tierFor(b.domain, deps.trusted)] - TIER_RANK[tierFor(a.domain, deps.trusted)],
+          Number(Boolean(b.isFactCheck)) - Number(Boolean(a.isFactCheck)) ||
+          TIER_RANK[b.tier ?? 'unknown'] - TIER_RANK[a.tier ?? 'unknown'] ||
+          time(b) - time(a),
       )
       .slice(0, MAX_EVIDENCE + 4);
+    // News items are fresh Google News redirects; only check other links are alive.
+    const fromNews = new Set([...news, ...checkers].map((e) => e.url));
     const alive = await Promise.all(
-      candidates.map(async (e) => ((await isAlive(e.url, f)) ? e : null)),
+      candidates.map(async (e) => (fromNews.has(e.url) || (await isAlive(e.url, f)) ? e : null)),
     );
     const evidence = alive.filter((e): e is Evidence => e !== null).slice(0, MAX_EVIDENCE);
+    // Encyclopedic background helps with settled, older facts that headlines summarise loosely.
+    for (const w of wiki ?? []) {
+      if (!evidence.some((e) => e.url === w.url)) {
+        evidence.push({
+          url: w.url,
+          title: w.title,
+          snippet: w.extract,
+          domain: domainOf(w.url) ?? 'wikipedia.org',
+          publisher: 'Wikipedia',
+          tier: tierFor(domainOf(w.url), deps.trusted),
+        });
+      }
+    }
 
     // 6. Verdict
     let verdict: FcVerdict = 'unverified';
     let confidence: FcConfidence = 'low';
     let explanation: string | null = null;
+    /** the judge's own confidence, before the fallback-model adjustment */
+    let judged: FcConfidence = 'low';
     const stances = new Map<string, Stance>();
 
     if (strongMatch) {
@@ -399,6 +473,7 @@ export async function runFactCheck(
           `${r.value.verdict} (${r.value.confidence})`,
         );
         verdict = r.value.verdict;
+        judged = r.value.confidence;
         confidence = r.llm.isFallback ? lowerConfidence(r.value.confidence) : r.value.confidence;
         explanation = r.value.explanation || null;
         for (const s of r.value.stances) stances.set(s.url, s.stance);
@@ -407,18 +482,30 @@ export async function runFactCheck(
         rec.add('llm_judge', 'quota_exhausted', now().toISOString(), null, 'no model available');
       }
     }
-    const reliable = evidence.some((e) => tierFor(e.domain, deps.trusted) !== 'unknown');
-    if (!strongMatch && (!reliable || confidence === 'low')) {
-      // Never a verdict without tier1/tier2 evidence (golden rule 9, LLD §11.2 step 6)
+    // Never a verdict without tier1/tier2 evidence that the judge actually relied on
+    // (golden rule 9, LLD §11.2 step 6).
+    const relied = evidence.filter(
+      (e) =>
+        e.tier !== 'unknown' &&
+        (stances.get(e.url) === 'supports' || stances.get(e.url) === 'refutes'),
+    );
+    const reliedPublishers = new Set(relied.map((e) => e.domain)).size;
+    if (!strongMatch && (reliedPublishers === 0 || judged === 'low')) {
       verdict = 'unverified';
       confidence = 'low';
+    } else if (!strongMatch && confidence === 'high' && reliedPublishers < 2) {
+      confidence = 'medium';
     }
 
     for (const e of evidence) {
       sources.push(
         toSource(e.url, deps.trusted, {
+          domain: e.domain,
+          tier: e.tier ?? tierFor(e.domain, deps.trusted),
           title: e.title,
-          stance: stances.get(e.url) ?? (web.includes(e) ? null : 'context'),
+          publisher: e.publisher ?? null,
+          publishedAt: e.publishedAt ?? null,
+          stance: stances.get(e.url) ?? 'context',
         }),
       );
     }
@@ -451,8 +538,11 @@ export async function runFactCheck(
 
   const verdict = overallVerdict(claims.map((c) => c.verdict));
   const worst = claims.find((c) => c.verdict === verdict) ?? claims[0];
+  // Reduced only when no claim got an answer; a model failing on a later claim must not
+  // throw away verdicts already reached for the others.
   const reduced =
-    llmUnavailable && !claims.some((c) => c.sources.some((s) => s.isExistingFactCheck));
+    llmUnavailable &&
+    !claims.some((c) => c.verdict !== 'unverified' || c.sources.some((s) => s.isExistingFactCheck));
   const confidence =
     verdict === 'unverified'
       ? 'low'

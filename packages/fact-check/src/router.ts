@@ -1,4 +1,4 @@
-import { QuotaExhaustedError, type LLM } from './providers/types.ts';
+import { QuotaExhaustedError, TransientLlmError, type LLM } from './providers/types.ts';
 
 /** Daily-quota bookkeeping (backed by public.provider_usage in the worker). */
 export interface QuotaStore {
@@ -15,9 +15,15 @@ export class AllProvidersExhaustedError extends Error {
   }
 }
 
+/** Longest wait for a transient refusal before falling back to the next model. */
+const MAX_RETRY_WAIT_MS = 12_000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 /**
  * Picks the first LLM with quota (LLD §11.3: Gemini → Groq → Cloudflare → OpenRouter).
- * A provider that answers 429 or fails is skipped for the rest of this job.
+ * A transient refusal (rate limit per minute, overload, timeout) is retried once on the same
+ * model after its suggested wait; anything else skips that model for the rest of this job.
  */
 export class LlmRouter {
   private readonly skipped = new Set<string>();
@@ -41,9 +47,19 @@ export class LlmRouter {
       }
       try {
         return { value: await fn(llm), llm };
-      } catch (e) {
+      } catch (first) {
+        let e = first;
+        if (e instanceof TransientLlmError && e.retryAfterMs <= MAX_RETRY_WAIT_MS) {
+          await sleep(e.retryAfterMs);
+          try {
+            return { value: await fn(llm), llm };
+          } catch (second) {
+            e = second;
+          }
+        }
         lastError = e;
-        this.skipped.add(key);
+        // Rate-limited models get another chance on the next call of this job.
+        if (!(e instanceof TransientLlmError)) this.skipped.add(key);
         if (!(e instanceof QuotaExhaustedError))
           console.warn(`llm ${key} failed`, e instanceof Error ? e.message : e);
       }

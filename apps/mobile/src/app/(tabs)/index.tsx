@@ -1,9 +1,11 @@
 import { router } from 'expo-router';
-import { ArrowRight, Check, ChevronRight, SearchCheck, ShieldCheck } from 'lucide-react-native';
+import { ArrowRight, ChevronRight, ShieldCheck } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { formatMoney } from '@prapp/shared';
+import { PortalWall } from '@/components/portal-wall';
+import { SourceStrip } from '@/components/source-strip';
 import { StatusBadge } from '@/components/status-badge';
-import { ActionButton, Eyebrow, Icon, LivePill, Panel, TabScreen, Text } from '@/components/ui';
+import { ActionButton, Eyebrow, Icon, Panel, TabScreen, Text } from '@/components/ui';
 import { useCatalogue } from '@/hooks/use-catalogue';
 import { useOrders } from '@/hooks/use-orders';
 import { useAuth } from '@/providers/auth-provider';
@@ -34,9 +36,9 @@ export default function HomeScreen() {
       </View>
 
       <Panel tone="subtle" className="gap-4">
-        <LivePill>Free · every answer shows its sources</LivePill>
         <Text variant="p">
-          Check a message, link or screenshot before you share it. We tell you which tools we used.
+          Check a WhatsApp forward, link or screenshot against live news, Indian fact-checkers and
+          official sources, in seconds.
         </Text>
         <ActionButton
           title="Check a forward"
@@ -83,23 +85,10 @@ export default function HomeScreen() {
         </View>
         <Text className="font-display text-headline-lg-mobile text-white">Publish your story</Text>
         <Text className="text-body-md text-white/70">
-          On our news portals and Instagram news page within 24 hours
-          {cheapest ? `, from ${formatMoney(cheapest)} (all taxes included)` : ''}. Published as
+          On 5 high-DA news portals from our network plus 1 Instagram collaboration post, within 24
+          hours{cheapest ? ` for ${formatMoney(cheapest)} (all taxes included)` : ''}. Published as
           sponsored content.
         </Text>
-        {catalogue.data?.portals.length ? (
-          <View className="flex-row flex-wrap gap-2">
-            {catalogue.data.portals.map((p) => (
-              <View
-                key={p.name}
-                className="flex-row items-center gap-1.5 rounded-md border border-white/15 px-2.5 py-1"
-              >
-                <Icon as={Check} size={12} className="text-emerald-soft" />
-                <Text className="font-mono text-code text-white">{p.name}</Text>
-              </View>
-            ))}
-          </View>
-        ) : null}
         <ActionButton
           title="Publish your story"
           variant="accent"
@@ -108,11 +97,24 @@ export default function HomeScreen() {
         />
       </View>
 
-      <View className="flex-row items-center gap-2 self-center">
-        <Icon as={SearchCheck} size={12} className="text-faint" />
-        <Text className="font-mono text-[11px] uppercase text-faint">
-          Checked against public sources
-        </Text>
+      {catalogue.data?.portals.length ? (
+        <View className="gap-3">
+          <Eyebrow>{`Our publishing network · ${catalogue.data.portals.length} portals`}</Eyebrow>
+          <PortalWall portals={catalogue.data.portals} limit={8} />
+          {catalogue.data.portals.length > 8 ? (
+            <ActionButton
+              title={`See all ${catalogue.data.portals.length} portals`}
+              variant="outline"
+              size="default"
+              onPress={() => router.push('/publish')}
+            />
+          ) : null}
+        </View>
+      ) : null}
+
+      <View className="gap-3">
+        <Eyebrow>Every check searches reporting from</Eyebrow>
+        <SourceStrip />
       </View>
     </TabScreen>
   );

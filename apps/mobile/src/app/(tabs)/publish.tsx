@@ -1,6 +1,6 @@
 import { ArrowRight, Info } from 'lucide-react-native';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { FEATURE_CONSENT_TEXT, formatMoney, type OrderContentInput } from '@prapp/shared';
 import { PackagePicker } from '@/components/package-picker';
 import { PublishSteps } from '@/components/publish-steps';
@@ -16,12 +16,14 @@ import {
   TabScreen,
   Text,
 } from '@/components/ui';
+import { PortalWall } from '@/components/portal-wall';
 import { useCatalogue } from '@/hooks/use-catalogue';
 import { useCreateDraft } from '@/hooks/use-order-editor';
 
 // Publish: package → story → (editor) images → review → pay (LLD §13).
 export default function PublishScreen() {
   const catalogue = useCatalogue();
+  const [showNetwork, setShowNetwork] = useState(false);
   const { pending, fieldErrors, error, create } = useCreateDraft();
   const [content, setContent] = useState<OrderContentInput>({
     packageId: '',
@@ -42,14 +44,29 @@ export default function PublishScreen() {
         <PageHeader
           eyebrow="Publish your story"
           title="Get your story published."
-          lede={`Our team posts it on our news portals and Instagram news page within 24 hours of payment.${
-            catalogue.data?.portals.length
-              ? ` Our portals: ${catalogue.data.portals.map((p) => p.name).join(', ')}.`
-              : ''
-          }`}
+          lede="Our editorial team publishes it on 5 high-DA portals from our network, plus an Instagram collaboration post, within 24 hours of payment."
         />
         <PublishSteps current={1} />
       </View>
+
+      {catalogue.data?.portals.length ? (
+        <Panel tone="subtle" className="gap-3">
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setShowNetwork((v) => !v)}
+            className="flex-row items-center justify-between gap-3"
+          >
+            <View className="flex-1 gap-0.5">
+              <Text variant="label">{`Our publishing network: ${catalogue.data.portals.length} portals`}</Text>
+              <Text variant="muted">Our team picks the best 5 for your story.</Text>
+            </View>
+            <Text className="text-label-sm text-emerald-strong">
+              {showNetwork ? 'Hide' : 'Show'}
+            </Text>
+          </Pressable>
+          {showNetwork ? <PortalWall portals={catalogue.data.portals} /> : null}
+        </Panel>
+      ) : null}
 
       <View className="gap-4">
         <StepHeading step="01" title="Your story" />

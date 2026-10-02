@@ -17,6 +17,11 @@ export default async function AdminOrderPage({ params }: PageProps<'/admin/order
   const data = await getAdminOrder(db, id);
   if (!data) notFound();
   const isAdmin = me.role === 'admin';
+  // Editors (content team) get only what they post: name, story, images, Instagram handle.
+  // Contact details are removed here so they never reach the browser.
+  const view: typeof data = isAdmin
+    ? data
+    : { ...data, order: { ...data.order, customer_email: null, customer_phone: null } };
   const [portals, staff, payments, refunds] = await Promise.all([
     activePortals(db),
     isAdmin ? activeStaff(db) : Promise.resolve([]),
@@ -58,7 +63,7 @@ export default async function AdminOrderPage({ params }: PageProps<'/admin/order
   return (
     <Workspace
       me={{ id: me.id, role: me.role }}
-      data={data}
+      data={view}
       portals={portals}
       staff={staff}
       payments={payments.data ?? []}
