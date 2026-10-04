@@ -4,8 +4,8 @@ import { Badge, type BadgeTone } from '@/components/ui';
 const TONES: Record<OrderStatus, BadgeTone> = {
   draft: 'neutral',
   pending_payment: 'warn',
-  paid: 'emerald',
-  in_progress: 'emerald',
+  paid: 'verified',
+  in_progress: 'verified',
   changes_requested: 'warn',
   published: 'ink',
   rejected: 'danger',

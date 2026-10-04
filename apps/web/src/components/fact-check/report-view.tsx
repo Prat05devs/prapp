@@ -9,7 +9,7 @@ import {
 } from '@prapp/shared';
 import { Icon } from '@/components/icon';
 import { Badge, Eyebrow, Notice, type BadgeTone } from '@/components/ui';
-import { VERDICT_COLORS, VERDICT_ICONS } from './verdict-style';
+import { VERDICT_COLORS, VERDICT_ICONS, VERDICT_TINTS } from './verdict-style';
 
 const TIER_LABEL = {
   tier1: 'Official / fact-checker',
@@ -18,25 +18,19 @@ const TIER_LABEL = {
 };
 
 const TIER_TONE: Record<FactCheckSourceView['tier'], BadgeTone> = {
-  tier1: 'emerald',
+  tier1: 'verified',
   tier2: 'neutral',
   unknown: 'neutral',
 };
 
 const STANCE: Record<NonNullable<FactCheckSourceView['stance']>, [string, BadgeTone]> = {
-  supports: ['Supports the claim', 'emerald'],
+  supports: ['Supports the claim', 'verified'],
   refutes: ['Contradicts the claim', 'danger'],
   context: ['Context', 'neutral'],
 };
 
-function SectionTitle({ index, children }: { index: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2">
-      <Eyebrow accent>{index}</Eyebrow>
-      <span className="text-xs text-faint">/</span>
-      <h2 className="font-display text-headline-sm text-ink">{children}</h2>
-    </div>
-  );
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h2 className="font-display text-headline-sm text-ink">{children}</h2>;
 }
 
 /**
@@ -49,16 +43,16 @@ export function ReportView({ report, reportUrl }: { report: FactCheckReport; rep
   const evidence = report.claims.flatMap((c) => c.sources.filter((s) => !s.isExistingFactCheck));
   const gov = report.claims.some((c) => c.isGovernmentRelated);
   const checked = report.toolRuns.filter((t) => t.status === 'ok');
-  let section = 0;
-  const next = () => String(++section).padStart(2, '0');
 
   return (
     <article className="flex flex-col gap-8" lang={report.language ?? undefined}>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-code text-slate uppercase">
-        <span className="text-ink">Report {report.reportId}</span>
-        <span className="text-faint">·</span>
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm text-slate">
+        <span>
+          Report <span className="font-mono text-code text-ink">{report.reportId}</span>
+        </span>
+        <span aria-hidden>·</span>
         <span>Checked {report.checkedAt ? formatIST(report.checkedAt) : '-'}</span>
-      </div>
+      </p>
 
       <div className="flex flex-col gap-3">
         <Eyebrow>The claim</Eyebrow>
@@ -71,7 +65,7 @@ export function ReportView({ report, reportUrl }: { report: FactCheckReport; rep
           </blockquote>
         ))}
         {report.inputUrl ? (
-          <p className="flex items-start gap-2 rounded-lg border border-hairline bg-subtle px-3 py-2 font-mono text-code break-all text-slate">
+          <p className="flex items-start gap-2 rounded-md bg-subtle px-3 py-2 font-mono text-code break-all text-slate">
             <Icon name="link" size={16} className="mt-px" />
             <span>
               {report.inputUrl}
@@ -83,38 +77,35 @@ export function ReportView({ report, reportUrl }: { report: FactCheckReport; rep
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-4 rounded-2xl border border-hairline bg-subtle p-5 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="font-display text-headline-sm text-ink">Verdict</span>
-            <span
-              className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-label-md font-semibold tracking-wide text-white uppercase"
-              style={{ backgroundColor: VERDICT_COLORS[verdict] }}
-            >
-              <Icon name={VERDICT_ICONS[verdict]} size={18} />
-              {FC_VERDICT_LABELS[verdict]}
-            </span>
-          </div>
-          <span className="flex flex-col items-end">
-            <span className="font-display text-headline-sm text-ink capitalize">
-              {report.confidence ?? 'low'}
-            </span>
-            <Eyebrow>Confidence</Eyebrow>
-          </span>
-        </div>
-        {report.summary ? <p className="text-body-lg text-body">{report.summary}</p> : null}
-      </div>
+      <section
+        aria-label="Verdict"
+        className="flex flex-col gap-3 rounded-lg p-5 sm:p-6"
+        style={{ backgroundColor: VERDICT_TINTS[verdict] }}
+      >
+        <p className="text-label-sm text-body">Our verdict</p>
+        <p
+          className="flex items-center gap-2.5 font-display text-headline-md"
+          style={{ color: VERDICT_COLORS[verdict] }}
+        >
+          <Icon name={VERDICT_ICONS[verdict]} size={26} />
+          {FC_VERDICT_LABELS[verdict]}
+        </p>
+        <p className="text-body-sm text-body">
+          Confidence: <span className="font-semibold capitalize">{report.confidence ?? 'low'}</span>
+        </p>
+        {report.summary ? <p className="text-body-lg text-ink">{report.summary}</p> : null}
+      </section>
 
       {existing.length ? (
         <section className="flex flex-col gap-3">
-          <SectionTitle index={next()}>Existing fact checks</SectionTitle>
-          <ul className="flex flex-col divide-y divide-divider rounded-2xl border border-hairline">
+          <SectionTitle>Existing fact checks</SectionTitle>
+          <ul className="flex flex-col divide-y divide-divider border-y border-hairline">
             {existing.map((s) => (
-              <li key={s.url} className="flex flex-wrap items-center gap-3 px-4 py-3">
+              <li key={s.url} className="flex flex-wrap items-center gap-3 py-3">
                 <span className="text-label-md text-ink">{s.publisher ?? s.domain}</span>
                 {s.rating ? <Badge>{s.rating}</Badge> : null}
                 <a
-                  className="ml-auto inline-flex items-center gap-1 text-label-md text-emerald-strong hover:text-emerald-deep"
+                  className="ml-auto inline-flex items-center gap-1 text-label-md text-brand hover:text-brand-deep"
                   href={s.url}
                   target="_blank"
                   rel="noreferrer"
@@ -129,12 +120,12 @@ export function ReportView({ report, reportUrl }: { report: FactCheckReport; rep
 
       {evidence.length ? (
         <section className="flex flex-col gap-3">
-          <SectionTitle index={next()}>Evidence</SectionTitle>
-          <ul className="flex flex-col divide-y divide-divider rounded-2xl border border-hairline">
+          <SectionTitle>Evidence</SectionTitle>
+          <ul className="flex flex-col divide-y divide-divider border-y border-hairline">
             {evidence.map((s) => (
-              <li key={s.url} className="flex flex-col gap-2 px-4 py-3.5">
+              <li key={s.url} className="flex flex-col gap-2 py-3.5">
                 <a
-                  className="group inline-flex items-start gap-1 text-label-md text-ink hover:text-emerald-strong"
+                  className="group inline-flex items-start gap-1 text-label-md text-ink hover:text-brand"
                   href={s.url}
                   target="_blank"
                   rel="noreferrer"
@@ -156,26 +147,27 @@ export function ReportView({ report, reportUrl }: { report: FactCheckReport; rep
       ) : null}
 
       <section className="flex flex-col gap-3">
-        <SectionTitle index={next()}>How we checked this</SectionTitle>
-        <ol className="grid gap-2 sm:grid-cols-2">
+        <SectionTitle>How we checked this</SectionTitle>
+        <p className="text-body-sm text-slate">
+          Each step ran on this report. The verdict comes from what these sources say, not from our
+          opinion.
+        </p>
+        <ul className="grid gap-x-6 sm:grid-cols-2">
           {checked.map((t, i) => (
             <li
               key={`${t.tool}-${i}`}
-              className="flex items-start gap-3 rounded-xl border border-hairline bg-canvas p-3.5"
+              className="flex items-start gap-2.5 border-b border-divider py-2.5 text-body-sm text-body"
             >
-              <span className="mt-0.5 font-mono text-code text-faint">
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              <span className="flex-1 text-body-sm text-body">
+              <Icon name="check" size={16} className="mt-0.5 text-verified" />
+              <span className="flex-1">
                 {FC_TOOL_LABELS[t.tool] ?? t.tool}
                 {t.model && ['llm_judge', 'claim_extraction', 'ocr'].includes(t.tool) ? (
-                  <span className="font-mono text-code text-slate"> ({t.model})</span>
+                  <span className="text-slate"> ({t.model})</span>
                 ) : null}
               </span>
-              <Icon name="check_circle" size={16} className="mt-0.5 text-emerald" />
             </li>
           ))}
-        </ol>
+        </ul>
         {report.mode === 'reduced' ? (
           <Notice tone="warn">
             Reduced check: our AI tools were at capacity. Full check pending. This report will
@@ -194,8 +186,9 @@ export function ReportView({ report, reportUrl }: { report: FactCheckReport; rep
 
       <div className="flex flex-col gap-2 border-t border-hairline pt-5">
         <p className="text-body-sm text-slate">{FC_DISCLAIMER}</p>
-        <p className="flex items-center gap-2 font-mono text-code break-all text-slate">
-          <Icon name="verified_user" size={16} /> Verify this report: {reportUrl}
+        <p className="flex items-center gap-2 text-body-sm break-all text-slate">
+          <Icon name="verified_user" size={16} /> Verify this report at{' '}
+          <span className="font-mono text-code text-ink">{reportUrl}</span>
         </p>
       </div>
     </article>

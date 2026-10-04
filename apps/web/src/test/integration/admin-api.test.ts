@@ -107,4 +107,35 @@ describe('admin records API (admin-managed tables)', () => {
     );
     expect(removed.status).toBe(200);
   });
+
+  it('lets editors manage the showcase (LLD §10) but nothing admin-only', async () => {
+    const editor = await createUser({ role: 'editor' });
+    const added = await records(
+      post('http://x/api/admin/records/showcase_stories', editor.accessToken, {
+        op: 'insert',
+        values: {
+          title: 'Doon story',
+          portal_name: 'Doon Times',
+          url: 'https://doontimes.in/story',
+          sort_order: 1,
+          is_visible: false,
+        },
+      }),
+      table('showcase_stories'),
+    );
+    expect(added.status).toBe(200);
+    const { rows } = (await added.json()) as { rows: { id: string; created_by: string }[] };
+    expect(rows[0]?.created_by).toBe(editor.id);
+    await service.from('showcase_stories').delete().eq('id', rows[0]!.id);
+
+    const pkg = await records(
+      post('http://x/api/admin/records/packages', editor.accessToken, {
+        op: 'update',
+        match: { id: editor.id },
+        values: { price_inr_paise: 100 },
+      }),
+      table('packages'),
+    );
+    expect(pkg.status).toBe(403);
+  });
 });

@@ -19,11 +19,6 @@ const razorpaySchema = z.object({
 
 const cronSchema = z.object({ CRON_SECRET: z.string().min(16) });
 
-const emailSchema = z.object({
-  EMAIL_API_KEY: z.string().min(1),
-  EMAIL_FROM: z.string().min(3),
-});
-
 function lazy<T extends z.ZodType>(schema: T): () => z.infer<T> {
   let cached: z.infer<T> | undefined;
   return () => (cached ??= parseEnv(schema, process.env));
@@ -51,4 +46,3 @@ export function supabaseServerEnv() {
 }
 export const razorpayEnv = lazy(razorpaySchema);
 export const cronEnv = lazy(cronSchema);
-export const emailEnv = lazy(emailSchema);

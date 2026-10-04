@@ -5,10 +5,44 @@ import { formatDateIST, formatMoney, type Currency } from '@prapp/shared';
 import { StatusBadge } from '@/components/status-badge';
 import { ActionButton, Icon, PageHeader, TabScreen, Text } from '@/components/ui';
 import { useOrders } from '@/hooks/use-orders';
+import { SIGN_IN_REASONS, promptSignIn } from '@/lib/sign-in-prompt';
+import { useAuth } from '@/providers/auth-provider';
 
 export default function OrdersScreen() {
+  const { session } = useAuth();
   const { data, loading, refresh, error } = useOrders();
   const orders = data ?? [];
+
+  if (!session) {
+    return (
+      <TabScreen>
+        <PageHeader title="Your orders" lede={SIGN_IN_REASONS.orders} />
+        <View className="gap-3">
+          <ActionButton
+            title="Log in"
+            variant="accent"
+            icon={ArrowRight}
+            onPress={() => promptSignIn({ mode: 'login', reason: 'orders' })}
+          />
+          <ActionButton
+            title="Create an account"
+            variant="outline"
+            onPress={() => promptSignIn({ mode: 'signup', reason: 'orders' })}
+          />
+        </View>
+        <Text variant="muted">
+          You can write your story without an account. We&apos;ll ask you to log in when you save it
+          to add photos and pay.
+        </Text>
+        <ActionButton
+          title="Publish your story"
+          variant="ghost"
+          icon={Pencil}
+          onPress={() => router.push('/publish')}
+        />
+      </TabScreen>
+    );
+  }
 
   return (
     <TabScreen refreshing={loading} onRefresh={() => void refresh()}>
@@ -17,8 +51,8 @@ export default function OrdersScreen() {
         title="Your orders"
       />
       {!loading && !orders.length ? (
-        <View className="items-center gap-4 rounded-2xl border border-dashed border-hairline bg-subtle px-6 py-12">
-          <View className="h-12 w-12 items-center justify-center rounded-full border border-hairline bg-canvas">
+        <View className="items-center gap-4 rounded-xl border border-dashed border-input bg-paper px-6 py-12">
+          <View className="h-12 w-12 items-center justify-center rounded-full bg-subtle">
             <Icon as={Inbox} size={20} className="text-slate" />
           </View>
           <View className="items-center gap-1">
@@ -41,17 +75,15 @@ export default function OrdersScreen() {
               key={o.id}
               accessibilityRole="button"
               onPress={() => router.push({ pathname: '/orders/[id]', params: { id: o.id } })}
-              className="gap-3 rounded-2xl border border-hairline bg-canvas p-5 active:border-ink"
+              className="gap-2 rounded-lg border border-hairline bg-paper p-4 active:border-ink"
             >
               <View className="flex-row items-center justify-between gap-3">
-                <View className="rounded-md bg-elevated px-2 py-0.5">
-                  <Text className="font-mono text-code text-ink">{o.orderNumber}</Text>
-                </View>
+                <Text className="font-mono text-code text-slate">{o.orderNumber}</Text>
                 <StatusBadge status={o.status} />
               </View>
               <Text variant="label">{o.headline || 'Untitled story'}</Text>
               <View className="flex-row items-center justify-between">
-                <Text className="font-mono text-code text-slate">
+                <Text className="text-body-sm text-slate">
                   {formatDateIST(o.createdAt)}
                   {o.amountMinor
                     ? ` · ${formatMoney(o.amountMinor, (o.currency ?? 'INR') as Currency)}`

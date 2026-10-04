@@ -23,19 +23,19 @@ export function OrderTimeline({ status }: { status: string }) {
             <View
               className={`h-5 w-5 items-center justify-center rounded-full ${
                 done
-                  ? 'bg-emerald-strong'
+                  ? 'bg-verified'
                   : current
                     ? status === 'changes_requested'
                       ? 'bg-warn'
-                      : 'bg-ink'
-                    : 'border border-hairline bg-canvas'
+                      : 'bg-brand'
+                    : 'border border-input bg-paper'
               }`}
             >
               {done ? <Icon as={Check} size={11} className="text-white" /> : null}
               {current ? <View className="h-1.5 w-1.5 rounded-full bg-white" /> : null}
             </View>
             <Text
-              className={`text-label-md ${done || current ? 'font-sans-medium text-ink' : 'text-faint'}`}
+              className={`text-label-md ${done || current ? 'font-sans-semibold text-ink' : 'text-slate'}`}
             >
               {label}
             </Text>

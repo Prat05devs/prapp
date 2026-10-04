@@ -7,8 +7,7 @@ const size = (px, lh, trackingEm = 0) => [
 ];
 
 /**
- * Stitch design system ("Obsidian & Emerald Minimalist") for NativeWind + React Native
- * Reusables. Token names match apps/web/src/app/globals.css so classes read the same
+ * NewsVio design system (docs/DESIGN.md) for NativeWind + React Native Reusables. Token names match apps/web/src/app/globals.css so classes read the same
  * on both apps.
  * @type {import('tailwindcss').Config}
  */
@@ -53,53 +52,56 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // Stitch tokens
-        canvas: '#ffffff',
-        subtle: '#f8f9fa',
-        elevated: '#f4f5f6',
-        hairline: '#e5e7eb',
-        divider: '#eeeeee',
-        ink: { DEFAULT: '#111111', soft: '#18181b' },
-        body: '#444748',
-        slate: '#71717a',
-        faint: '#a1a1aa',
-        emerald: {
-          DEFAULT: '#10b981',
-          strong: '#006c49',
-          deep: '#065f46',
-          tint: '#ecfdf5',
-          soft: '#6cf8bb',
-        },
-        danger: { DEFAULT: '#ba1a1a', tint: '#ffdad6', deep: '#93000a' },
-        warn: { DEFAULT: '#b45309', tint: '#fef3c7', deep: '#92400e' },
+        // NewsVio tokens (docs/DESIGN.md), same names and values as apps/web globals.css
+        canvas: '#fbfaf7',
+        paper: '#ffffff',
+        subtle: '#f5f3ee',
+        elevated: '#ece8df',
+        hairline: '#e2ddd2',
+        // Same colour as hairline, for single-edge borders: `border-hairline` also sets a
+        // hairline width on all four sides (borderWidth.hairline below).
+        rule: '#e2ddd2',
+        divider: '#ebe7de',
+        ink: { DEFAULT: '#17140f', soft: '#2a261f' },
+        body: '#3b3731',
+        slate: '#6b655b',
+        faint: '#8f8879',
+        brand: { DEFAULT: '#1d3d63', deep: '#132a45', tint: '#e9eef4', soft: '#b9c8da' },
+        verified: { DEFAULT: '#1e6b45', deep: '#154d32', tint: '#e5f0e9' },
+        danger: { DEFAULT: '#b3261e', tint: '#f7e2df', deep: '#8a1c16' },
+        warn: { DEFAULT: '#8a5300', tint: '#f6ead2', deep: '#6b4000' },
       },
       // One family per weight: custom fonts on React Native don't synthesise weights.
       fontFamily: {
-        sans: ['Inter_400Regular'],
-        'sans-medium': ['Inter_500Medium'],
-        'sans-semibold': ['Inter_600SemiBold'],
-        display: ['Manrope_600SemiBold'],
-        'display-bold': ['Manrope_700Bold'],
-        mono: ['JetBrainsMono_500Medium'],
+        sans: ['PublicSans_400Regular'],
+        'sans-medium': ['PublicSans_500Medium'],
+        'sans-semibold': ['PublicSans_600SemiBold'],
+        display: ['SourceSerif4_600SemiBold'],
+        'display-bold': ['SourceSerif4_700Bold'],
+        mono: ['IBMPlexMono_500Medium'],
       },
       fontSize: {
-        display: size(56, 64, -0.03),
-        'display-mobile': size(36, 42, -0.025),
-        'headline-lg': size(40, 48, -0.025),
-        'headline-lg-mobile': size(28, 34, -0.02),
-        'headline-md': size(28, 36, -0.02),
-        'headline-sm': size(20, 28, -0.015),
-        'body-lg': size(18, 28, -0.01),
-        'body-md': size(15, 24, -0.005),
-        'body-sm': size(13, 20),
-        'label-md': size(14, 20),
-        'label-sm': size(12, 16, 0.01),
-        code: size(12, 18, -0.01),
+        display: size(54, 60, -0.015),
+        'display-mobile': size(36, 42, -0.01),
+        'headline-lg': size(38, 46, -0.01),
+        'headline-lg-mobile': size(28, 34, -0.005),
+        'headline-md': size(28, 36, -0.005),
+        'headline-sm': size(21, 28),
+        'body-lg': size(18, 29),
+        'body-md': size(16, 25),
+        'body-sm': size(14, 21),
+        'label-md': size(15, 21),
+        'label-sm': size(13, 18),
+        code: size(13, 19),
       },
+      // Three steps only (docs/DESIGN.md): 4 small, 6 controls and cards, 10 large panels.
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        sm: '4px',
+        md: '6px',
+        lg: '6px',
+        xl: '10px',
+        '2xl': '10px',
+        '3xl': '10px',
       },
       borderWidth: {
         hairline: hairlineWidth(),

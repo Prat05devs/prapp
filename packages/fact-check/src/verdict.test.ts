@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { inputHash, normalizeText, normalizeUrl } from './normalize.ts';
 import { tierFor } from './sources.ts';
-import { assertPublicUrl } from './tools/http.ts';
+import { assertPublicUrl, isAlive } from './tools/http.ts';
 import { keywordQuery } from './tools/gdelt.ts';
 import { isLikelySameClaim } from './tools/google-fact-check.ts';
 import { lowerConfidence, overallVerdict, verdictFromRating } from './verdict.ts';
@@ -109,6 +109,18 @@ describe('SSRF guard', () => {
   });
   it('allows public sites', () => {
     expect(assertPublicUrl('https://www.thehindu.com/news/a').hostname).toBe('www.thehindu.com');
+  });
+  it('isAlive does not follow a redirect to a private address', async () => {
+    const seen: string[] = [];
+    const fake = (async (url: string) => {
+      seen.push(url);
+      return new Response(null, {
+        status: 302,
+        headers: { location: 'http://169.254.169.254/latest/meta-data' },
+      });
+    }) as unknown as typeof fetch;
+    expect(await isAlive('https://example.com/a', fake)).toBe(false);
+    expect(seen).toEqual(['https://example.com/a']);
   });
 });
 

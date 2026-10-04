@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
 
-// Teach tailwind-merge the Stitch type and font tokens, so `text-body-sm text-ink`
+// Teach tailwind-merge the design-system type and font tokens, so `text-body-sm text-ink`
 // keeps both classes and `font-sans font-mono` resolves to the last one.
 const twMerge = extendTailwindMerge({
   extend: {

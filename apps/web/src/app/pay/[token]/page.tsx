@@ -34,7 +34,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <span className="font-display text-headline-sm leading-tight text-ink">
             Secure checkout
           </span>
-          <span className="font-mono text-code text-slate uppercase">Payments by Razorpay</span>
+          <span className="text-body-sm text-slate">Payments by Razorpay</span>
         </div>
       </div>
       {children}
@@ -129,7 +129,7 @@ export default async function PayPage({ params }: PageProps<'/pay/[token]'>) {
           </div>
           <div className="flex flex-col items-end">
             <span className="font-display text-headline-md text-ink">{amount}</span>
-            <span className="font-mono text-code text-emerald-strong">All taxes included</span>
+            <span className="text-body-sm text-slate">All taxes included</span>
           </div>
         </div>
         <p className="rounded-xl border border-hairline bg-subtle p-3 text-body-sm text-body">
@@ -156,7 +156,7 @@ export default async function PayPage({ params }: PageProps<'/pay/[token]'>) {
         }}
       />
       <p className="flex items-start gap-2 text-body-sm text-slate">
-        <Icon name="shield" size={16} className="mt-0.5 text-emerald-strong" />
+        <Icon name="shield" size={16} className="mt-0.5 text-brand" />
         Payments are processed securely by Razorpay. We never see your card or UPI details.
       </p>
     </Shell>

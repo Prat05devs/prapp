@@ -40,7 +40,7 @@ export function AttentionActions({
         {reason === 'partial_delivery_refund_due' ? (
           <Link
             href={`/admin/orders/${orderId}`}
-            className="text-sm font-medium text-emerald-strong hover:underline"
+            className="text-sm font-medium text-brand hover:underline"
           >
             Partial refund from the order&apos;s payment panel
           </Link>

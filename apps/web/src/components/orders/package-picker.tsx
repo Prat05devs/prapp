@@ -2,8 +2,7 @@
 
 import type { CataloguePackage } from '@prapp/api-client';
 import { formatMoney } from '@prapp/shared';
-import { Icon } from '@/components/icon';
-import { Badge, Label, RadioGroup, RadioGroupItem } from '@/components/ui';
+import { Label, RadioGroup, RadioGroupItem } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 /** Package cards on a shadcn RadioGroup (keyboard arrows move between packages). */
@@ -36,9 +35,9 @@ export function PackagePicker({
               key={p.id}
               htmlFor={`package-${p.id}`}
               className={cn(
-                'flex cursor-pointer items-start gap-4 rounded-2xl border bg-card p-5 font-normal transition-colors has-[:disabled]:cursor-not-allowed',
+                'flex cursor-pointer items-start gap-4 rounded-lg border bg-paper p-5 font-normal transition-colors has-[:disabled]:cursor-not-allowed',
                 selected
-                  ? 'border-emerald-strong ring-1 ring-emerald-strong'
+                  ? 'border-brand bg-brand-tint/40 ring-1 ring-brand'
                   : 'border-hairline hover:border-ink',
               )}
             >
@@ -46,7 +45,7 @@ export function PackagePicker({
               <span className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="flex items-start justify-between gap-3">
                   <span className="text-label-md text-ink">{p.name}</span>
-                  <span className="font-display text-headline-sm text-ink">
+                  <span className="tabular font-display text-headline-sm text-ink">
                     {formatMoney(p.priceInrPaise, 'INR')}
                   </span>
                 </span>
@@ -58,17 +57,12 @@ export function PackagePicker({
                 {p.description ? (
                   <span className="text-body-sm text-slate">{p.description}</span>
                 ) : null}
-                {selected ? (
-                  <Badge variant="emerald" className="mt-2 rounded-md">
-                    <Icon name="check" size={14} /> Selected
-                  </Badge>
-                ) : null}
               </span>
             </Label>
           );
         })}
       </RadioGroup>
-      <p className="font-mono text-code text-slate">Prices are inclusive of all taxes</p>
+      <p className="text-body-sm text-slate">Prices include all taxes.</p>
       {error ? <p className="text-body-sm text-danger">{error}</p> : null}
     </div>
   );

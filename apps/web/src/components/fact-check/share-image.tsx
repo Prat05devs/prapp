@@ -44,7 +44,7 @@ export function buildShareElement(report: FactCheckReport, qr: string) {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#fbfaf7',
         padding: 72,
         fontFamily: 'Noto, NotoDeva',
         color: '#111',

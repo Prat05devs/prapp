@@ -4,18 +4,18 @@ import { Slot } from '@rn-primitives/slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { View } from 'react-native';
 
-// React Native Reusables badge as the Stitch status pill: mono caps on tinted planes.
+// Status label (docs/DESIGN.md): sentence case, sans, small. Tones only for real states.
 const badgeVariants = cva(
-  'shrink-0 flex-row items-center justify-center gap-1.5 self-start overflow-hidden rounded-full border px-2.5 py-0.5',
+  'shrink-0 flex-row items-center justify-center gap-1.5 self-start overflow-hidden rounded-sm border px-1.5 py-px',
   {
     variants: {
       variant: {
-        neutral: 'border-hairline bg-elevated',
-        emerald: 'border-emerald/30 bg-emerald-tint',
+        neutral: 'border-hairline bg-subtle',
+        verified: 'border-verified/25 bg-verified-tint',
         danger: 'border-danger/20 bg-danger-tint',
         warn: 'border-warn/25 bg-warn-tint',
         ink: 'border-ink bg-ink',
-        outline: 'border-hairline bg-background',
+        outline: 'border-input bg-paper',
       },
     },
     defaultVariants: {
@@ -24,11 +24,11 @@ const badgeVariants = cva(
   },
 );
 
-const badgeTextVariants = cva('font-mono text-[11px] uppercase leading-4 tracking-wide', {
+const badgeTextVariants = cva('font-sans-semibold text-label-sm', {
   variants: {
     variant: {
-      neutral: 'text-slate',
-      emerald: 'text-emerald-deep',
+      neutral: 'text-body',
+      verified: 'text-verified-deep',
       danger: 'text-danger-deep',
       warn: 'text-warn-deep',
       ink: 'text-white',

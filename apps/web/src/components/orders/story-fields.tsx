@@ -16,7 +16,7 @@ export function StoryFields({
   const headlineLen = value.headline.trim().length;
   const bodyLen = value.body.trim().length;
   const count = (ok: boolean, text: string) => (
-    <span className={ok ? 'text-emerald-strong' : ''}>{text}</span>
+    <span className={ok ? 'text-verified' : ''}>{text}</span>
   );
   return (
     <div className="flex flex-col gap-6">

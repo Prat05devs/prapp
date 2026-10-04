@@ -179,6 +179,24 @@ describe('payment link checkout (PAYMENTS_MODE=link, first build)', () => {
     expect(notes).toContainEqual({ type: 'order_paid', title: 'Order received' });
   });
 
+  it('editors cannot start the order until an admin has verified the payment', async () => {
+    await link();
+    const editor = await createUser({ role: 'editor' });
+    const admin = await createUser({ role: 'admin' });
+    const claim = (u: TestUser) => u.db.rpc('staff_claim_order', { p_order_id: orderId });
+
+    expect((await claim(editor)).error?.message).toMatch(/^payment_unverified/);
+    expect((await orderRow(orderId)).status).toBe('paid');
+
+    const cleared = await admin.db.rpc('admin_clear_attention', {
+      p_order_id: orderId,
+      p_note: 'Seen in the Razorpay dashboard',
+    });
+    expect(cleared.error).toBeNull();
+    expect((await claim(editor)).error).toBeNull();
+    expect((await orderRow(orderId)).status).toBe('in_progress');
+  });
+
   it('refuses to confirm without a configured payment page', async () => {
     await expect(link(null)).rejects.toMatchObject({ code: 'internal_error' });
     expect((await orderRow(orderId)).status).toBe('draft');

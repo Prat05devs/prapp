@@ -6,7 +6,7 @@ import { publicEnv } from '@/lib/env';
 /** Paths that need a signed-in user (LLD §6.3). /api returns 401 JSON instead. */
 const PROTECTED_PREFIXES = ['/orders', '/account', '/admin', '/complete-profile'];
 
-export function isProtectedPath(pathname: string): boolean {
+function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 

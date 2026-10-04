@@ -10,8 +10,8 @@ import { Icon, type IconName } from '@/components/icon';
 import {
   Badge,
   Button,
+  buttonVariants,
   CheckRow,
-  Eyebrow,
   LiveDot,
   Notice,
   Tabs,
@@ -80,16 +80,9 @@ export function FactChecker({
   return (
     <div className="flex flex-col gap-6">
       {!showResult ? (
-        <div className="rounded-2xl border border-hairline bg-canvas p-4 text-left shadow-sm sm:p-6">
-          <div className="flex flex-col gap-4 border-b border-divider pb-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <Eyebrow accent>01</Eyebrow>
-                <span className="text-xs text-faint">/</span>
-                <h2 className="font-display text-headline-sm text-ink">Paste the forward</h2>
-              </div>
-              <p className="text-body-sm text-slate">A message, a link or a screenshot.</p>
-            </div>
+        <div className="rounded-xl border border-hairline bg-paper p-4 text-left sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-label-md text-ink">What do you want to check?</h2>
             <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
               <TabsList className="self-start sm:self-auto">
                 {MODES.map((m) => (
@@ -97,7 +90,7 @@ export function FactChecker({
                     <Icon
                       name={m.icon}
                       size={16}
-                      className="group-data-[state=active]/trigger:text-emerald-strong"
+                      className="group-data-[state=active]/trigger:text-brand"
                     />
                     {m.label}
                   </TabsTrigger>
@@ -106,17 +99,7 @@ export function FactChecker({
             </Tabs>
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-xl border border-hairline bg-subtle transition-colors focus-within:border-ink focus-within:bg-canvas">
-            <div className="flex items-center justify-between gap-3 border-b border-divider px-4 py-2 font-mono text-[11px] text-faint uppercase">
-              <span>{mode === 'text' ? 'Message' : mode === 'url' ? 'Link' : 'Screenshot'}</span>
-              <span className="truncate text-slate">
-                {mode === 'text'
-                  ? `${text.length.toLocaleString('en-IN')} / ${TEXT_MAX.toLocaleString('en-IN')}`
-                  : mode === 'image'
-                    ? 'JPG, PNG or WebP'
-                    : 'https://'}
-              </span>
-            </div>
+          <div className="mt-4 overflow-hidden rounded-md border border-input bg-paper transition-colors focus-within:border-ink">
             {mode === 'text' ? (
               <textarea
                 aria-label="Message to check"
@@ -137,14 +120,14 @@ export function FactChecker({
               />
             ) : (
               <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center gap-2 p-4 text-center">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-canvas text-slate">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-subtle text-slate">
                   <Icon name={file ? 'check' : 'upload'} size={20} />
                 </span>
                 <span className="text-label-md text-ink">
                   {file ? file.name : 'Choose a screenshot'}
                 </span>
                 <span className="text-body-sm text-slate">
-                  {file ? 'Tap to choose a different one' : 'Up to 5 MB'}
+                  {file ? 'Choose a different one' : 'JPG, PNG or WebP, up to 5 MB'}
                 </span>
                 <input
                   type="file"
@@ -155,12 +138,14 @@ export function FactChecker({
               </label>
             )}
           </div>
-
-          <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="flex items-center gap-2 font-mono text-code text-slate">
-              <Icon name="verified_user" size={16} className="text-emerald-strong" />
-              Every answer lists its sources
+          {mode === 'text' ? (
+            <p className="tabular mt-1.5 text-right text-body-sm text-faint">
+              {text.length.toLocaleString('en-IN')} / {TEXT_MAX.toLocaleString('en-IN')}
             </p>
+          ) : null}
+
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-body-sm text-slate">Every answer links to its sources.</p>
             <Button variant="accent" size="lg" disabled={busy} onClick={submit}>
               {busy ? (
                 <>
@@ -168,7 +153,7 @@ export function FactChecker({
                 </>
               ) : (
                 <>
-                  <Icon name="bolt" /> Check it <Icon name="arrow_forward" size={16} />
+                  Check it <Icon name="arrow_forward" size={16} />
                 </>
               )}
             </Button>
@@ -186,32 +171,29 @@ export function FactChecker({
 
       {fc.phase === 'checking' || fc.phase === 'submitting' ? (
         <div
-          className="flex flex-col gap-4 rounded-2xl border border-hairline bg-canvas p-5 text-left sm:p-6"
+          className="flex flex-col gap-4 rounded-xl border border-hairline bg-paper p-5 text-left sm:p-6"
           aria-live="polite"
         >
           <div className="flex items-center justify-between gap-3">
             <span className="flex items-center gap-2 text-label-md text-ink">
               <LiveDot /> Checking sources
             </span>
-            <Badge variant="emerald">Running</Badge>
           </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-elevated">
-            <div className="h-full w-2/5 animate-indeterminate rounded-full bg-emerald motion-reduce:animate-none" />
+          <div className="h-1 overflow-hidden rounded-full bg-elevated">
+            <div className="h-full w-2/5 animate-indeterminate rounded-full bg-brand motion-reduce:animate-none" />
           </div>
           <p className="text-body-sm text-slate">This usually takes under a minute.</p>
-          <ol className="flex flex-col gap-2">
-            {STEPS[mode].map((tool, i) => (
-              <li
-                key={tool}
-                className="flex items-center gap-3 rounded-lg border border-divider bg-subtle px-3 py-2 text-body-sm text-body"
-              >
-                <span className="font-mono text-code text-faint">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                {FC_TOOL_LABELS[tool]}
-              </li>
-            ))}
-          </ol>
+          <div className="flex flex-col gap-1.5">
+            <p className="text-label-sm text-ink">What we&apos;re running</p>
+            <ul className="flex flex-col gap-1 text-body-sm text-body">
+              {STEPS[mode].map((tool) => (
+                <li key={tool} className="flex items-center gap-2.5">
+                  <span aria-hidden className="h-1 w-1 rounded-full bg-faint" />
+                  {FC_TOOL_LABELS[tool]}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       ) : null}
 
@@ -224,23 +206,33 @@ export function FactChecker({
       ) : null}
 
       {fc.error ? (
-        <Notice tone="danger">
+        <Notice
+          tone={fc.error.code === 'fact_check_limit_reached' && !signedIn ? 'info' : 'danger'}
+        >
           <span role="alert">{fc.error.message}</span>
           {fc.error.code === 'fact_check_limit_reached' && !signedIn ? (
-            <Link
-              className="text-label-md underline underline-offset-2"
-              href="/login?next=/fact-check"
-            >
-              Sign in for more checks
-            </Link>
+            <span className="mt-2 flex flex-wrap gap-2">
+              <Link
+                className={buttonVariants({ variant: 'accent', size: 'sm' })}
+                href="/login?mode=signup&reason=fact-check&next=/fact-check"
+              >
+                Create a free account
+              </Link>
+              <Link
+                className={buttonVariants({ variant: 'outline', size: 'sm' })}
+                href="/login?reason=fact-check&next=/fact-check"
+              >
+                Log in
+              </Link>
+            </span>
           ) : null}
         </Notice>
       ) : null}
 
       {showResult && fc.report ? (
-        <div className="flex flex-col gap-6 rounded-2xl border border-hairline bg-canvas p-5 text-left shadow-sm sm:p-8">
+        <div className="flex flex-col gap-6 rounded-xl border border-hairline bg-paper p-5 text-left sm:p-8">
           <ReportView report={fc.report} reportUrl={reportUrl} />
-          <div className="flex flex-col gap-4 rounded-xl border border-hairline bg-subtle p-4">
+          <div className="flex flex-col gap-4 rounded-md bg-subtle p-4">
             <CheckRow checked={fc.report.isPublic} onChange={(v) => void fc.setPublic(v)}>
               Anyone with the link can see this report
             </CheckRow>
@@ -258,19 +250,19 @@ export function FactChecker({
             <Icon name="history" className="text-slate" />
             <h2 className="font-display text-headline-sm text-ink">Your checks</h2>
           </div>
-          <ul className="flex flex-col divide-y divide-divider rounded-2xl border border-hairline">
+          <ul className="flex flex-col divide-y divide-divider border-y border-hairline">
             {history.map((h) => (
-              <li key={h.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
+              <li key={h.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
                 {h.verdict ? (
                   <Badge variant={VERDICT_TONES[h.verdict]}>{FC_VERDICT_LABELS[h.verdict]}</Badge>
                 ) : (
                   <Badge>{h.status}</Badge>
                 )}
                 <span className="min-w-0 flex-1 truncate text-body-sm text-ink">{h.preview}</span>
-                <span className="font-mono text-code text-faint">{formatIST(h.createdAt)}</span>
+                <span className="tabular text-body-sm text-slate">{formatIST(h.createdAt)}</span>
                 {h.status === 'done' && h.isPublic ? (
                   <Link
-                    className="inline-flex items-center gap-1 text-label-sm text-emerald-strong hover:text-emerald-deep"
+                    className="inline-flex items-center gap-1 text-label-sm text-brand hover:text-brand-deep"
                     href={`/r/${h.reportId}`}
                   >
                     Open <Icon name="north_east" size={14} />

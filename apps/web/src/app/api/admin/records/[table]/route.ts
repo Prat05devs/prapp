@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { Json } from '@prapp/db-types';
 import { AppError, handleApi, parseBody, readJson, throwDbError } from '@/server/api';
 import { rateLimit } from '@/server/rate-limit';
-import { requireStaff } from '@/server/staff';
+import { requireStaff, type StaffLevel } from '@/server/staff';
 
 export const runtime = 'nodejs';
 
@@ -13,12 +13,13 @@ const optText = (max: number) => z.string().trim().max(max).nullable();
 const int = z.number().int();
 
 /**
- * Admin-managed reference tables (LLD §10). Each table lists the columns an admin may write
- * and how a row is identified; anything else is rejected before it reaches the database.
- * Writes run as the admin, so RLS and CHECK constraints still decide.
+ * Staff-managed reference tables (LLD §10): admin only, except the showcase (editor+). Each table
+ * lists the columns that may be written and how a row is identified; anything else is rejected
+ * before it reaches the database. Writes run as the caller, so RLS and CHECK constraints decide.
  */
 const TABLES = {
   trusted_sources: {
+    level: 'admin',
     key: z.object({ domain: text(253).min(3) }),
     values: z
       .object({
@@ -32,6 +33,7 @@ const TABLES = {
     stamp: 'added_by',
   },
   portals: {
+    level: 'admin',
     key: z.object({ id: uuid }),
     values: z
       .object({
@@ -50,6 +52,7 @@ const TABLES = {
     stamp: null,
   },
   packages: {
+    level: 'admin',
     key: z.object({ id: uuid }),
     values: z
       .object({
@@ -69,18 +72,21 @@ const TABLES = {
     stamp: null,
   },
   package_portals: {
+    level: 'admin',
     key: z.object({ package_id: uuid, portal_id: uuid }),
     values: z.object({ package_id: uuid, portal_id: uuid }),
     ops: ['insert', 'delete'],
     stamp: null,
   },
   app_settings: {
+    level: 'admin',
     key: z.object({ key: text(100).min(1) }),
     values: z.object({ value: z.json() }),
     ops: ['update'],
     stamp: 'updated_by',
   },
   showcase_stories: {
+    level: 'editor',
     key: z.object({ id: uuid }),
     values: z
       .object({
@@ -95,7 +101,16 @@ const TABLES = {
     ops: ['insert', 'update', 'delete'],
     stamp: 'created_by',
   },
-} as const;
+} as const satisfies Record<
+  string,
+  {
+    level: StaffLevel;
+    key: z.ZodType;
+    values: z.ZodType;
+    ops: readonly string[];
+    stamp: string | null;
+  }
+>;
 
 type Table = keyof typeof TABLES;
 type Op = 'insert' | 'upsert' | 'update' | 'delete';
@@ -122,7 +137,7 @@ export const POST = handleApi(
     if (!(raw in TABLES)) throw new AppError('validation_failed', { table: raw });
     const table = raw as Table;
     const spec = TABLES[table];
-    const { supabase, user } = await requireStaff(req, 'admin');
+    const { supabase, user } = await requireStaff(req, spec.level);
     rateLimit(`admin-records:${user.id}`, 120, 60_000);
     const { op, match, values } = parseBody(bodySchema, await readJson(req));
     if (!(spec.ops as readonly Op[]).includes(op)) throw new AppError('not_authorized');

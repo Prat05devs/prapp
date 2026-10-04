@@ -36,7 +36,7 @@ function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) 
   return (
     <button
       type="button"
-      className="text-xs font-medium text-emerald-strong hover:underline"
+      className="text-xs font-medium text-brand hover:underline"
       onClick={() => {
         void navigator.clipboard.writeText(text).then(() => {
           setDone(true);
@@ -182,7 +182,7 @@ export function Workspace({
               <>
                 <span className="font-medium">@{handle}</span> <CopyButton text={handle} />
                 <a
-                  className="text-xs font-medium text-emerald-strong hover:underline"
+                  className="text-xs font-medium text-brand hover:underline"
                   href={`https://instagram.com/${handle}`}
                   target="_blank"
                   rel="noreferrer"
@@ -206,7 +206,7 @@ export function Workspace({
             aside={
               images.length ? (
                 <a
-                  className="text-sm font-medium text-emerald-strong hover:underline"
+                  className="text-sm font-medium text-brand hover:underline"
                   href={`/api/admin/orders/${order.id}/images.zip`}
                 >
                   Download all
@@ -229,10 +229,7 @@ export function Workspace({
                     {img.width}×{img.height} · {Math.round(img.size_bytes / 1024)} KB
                   </span>
                   {downloads[img.id] ? (
-                    <a
-                      className="font-medium text-emerald-strong hover:underline"
-                      href={downloads[img.id]}
-                    >
+                    <a className="font-medium text-brand hover:underline" href={downloads[img.id]}>
                       Download {img.original_filename ?? ''}
                     </a>
                   ) : null}
@@ -246,7 +243,7 @@ export function Workspace({
             {order.customer_email ? (
               <p className="text-sm">
                 <a
-                  className="font-medium text-emerald-strong hover:underline"
+                  className="font-medium text-brand hover:underline"
                   href={`mailto:${order.customer_email}`}
                 >
                   {order.customer_email}
@@ -256,13 +253,13 @@ export function Workspace({
             {order.customer_phone ? (
               <p className="flex gap-3 text-sm">
                 <a
-                  className="font-medium text-emerald-strong hover:underline"
+                  className="font-medium text-brand hover:underline"
                   href={`tel:${order.customer_phone}`}
                 >
                   {order.customer_phone}
                 </a>
                 <a
-                  className="font-medium text-emerald-strong hover:underline"
+                  className="font-medium text-brand hover:underline"
                   href={`https://wa.me/${phoneDigits}`}
                   target="_blank"
                   rel="noreferrer"
@@ -476,7 +473,7 @@ export function Workspace({
               <>
                 {' · '}
                 <a
-                  className="font-medium text-emerald-strong hover:underline"
+                  className="font-medium text-brand hover:underline"
                   href={`/api/orders/${order.id}/report`}
                 >
                   open PDF (v{order.report_version})

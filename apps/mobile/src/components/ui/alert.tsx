@@ -6,12 +6,12 @@ import type { LucideIcon } from 'lucide-react-native';
 import * as React from 'react';
 import { View } from 'react-native';
 
-// React Native Reusables alert with the Stitch semantic tones (same as the web Notice).
-const alertVariants = cva('relative w-full rounded-xl border p-4', {
+// React Native Reusables alert with semantic tones (same as the web Notice).
+const alertVariants = cva('relative w-full rounded-md border p-4', {
   variants: {
     variant: {
       default: 'border-hairline bg-subtle',
-      success: 'border-emerald/30 bg-emerald-tint',
+      success: 'border-verified/25 bg-verified-tint',
       warn: 'border-warn/25 bg-warn-tint',
       destructive: 'border-danger/20 bg-danger-tint/60',
     },
@@ -23,7 +23,7 @@ const alertTextVariants = cva('text-body-sm', {
   variants: {
     variant: {
       default: 'text-ink',
-      success: 'text-emerald-deep',
+      success: 'text-verified-deep',
       warn: 'text-warn-deep',
       destructive: 'text-danger-deep',
     },
@@ -59,7 +59,7 @@ function Alert({
 }
 
 function AlertTitle({ className, ...props }: React.ComponentProps<typeof Text>) {
-  return <Text className={cn('font-sans-medium text-label-md', className)} {...props} />;
+  return <Text className={cn('font-sans-semibold text-label-md', className)} {...props} />;
 }
 
 function AlertDescription({ className, ...props }: React.ComponentProps<typeof Text>) {

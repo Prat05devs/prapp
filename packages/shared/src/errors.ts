@@ -21,6 +21,8 @@ export const ERROR_MESSAGES = {
   order_not_resubmittable: "This order isn't waiting for changes.",
   illegal_transition: "That action isn't allowed for this order's current status.",
   order_not_claimable: 'Someone else already picked up this order.',
+  payment_unverified:
+    'An admin needs to confirm this payment in the Razorpay dashboard before the order can be started.',
   order_not_releasable: 'This order is assigned to another editor.',
   order_assigned_to_someone_else: 'This order is assigned to another editor.',
   order_not_in_progress: 'Claim the order first.',

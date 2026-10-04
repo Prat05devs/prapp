@@ -11,15 +11,15 @@ function icon(Glyph: LucideIcon) {
 }
 
 // Tabs: Home · Fact check · Publish · Orders · Profile (LLD §13). Each tab root draws the
-// Stitch app bar itself, so the native header is hidden.
+// app bar itself, so the native header is hidden.
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.emeraldStrong,
+        tabBarActiveTintColor: COLORS.brand,
         tabBarInactiveTintColor: COLORS.slate,
-        tabBarLabelStyle: { fontFamily: 'Inter_500Medium', fontSize: 11 },
+        tabBarLabelStyle: { fontFamily: 'PublicSans_600SemiBold', fontSize: 11 },
         tabBarStyle: { borderTopColor: COLORS.hairline, backgroundColor: COLORS.canvas },
       }}
     >

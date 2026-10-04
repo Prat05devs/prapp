@@ -63,15 +63,15 @@ function ensureFonts(): Promise<void> {
 
 const VERDICT_COLOR: Record<string, string> = {
   likely_false: '#b3261e',
-  misleading: '#b35c00',
-  likely_true: '#1e7b34',
-  unverified: '#555555',
+  misleading: '#8a5300',
+  likely_true: '#1e6b45',
+  unverified: '#6b655b',
 };
 
 const hasDevanagari = (s: string | null | undefined) => /[ऀ-ॿ]/.test(s ?? '');
 
 const s = StyleSheet.create({
-  page: { padding: 36, fontSize: 10, fontFamily: 'NotoSans', color: '#111' },
+  page: { padding: 36, fontSize: 10, fontFamily: 'NotoSans', color: '#17140f' },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   brand: { fontSize: 16, fontWeight: 700 },
   muted: { color: '#555' },
@@ -79,7 +79,7 @@ const s = StyleSheet.create({
   claim: { fontSize: 12, marginTop: 10 },
   verdict: { fontSize: 18, fontWeight: 700, marginTop: 8 },
   item: { marginBottom: 4 },
-  link: { color: '#0b57d0', textDecoration: 'none' },
+  link: { color: '#1d3d63', textDecoration: 'none' },
   badge: { fontSize: 8, color: '#555' },
   disclaimer: { marginTop: 14, fontSize: 8, color: '#555' },
   qr: { width: 72, height: 72 },

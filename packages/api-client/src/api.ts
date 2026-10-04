@@ -1,6 +1,5 @@
 import type {
   CheckoutResponse,
-  FactCheckHistoryItem,
   FactCheckReport,
   FactCheckSubmitInput,
   FactCheckSubmitResponse,
@@ -12,7 +11,7 @@ import type {
   OrderImageMeta,
 } from '@prapp/shared';
 import { createRequest, type ApiClientOptions } from './client';
-import type { Catalogue, CustomerOrder, OrderImage, OrderListItem } from './direct';
+import type { Catalogue, CustomerOrder, OrderImage, OrderListItem, ShowcaseStory } from './direct';
 
 export interface NotificationItem {
   id: string;
@@ -53,11 +52,13 @@ export function createApiClient(options: ApiClientOptions) {
           method: 'PATCH',
           body: { isPublic, deviceId },
         }),
-      history: () => request<FactCheckHistoryItem[]>('/api/me/fact-checks'),
     },
     catalogue: {
       get: (signal?: AbortSignal) =>
-        request<Catalogue & { settings: Record<string, unknown> }>('/api/catalogue', { signal }),
+        request<Catalogue & { settings: Record<string, unknown>; showcase: ShowcaseStory[] }>(
+          '/api/catalogue',
+          { signal },
+        ),
     },
     notifications: {
       list: () => request<NotificationItem[]>('/api/notifications'),
@@ -104,10 +105,10 @@ export function createApiClient(options: ApiClientOptions) {
         form.append('file', file as Blob);
         form.append('meta', JSON.stringify(meta));
         if (replaceImageId) form.append('replaceImageId', replaceImageId);
-        return request<{ image: OrderImage; url: string | null }>(
-          `/api/orders/${enc(id)}/images`,
-          { method: 'POST', body: form },
-        );
+        return request<{ image: OrderImage; url: string | null }>(`/api/orders/${enc(id)}/images`, {
+          method: 'POST',
+          body: form,
+        });
       },
       removeImage: (id: string, imageId: string) =>
         request<{ ok: true }>(`/api/orders/${enc(id)}/images/${enc(imageId)}`, {

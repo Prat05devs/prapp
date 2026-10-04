@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 
-/** Header / sidebar link with the Stitch active state (elevated plane). */
+/** Header / sidebar link active page underlined in brand blue. */
 export function NavLink({
   href,
   children,
@@ -22,8 +22,10 @@ export function NavLink({
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-label-md whitespace-nowrap transition-colors duration-150 ${
-        active ? 'bg-elevated text-ink' : 'text-body hover:bg-subtle hover:text-ink'
+      className={`flex shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-body-sm font-semibold whitespace-nowrap transition-colors duration-150 ${
+        active
+          ? 'text-ink underline decoration-brand decoration-2 underline-offset-8'
+          : 'text-body hover:text-ink'
       } ${className}`}
     >
       {children}

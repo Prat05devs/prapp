@@ -3,11 +3,11 @@ import { cn } from '@/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Platform, Pressable } from 'react-native';
 
-// React Native Reusables button, restyled to the Stitch spec (same variants as the web app):
-// 8px radius, obsidian primary, emerald accent for the main action, hairline outline.
+// React Native Reusables button (docs/DESIGN.md, same variants as the web app): 6px radius,
+// ink primary, brand blue for the one main action on a screen, hairline outline.
 const buttonVariants = cva(
   cn(
-    'group shrink-0 flex-row items-center justify-center gap-2 rounded-lg',
+    'group shrink-0 flex-row items-center justify-center gap-2 rounded-md',
     Platform.select({
       web: 'whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/25 disabled:pointer-events-none',
     }),
@@ -16,12 +16,12 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-ink active:bg-ink-soft',
-        accent: 'bg-emerald-strong active:bg-emerald-deep',
-        outline: 'border border-hairline bg-background active:border-ink active:bg-subtle',
+        accent: 'bg-brand active:bg-brand-deep',
+        outline: 'border border-input bg-paper active:border-ink active:bg-subtle',
         secondary: 'bg-elevated active:bg-hairline',
         ghost: 'active:bg-subtle',
         destructive: 'bg-danger active:bg-danger-deep',
-        'destructive-outline': 'border border-danger/30 bg-background active:bg-danger-tint/40',
+        'destructive-outline': 'border border-danger/30 bg-paper active:bg-danger-tint/40',
         link: '',
       },
       size: {
@@ -38,7 +38,7 @@ const buttonVariants = cva(
   },
 );
 
-const buttonTextVariants = cva('font-sans-medium text-label-md text-ink', {
+const buttonTextVariants = cva('font-sans-semibold text-label-md text-ink', {
   variants: {
     variant: {
       default: 'text-white',
@@ -48,7 +48,7 @@ const buttonTextVariants = cva('font-sans-medium text-label-md text-ink', {
       ghost: 'text-body',
       destructive: 'text-white',
       'destructive-outline': 'text-danger',
-      link: 'text-emerald-strong group-active:underline',
+      link: 'text-brand underline',
     },
     size: {
       default: '',

@@ -27,7 +27,7 @@ export default async function AccountPage() {
 
       <section className="flex flex-col gap-5 rounded-2xl border border-hairline bg-subtle p-5 sm:p-6">
         <div className="flex items-center gap-4">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ink font-display text-headline-sm text-white uppercase">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand font-display text-headline-sm text-white uppercase">
             {(me.fullName || me.email || '?').slice(0, 1)}
           </span>
           <div className="flex min-w-0 flex-col">

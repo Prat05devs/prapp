@@ -28,7 +28,7 @@ export default function NotificationsScreen() {
       refreshing={list.loading}
       onRefresh={() => void list.refresh()}
       ListEmptyComponent={
-        <View className="m-5 items-center gap-3 rounded-2xl border border-dashed border-hairline bg-subtle px-6 py-12">
+        <View className="m-5 items-center gap-3 rounded-xl border border-dashed border-input bg-paper px-6 py-12">
           <Icon as={BellOff} size={20} className="text-slate" />
           <Text variant="muted">Nothing yet.</Text>
         </View>
@@ -42,20 +42,20 @@ export default function NotificationsScreen() {
           <View
             className={cn(
               'mt-2 h-1.5 w-1.5 rounded-full',
-              n.read_at ? 'bg-transparent' : 'bg-emerald',
+              n.read_at ? 'bg-transparent' : 'bg-brand',
             )}
           />
           <View className="flex-1 gap-0.5">
             <Text
               className={cn(
-                'font-sans-medium text-label-md',
+                'font-sans-semibold text-label-md',
                 n.read_at ? 'text-slate' : 'text-ink',
               )}
             >
               {n.title}
             </Text>
             <Text className="text-body-sm text-body">{n.body}</Text>
-            <Text className="mt-1 font-mono text-code text-faint">{formatIST(n.created_at)}</Text>
+            <Text className="mt-1 text-body-sm text-slate">{formatIST(n.created_at)}</Text>
           </View>
         </Pressable>
       )}

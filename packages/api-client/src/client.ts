@@ -60,6 +60,7 @@ export function createRequest(options: ApiClientOptions): ApiRequest {
         'internal_error',
         0,
         'Network error. Check your connection and try again.',
+        { cause: e instanceof Error ? e.message : String(e) },
       );
     }
 

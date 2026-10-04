@@ -81,7 +81,7 @@ export function LoginForm({ next, initialMode }: { next: string; initialMode: Au
             }}
           >
             <p className="flex items-start gap-2 text-body-sm text-body">
-              <Icon name="mail" size={16} className="mt-0.5 text-emerald-strong" />
+              <Icon name="mail" size={16} className="mt-0.5 text-brand" />
               <span>
                 We emailed <strong className="text-ink">{otp.email}</strong>. Open the sign-in link
                 in that email in this browser, or enter the 6-digit code if the email shows one. It
@@ -113,7 +113,7 @@ export function LoginForm({ next, initialMode }: { next: string; initialMode: Au
 
       <div className="flex items-center gap-3">
         <Separator className="flex-1" />
-        <span className="font-mono text-code text-faint uppercase">Or continue with</span>
+        <span className="text-body-sm text-slate">or</span>
         <Separator className="flex-1" />
       </div>
 
@@ -130,7 +130,7 @@ export function LoginForm({ next, initialMode }: { next: string; initialMode: Au
       </p>
       <p className="text-center text-body-sm text-slate">
         NewsVio team member?{' '}
-        <a href="/team-login" className="text-emerald-strong underline-offset-2 hover:underline">
+        <a href="/team-login" className="text-brand underline-offset-2 hover:underline">
           Log in with your password
         </a>
       </p>

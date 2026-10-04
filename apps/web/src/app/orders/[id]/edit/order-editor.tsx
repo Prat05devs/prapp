@@ -57,9 +57,9 @@ export function OrderEditor({
             <StatusBadge status={ed.status} />
           </div>
           <span
-            className={`inline-flex items-center gap-1.5 font-mono text-code uppercase ${
+            className={`inline-flex items-center gap-1.5 text-body-sm ${
               saveOk
-                ? 'text-emerald-strong'
+                ? 'text-verified'
                 : ed.saveState === 'invalid' || ed.saveState === 'error'
                   ? 'text-danger'
                   : 'text-slate'
@@ -81,11 +81,11 @@ export function OrderEditor({
 
       <div className="grid items-start gap-8 lg:grid-cols-12">
         <div className="flex flex-col gap-5 lg:col-span-7">
-          <StepHeading step="01" title="Your story" />
+          <StepHeading title="Your story" />
           <Card>
             <StoryFields value={ed.content} onChange={ed.update} errors={ed.fieldErrors} />
           </Card>
-          <StepHeading step="02" title="Photos" />
+          <StepHeading title="Photos" />
           <ImageSlots
             orderId={order.id}
             images={ed.images}
@@ -99,7 +99,6 @@ export function OrderEditor({
 
         <div className="flex flex-col gap-5 lg:sticky lg:top-24 lg:col-span-5">
           <StepHeading
-            step="03"
             title="Package"
             aside={ed.packageLocked ? 'Locked after payment' : 'All taxes included'}
           />
@@ -198,7 +197,7 @@ export function OrderEditor({
               </Button>
             ) : null}
             {!isChangesRequested ? (
-              <p className="flex items-start gap-2 font-mono text-code text-slate">
+              <p className="flex items-start gap-2 text-body-sm text-slate">
                 <Icon name="shield" size={16} />
                 Paid securely with Razorpay: UPI, card or net banking.
               </p>

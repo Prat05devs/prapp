@@ -14,7 +14,7 @@ export class AppError extends Error {
   }
 }
 
-export function jsonError(code: ErrorCode, details?: unknown): NextResponse {
+function jsonError(code: ErrorCode, details?: unknown): NextResponse {
   return NextResponse.json(apiErrorBody(code, details), { status: httpStatusFor(code) });
 }
 

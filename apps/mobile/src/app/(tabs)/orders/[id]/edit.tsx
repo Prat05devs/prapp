@@ -71,12 +71,12 @@ function Editor({ order }: { order: CustomerOrder }) {
         </View>
         <View className="flex-row items-center gap-1.5">
           {ed.saveState === 'saved' ? (
-            <Icon as={CircleCheck} size={12} className="text-emerald-strong" />
+            <Icon as={CircleCheck} size={12} className="text-verified" />
           ) : null}
           <Text
-            className={`font-mono text-code uppercase ${
+            className={`text-body-sm ${
               ed.saveState === 'saved'
-                ? 'text-emerald-strong'
+                ? 'text-verified'
                 : ed.saveState === 'invalid' || ed.saveState === 'error'
                   ? 'text-danger'
                   : 'text-slate'
@@ -95,14 +95,14 @@ function Editor({ order }: { order: CustomerOrder }) {
       ) : null}
 
       <View className="gap-4">
-        <StepHeading step="01" title="Your story" />
+        <StepHeading title="Your story" />
         <Panel>
           <StoryFields value={ed.content} onChange={ed.update} errors={ed.fieldErrors} />
         </Panel>
       </View>
 
       <View className="gap-4">
-        <StepHeading step="02" title="Photos" />
+        <StepHeading title="Photos" />
         <ImageSlots
           orderId={order.id}
           images={ed.images}
@@ -144,7 +144,7 @@ function Editor({ order }: { order: CustomerOrder }) {
           {DECLARATION_TEXT} <Text className="text-danger">*</Text>
         </CheckRow>
         {ed.readiness.problems.length ? (
-          <View className="gap-1.5 rounded-xl border border-hairline bg-canvas p-3">
+          <View className="gap-1.5 rounded-lg border border-hairline bg-paper p-3">
             {ed.readiness.problems.map((p) => (
               <View key={p} className="flex-row items-start gap-2">
                 <Icon as={Info} size={14} className="mt-0.5 text-warn" />
@@ -154,7 +154,7 @@ function Editor({ order }: { order: CustomerOrder }) {
           </View>
         ) : null}
         {!changes && pkg ? (
-          <View className="flex-row items-center justify-between border-t border-hairline pt-4">
+          <View className="flex-row items-center justify-between border-t border-rule pt-4">
             <Text variant="label">Total</Text>
             {freeCheckout ? (
               <View className="flex-row items-baseline gap-2">
@@ -204,7 +204,7 @@ function Editor({ order }: { order: CustomerOrder }) {
         {!changes ? (
           <View className="flex-row items-start gap-2">
             <Icon as={ShieldCheck} size={14} className="mt-0.5 text-slate" />
-            <Text className="flex-1 font-mono text-code text-slate">
+            <Text className="flex-1 text-body-sm text-slate">
               Paid securely with Razorpay: UPI, card or net banking.
             </Text>
           </View>

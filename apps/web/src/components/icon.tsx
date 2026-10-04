@@ -1,6 +1,7 @@
-// Material Symbols (the icon set Stitch uses), loaded as a subset font. Only the names below
+// Material Symbols, loaded as a subset font. Only the names below
 // are in the subset; anything else would render as its raw ligature text, so the type is closed.
 const ICONS = [
+  'add',
   'arrow_back',
   'arrow_forward',
   'bolt',

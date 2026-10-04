@@ -11,7 +11,7 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
   return (
     <TabsPrimitive.List
       className={cn(
-        'flex flex-row items-center justify-center rounded-lg border border-hairline bg-subtle p-1',
+        'flex flex-row items-center justify-center rounded-md bg-subtle p-1',
         Platform.select({ web: 'inline-flex w-fit', native: 'mr-auto' }),
         className,
       )}
@@ -24,7 +24,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
   const { value } = TabsPrimitive.useRootContext();
   return (
     <TextClassContext.Provider
-      value={cn('font-sans-medium text-label-sm text-slate', value === props.value && 'text-ink')}
+      value={cn('font-sans-semibold text-label-sm text-slate', value === props.value && 'text-ink')}
     >
       <TabsPrimitive.Trigger
         className={cn(
@@ -33,7 +33,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
             web: 'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring inline-flex cursor-default whitespace-nowrap transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px] disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0',
           }),
           props.disabled && 'opacity-50',
-          props.value === value && 'border-hairline bg-background',
+          props.value === value && 'border-hairline bg-paper',
           className,
         )}
         {...props}

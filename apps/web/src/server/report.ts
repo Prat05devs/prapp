@@ -3,7 +3,8 @@ import { renderPrReport, type PrReportData } from '@prapp/report-templates';
 import type { ServiceSupabase } from '@/server/service-types';
 
 function settingString(v: unknown): string | undefined {
-  return typeof v === 'string' && v.trim() ? v : undefined;
+  // Same rule as the site and app: blank or seed placeholders (+91XXXXXXXXXX) are not shown.
+  return typeof v === 'string' && v.trim() && !v.includes('XXXX') ? v : undefined;
 }
 
 /**

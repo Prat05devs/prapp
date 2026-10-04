@@ -19,12 +19,14 @@ import {
 import { PortalWall } from '@/components/portal-wall';
 import { useCatalogue } from '@/hooks/use-catalogue';
 import { useCreateDraft } from '@/hooks/use-order-editor';
+import { useAuth } from '@/providers/auth-provider';
 
 // Publish: package → story → (editor) images → review → pay (LLD §13).
 export default function PublishScreen() {
   const catalogue = useCatalogue();
   const [showNetwork, setShowNetwork] = useState(false);
   const { pending, fieldErrors, error, create } = useCreateDraft();
+  const { session } = useAuth();
   const [content, setContent] = useState<OrderContentInput>({
     packageId: '',
     headline: '',
@@ -60,16 +62,14 @@ export default function PublishScreen() {
               <Text variant="label">{`Our publishing network: ${catalogue.data.portals.length} portals`}</Text>
               <Text variant="muted">Our team picks the best 5 for your story.</Text>
             </View>
-            <Text className="text-label-sm text-emerald-strong">
-              {showNetwork ? 'Hide' : 'Show'}
-            </Text>
+            <Text className="text-label-sm text-brand">{showNetwork ? 'Hide' : 'Show'}</Text>
           </Pressable>
           {showNetwork ? <PortalWall portals={catalogue.data.portals} /> : null}
         </Panel>
       ) : null}
 
       <View className="gap-4">
-        <StepHeading step="01" title="Your story" />
+        <StepHeading title="Your story" />
         <Panel>
           <StoryFields value={content} onChange={update} errors={fieldErrors} />
         </Panel>
@@ -84,7 +84,7 @@ export default function PublishScreen() {
       </View>
 
       <View className="gap-4">
-        <StepHeading step="02" title="Pick a package" aside="Taxes included" />
+        <StepHeading title="Pick a package" aside="Taxes included" />
         {catalogue.data ? (
           <PackagePicker
             packages={catalogue.data.packages}
@@ -99,7 +99,7 @@ export default function PublishScreen() {
           <Text variant="muted">Package</Text>
           <Text variant="label">{selected?.name ?? '-'}</Text>
         </View>
-        <View className="flex-row items-center justify-between border-t border-hairline pt-4">
+        <View className="flex-row items-center justify-between border-t border-rule pt-4">
           <Text variant="label">Total</Text>
           <Text className="font-display text-headline-sm text-ink">
             {selected ? formatMoney(selected.priceInrPaise) : '-'}
@@ -115,8 +115,10 @@ export default function PublishScreen() {
         />
         <View className="flex-row items-start gap-2">
           <Icon as={Info} size={14} className="mt-0.5 text-slate" />
-          <Text className="flex-1 font-mono text-code text-slate">
-            You pay after adding photos and reviewing your story.
+          <Text className="flex-1 text-body-sm text-slate">
+            {session
+              ? 'You pay after adding photos and reviewing your story.'
+              : "Next you'll log in or create an account, then add photos and pay."}
           </Text>
         </View>
       </Panel>

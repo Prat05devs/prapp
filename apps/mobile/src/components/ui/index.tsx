@@ -6,7 +6,6 @@ import {
   CircleAlert,
   CircleCheck,
   Info,
-  ShieldCheck,
   TriangleAlert,
   type LucideIcon,
 } from 'lucide-react-native';
@@ -21,8 +20,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BRAND_NAME } from '@prapp/shared';
+import { promptSignIn } from '@/lib/sign-in-prompt';
 import { COLORS } from '@/lib/theme';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/providers/auth-provider';
 import { Alert, AlertDescription, AlertTitle } from './alert';
 import { Button, type ButtonProps } from './button';
 import { Checkbox } from './checkbox';
@@ -31,7 +32,7 @@ import { Input } from './input';
 import { Text } from './text';
 import { Textarea } from './textarea';
 
-// App-level building blocks for the Stitch design system, composed from the
+// App-level building blocks for the NewsVio design system (docs/DESIGN.md), composed from the
 // React Native Reusables (shadcn for React Native) components in this folder.
 
 export { Badge } from './badge';
@@ -48,35 +49,32 @@ export { Text } from './text';
 export { Textarea } from './textarea';
 export { Alert, AlertDescription, AlertTitle } from './alert';
 
-/** Stitch mobile top bar: wordmark + notifications bell. */
+/** Top bar: serif wordmark + notifications bell (or "Log in" for guests). */
 export function AppBar() {
+  const { session } = useAuth();
   return (
-    <View className="flex-row items-center justify-between border-b border-hairline bg-canvas px-5 py-3">
-      <View className="flex-row items-center gap-2.5">
-        <View className="h-8 w-8 items-center justify-center rounded-lg bg-ink">
-          <Icon as={ShieldCheck} size={18} className="text-white" />
-        </View>
-        <View>
-          <Text className="font-display-bold text-[17px] leading-5 text-ink">{BRAND_NAME}</Text>
-          <Text className="font-mono text-[10px] uppercase leading-3 tracking-wider text-faint">
-            Fact check · Publish
-          </Text>
-        </View>
-      </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Notifications"
-        hitSlop={8}
-        onPress={() => router.push('/notifications')}
-        className="h-10 w-10 items-center justify-center rounded-full border border-hairline active:bg-subtle"
-      >
-        <Icon as={Bell} size={18} className="text-ink" />
-      </Pressable>
+    <View className="flex-row items-center justify-between border-b border-rule bg-canvas px-5 py-3">
+      <Text className="font-display-bold text-[20px] leading-6 text-ink">{BRAND_NAME}</Text>
+      {!session ? (
+        <Button variant="ghost" size="sm" onPress={() => promptSignIn()}>
+          <Text>Log in</Text>
+        </Button>
+      ) : (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Notifications"
+          hitSlop={8}
+          onPress={() => router.push('/notifications')}
+          className="h-11 w-11 items-center justify-center rounded-full active:bg-subtle"
+        >
+          <Icon as={Bell} size={20} className="text-ink" />
+        </Pressable>
+      )}
     </View>
   );
 }
 
-/** A tab root: safe area, the Stitch app bar, then scrolling content. */
+/** A tab root: safe area, the app bar, then scrolling content. */
 export function TabScreen({
   children,
   refreshing,
@@ -163,7 +161,7 @@ export function Centered({ children }: { children: ReactNode }) {
   return <View className="flex-1 items-center justify-center gap-4 bg-canvas p-6">{children}</View>;
 }
 
-/** Mono micro-label, e.g. "01 / Paste the forward". */
+/** Short sentence-case kicker above a heading. Use only when it adds information. */
 export function Eyebrow({
   children,
   accent = false,
@@ -174,13 +172,13 @@ export function Eyebrow({
   className?: string;
 }) {
   return (
-    <Text variant="eyebrow" className={cn(accent && 'text-emerald-strong', className)}>
+    <Text variant="eyebrow" className={cn(accent && 'text-brand', className)}>
       {children}
     </Text>
   );
 }
 
-/** Screen title block: eyebrow, Manrope headline, slate lede. */
+/** Screen title block: optional kicker, serif headline, lede. */
 export function PageHeader({
   eyebrow,
   title,
@@ -199,41 +197,30 @@ export function PageHeader({
   );
 }
 
-/** Numbered section heading: [01] Title … aside. */
+/** Section heading with a hairline underneath and an optional note on the right. */
 export function StepHeading({
-  step,
   title,
   aside,
 }: {
-  step: string;
+  /** kept for call sites; the publish progress bar already shows the step */
+  step?: string;
   title: ReactNode;
   aside?: ReactNode;
 }) {
   return (
-    <View className="flex-row items-center justify-between gap-3">
-      <View className="flex-row items-center gap-2.5">
-        <View className="rounded-md bg-ink px-1.5 py-0.5">
-          <Text className="font-mono text-code text-white">{step}</Text>
-        </View>
-        <Text variant="h3">{title}</Text>
-      </View>
-      {aside ? <Eyebrow>{aside}</Eyebrow> : null}
+    <View className="flex-row items-baseline justify-between gap-3 border-b border-rule pb-3">
+      <Text variant="h3">{title}</Text>
+      {aside ? <Text variant="muted">{aside}</Text> : null}
     </View>
   );
 }
 
-/** "01 / Title" heading used inside reports. */
-export function SectionTitle({ index, children }: { index: string; children: ReactNode }) {
-  return (
-    <View className="flex-row items-center gap-2">
-      <Eyebrow accent>{index}</Eyebrow>
-      <Text className="text-xs text-faint">/</Text>
-      <Text variant="h3">{children}</Text>
-    </View>
-  );
+/** Plain serif heading inside reports. `index` is ignored (no decorative numbering). */
+export function SectionTitle({ children }: { index?: string; children: ReactNode }) {
+  return <Text variant="h3">{children}</Text>;
 }
 
-/** Flat Stitch card: hairline border, 16px radius, canvas or subtle plane. */
+/** Flat card: a white sheet on the paper canvas (or a tinted plane), 10px radius, no shadow. */
 export function Panel({
   children,
   tone = 'canvas',
@@ -246,8 +233,8 @@ export function Panel({
   return (
     <View
       className={cn(
-        'gap-4 rounded-2xl border border-hairline p-5',
-        tone === 'subtle' ? 'bg-subtle' : 'bg-canvas',
+        'gap-4 rounded-xl border p-5',
+        tone === 'subtle' ? 'border-transparent bg-subtle' : 'border-hairline bg-paper',
         className,
       )}
     >
@@ -304,7 +291,7 @@ export function ActionButton({
   );
 }
 
-/** Label + input (or textarea) + hint/error, with an optional mono counter on the right. */
+/** Label + input (or textarea) + hint/error, with an optional counter on the right. */
 export function Field({
   label,
   error,
@@ -327,12 +314,7 @@ export function Field({
       <View className="flex-row items-baseline justify-between gap-3">
         <Text variant="label">{label}</Text>
         {aside ? (
-          <Text
-            className={cn(
-              'font-mono text-code uppercase',
-              asideOk ? 'text-emerald-strong' : 'text-slate',
-            )}
-          >
+          <Text className={cn('text-body-sm', asideOk ? 'text-verified' : 'text-slate')}>
             {aside}
           </Text>
         ) : null}
@@ -386,7 +368,7 @@ const NOTICE = {
   danger: { variant: 'destructive', icon: CircleAlert },
 } as const;
 
-/** Reusables Alert with a Stitch tone and matching icon. */
+/** Reusables Alert with a semantic tone and matching icon. */
 export function Notice({
   tone = 'info',
   title,
@@ -405,18 +387,9 @@ export function Notice({
   );
 }
 
-/** Emerald dot, as in the Stitch live pills. */
+/** Solid dot for work that is genuinely in progress (a running check). */
 export function LiveDot() {
-  return <View className="h-2 w-2 rounded-full bg-emerald" />;
-}
-
-export function LivePill({ children }: { children: ReactNode }) {
-  return (
-    <View className="flex-row items-center gap-2 self-start rounded-full border border-hairline bg-subtle px-3 py-1">
-      <LiveDot />
-      <Text className="font-mono text-label-sm uppercase tracking-wider text-ink">{children}</Text>
-    </View>
-  );
+  return <View className="h-2 w-2 rounded-full bg-brand" />;
 }
 
 /** Settings-style row: icon, label, optional detail, chevron. */
@@ -444,13 +417,13 @@ export function ListRow({
       ) : null}
       <Text
         className={cn(
-          'flex-1 font-sans-medium text-label-md',
+          'flex-1 font-sans-semibold text-label-md',
           destructive ? 'text-danger' : 'text-ink',
         )}
       >
         {label}
       </Text>
-      {detail ? <Text className="font-mono text-code text-slate">{detail}</Text> : null}
+      {detail ? <Text className="text-body-sm text-slate">{detail}</Text> : null}
       <Icon as={destructive ? ArrowRight : ChevronRight} size={16} className="text-faint" />
     </Pressable>
   );
@@ -460,7 +433,7 @@ export function ListRow({
 export function ListGroup({ children }: { children: ReactNode }) {
   const rows = Children.toArray(children).filter(Boolean);
   return (
-    <View className="overflow-hidden rounded-2xl border border-hairline bg-canvas">
+    <View className="overflow-hidden rounded-xl border border-hairline bg-paper">
       {rows.map((row, i) => (
         <Fragment key={i}>
           {i > 0 ? <View className="h-px bg-divider" /> : null}

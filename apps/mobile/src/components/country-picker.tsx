@@ -38,7 +38,7 @@ export function CountryPicker({
         onRequestClose={() => setOpen(false)}
       >
         <View className="flex-1 bg-canvas">
-          <View className="flex-row items-center justify-between border-b border-hairline px-5 py-4">
+          <View className="flex-row items-center justify-between border-b border-rule px-5 py-4">
             <Text variant="h3">Country code</Text>
             <Pressable
               accessibilityLabel="Close"
@@ -65,9 +65,7 @@ export function CountryPicker({
                 <Text className="font-mono text-code text-ink">
                   {item.code} +{item.callingCode}
                 </Text>
-                {item.code === value ? (
-                  <Icon as={Check} size={16} className="text-emerald-strong" />
-                ) : null}
+                {item.code === value ? <Icon as={Check} size={16} className="text-brand" /> : null}
               </Pressable>
             )}
           />

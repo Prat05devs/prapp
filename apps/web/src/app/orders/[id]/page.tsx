@@ -4,7 +4,7 @@ import { formatIST, formatMoney } from '@prapp/shared';
 import { Icon } from '@/components/icon';
 import { OrderTimeline } from '@/components/orders/order-timeline';
 import { StatusBadge } from '@/components/orders/status-badge';
-import { Badge, buttonVariants, Card, Eyebrow, Notice, Page } from '@/components/ui';
+import { Badge, buttonVariants, Card, Notice, Page } from '@/components/ui';
 import { AppError } from '@/server/api';
 import { paymentLinkUrl, paymentsMode } from '@/server/env';
 import { loadOrderDetail } from '@/server/orders';
@@ -48,27 +48,27 @@ export default async function OrderPage({ params, searchParams }: PageProps<'/or
       <Card tone="subtle" className="flex flex-col gap-6">
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="font-mono text-code text-slate uppercase">
-              Order <span className="text-ink">{order.orderNumber}</span>
+            <span className="text-body-sm text-slate">
+              Order <span className="font-mono text-code text-ink">{order.orderNumber}</span>
             </span>
             <StatusBadge status={order.status} />
           </div>
           <h1 className="font-display text-headline-md text-ink">{order.headline}</h1>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-1 rounded-xl border border-hairline bg-canvas p-4">
-            <Eyebrow>Package</Eyebrow>
-            <span className="text-label-md text-ink">{order.packageName ?? 'Package'}</span>
+        <dl className="grid gap-3 border-t border-hairline pt-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-0.5">
+            <dt className="text-body-sm text-slate">Package</dt>
+            <dd className="text-label-md text-ink">{order.packageName ?? 'Package'}</dd>
           </div>
-          <div className="flex flex-col gap-1 rounded-xl border border-hairline bg-canvas p-4">
-            <Eyebrow>Amount</Eyebrow>
-            <span className="text-label-md text-ink">
+          <div className="flex flex-col gap-0.5">
+            <dt className="text-body-sm text-slate">Amount</dt>
+            <dd className="tabular text-label-md text-ink">
               {order.amountMinor != null && order.currency
                 ? formatMoney(order.amountMinor, order.currency)
                 : '-'}
-            </span>
+            </dd>
           </div>
-        </div>
+        </dl>
         <OrderTimeline status={order.status} />
         <dl className="flex flex-col divide-y divide-hairline border-t border-hairline">
           {facts.map(([k, v]) => (
@@ -131,7 +131,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<'/or
       {placements.length ? (
         <section className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <Icon name="public" className="text-emerald-strong" />
+            <Icon name="public" className="text-brand" />
             <h2 className="font-display text-headline-sm text-ink">Your story is live</h2>
           </div>
           <ul className="flex flex-col gap-3">
@@ -139,7 +139,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<'/or
               <li key={p.id} className="flex flex-col gap-3 rounded-2xl border border-hairline p-4">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-label-md text-ink">{p.platform}</span>
-                  <Badge variant="emerald">
+                  <Badge variant="verified">
                     <span className="h-1.5 w-1.5 rounded-full bg-current" />
                     Live
                   </Badge>

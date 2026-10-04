@@ -22,7 +22,7 @@ export interface PrReportData {
 }
 
 const s = StyleSheet.create({
-  page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica', color: '#111' },
+  page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica', color: '#17140f' },
   header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 },
   brand: { fontSize: 18, fontFamily: 'Helvetica-Bold' },
   title: { fontSize: 14, fontFamily: 'Helvetica-Bold', marginBottom: 4 },
@@ -37,7 +37,7 @@ const s = StyleSheet.create({
   cPlatform: { width: 120 },
   cLink: { flex: 1, paddingRight: 8 },
   cDate: { width: 110 },
-  link: { color: '#0b57d0', textDecoration: 'none' },
+  link: { color: '#1d3d63', textDecoration: 'none' },
   note: { marginTop: 16, fontStyle: 'italic', color: '#333' },
   footer: {
     position: 'absolute',

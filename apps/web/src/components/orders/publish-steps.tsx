@@ -14,19 +14,21 @@ export function PublishSteps({ current }: { current: 1 | 2 | 3 }) {
           <li key={label} className="flex items-center gap-3">
             <span className="flex items-center gap-2">
               <span
-                className={`flex h-6 w-6 items-center justify-center rounded-full font-mono text-[11px] ${
+                className={`tabular flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-semibold ${
                   done
-                    ? 'bg-emerald-strong text-white'
+                    ? 'bg-brand-tint text-brand'
                     : active
-                      ? 'bg-ink text-white'
-                      : 'border border-hairline text-faint'
+                      ? 'bg-brand text-white'
+                      : 'border border-input text-slate'
                 }`}
               >
-                {done ? <Icon name="check" size={14} /> : String(n).padStart(2, '0')}
+                {done ? <Icon name="check" size={14} /> : n}
               </span>
-              <span className={`text-label-sm ${active ? 'text-ink' : 'text-slate'}`}>{label}</span>
+              <span className={`text-body-sm ${active ? 'font-semibold text-ink' : 'text-slate'}`}>
+                {label}
+              </span>
             </span>
-            {n < STEPS.length ? <span className="h-px w-6 bg-hairline" /> : null}
+            {n < STEPS.length ? <span aria-hidden className="h-px w-6 bg-input" /> : null}
           </li>
         );
       })}

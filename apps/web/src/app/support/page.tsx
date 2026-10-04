@@ -66,7 +66,7 @@ export default async function SupportPage({ searchParams }: PageProps<'/support'
               rel={c.external ? 'noreferrer' : undefined}
               className="group flex h-full flex-col gap-4 rounded-2xl border border-hairline bg-canvas p-5 transition-colors hover:border-ink"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-hairline bg-subtle text-emerald-strong">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-hairline bg-subtle text-brand">
                 <Icon name={c.icon} />
               </span>
               <span className="flex flex-col gap-1">

@@ -55,9 +55,12 @@ const bodySchema = z.object({
 });
 
 export const POST = handleApi(async (req: Request) => {
+  // Authenticate before looking at the body, then check the action's own level.
+  const staff = await requireStaff(req, 'editor');
   const { action, args } = parseBody(bodySchema, await readJson(req));
   const spec = ACTIONS[action];
-  const { supabase, user } = await requireStaff(req, spec.level);
+  if (spec.level === 'admin' && staff.role !== 'admin') throw new AppError('not_authorized');
+  const { supabase, user } = staff;
   rateLimit(`admin-action:${user.id}`, 120, 60_000);
   const parsed = spec.args.safeParse(args);
   if (!parsed.success) throw new AppError('validation_failed', parsed.error.issues);

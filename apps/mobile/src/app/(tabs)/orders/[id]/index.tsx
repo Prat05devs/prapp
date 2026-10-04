@@ -10,7 +10,6 @@ import {
   Badge,
   Centered,
   ErrorText,
-  Eyebrow,
   Icon,
   Notice,
   Panel,
@@ -68,19 +67,19 @@ export default function OrderScreen() {
     <ScrollScreen refreshing={loading} onRefresh={() => void refresh()}>
       <Panel tone="subtle" className="gap-5">
         <View className="flex-row items-center justify-between">
-          <Text className="font-mono text-code uppercase text-slate">
+          <Text className="text-body-sm text-slate">
             Order <Text className="font-mono text-code text-ink">{order.orderNumber}</Text>
           </Text>
           <StatusBadge status={order.status} />
         </View>
         <Text variant="h2">{order.headline}</Text>
-        <View className="flex-row gap-3">
-          <View className="flex-1 gap-1 rounded-xl border border-hairline bg-canvas p-3.5">
-            <Eyebrow>Package</Eyebrow>
+        <View className="flex-row gap-3 border-t border-rule pt-4">
+          <View className="flex-1 gap-0.5">
+            <Text variant="muted">Package</Text>
             <Text variant="label">{order.packageName ?? 'Package'}</Text>
           </View>
-          <View className="flex-1 gap-1 rounded-xl border border-hairline bg-canvas p-3.5">
-            <Eyebrow>Amount</Eyebrow>
+          <View className="flex-1 gap-0.5">
+            <Text variant="muted">Amount</Text>
             <Text variant="label">
               {order.amountMinor != null && order.currency
                 ? formatMoney(order.amountMinor, order.currency)
@@ -89,12 +88,9 @@ export default function OrderScreen() {
           </View>
         </View>
         <OrderTimeline status={order.status} />
-        <View className="border-t border-hairline">
+        <View className="border-t border-rule">
           {facts.map(([k, v]) => (
-            <View
-              key={k}
-              className="flex-row justify-between gap-4 border-b border-hairline py-2.5"
-            >
+            <View key={k} className="flex-row justify-between gap-4 border-b border-rule py-2.5">
               <Text variant="muted">{k}</Text>
               <Text className="text-body-sm text-ink">{v}</Text>
             </View>
@@ -150,21 +146,20 @@ export default function OrderScreen() {
       {placements.length ? (
         <View className="gap-3">
           <View className="flex-row items-center gap-2">
-            <Icon as={Globe} size={18} className="text-emerald-strong" />
+            <Icon as={Globe} size={18} className="text-brand" />
             <Text variant="h3">Your story is live</Text>
           </View>
           {placements.map((p) => (
-            <View key={p.id} className="gap-3 rounded-2xl border border-hairline p-4">
+            <View key={p.id} className="gap-3 rounded-lg border border-hairline bg-paper p-4">
               <View className="flex-row items-center justify-between">
                 <Text variant="label">{p.platform}</Text>
-                <Badge variant="emerald">
-                  <View className="h-1.5 w-1.5 rounded-full bg-emerald-deep" />
+                <Badge variant="verified">
                   <Text>Live</Text>
                 </Badge>
               </View>
               <Pressable
                 onPress={() => void Linking.openURL(p.liveUrl)}
-                className="flex-row items-center gap-2 rounded-lg border border-hairline bg-subtle px-3 py-2 active:border-ink"
+                className="flex-row items-center gap-2 rounded-md bg-subtle px-3 py-2 active:bg-elevated"
               >
                 <Text numberOfLines={1} className="flex-1 font-mono text-code text-body">
                   {p.liveUrl}

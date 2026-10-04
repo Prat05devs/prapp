@@ -31,6 +31,7 @@ import { useSignOut } from '@/hooks/use-sign-out';
 import { api } from '@/lib/api';
 import { appEnv } from '@/lib/env';
 import { unregisterPush } from '@/lib/push';
+import { promptSignIn } from '@/lib/sign-in-prompt';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -39,7 +40,7 @@ const str = (v: unknown) =>
 
 // Profile (LLD §13): details, notifications, support, terms, privacy, sign out, delete account.
 export default function ProfileScreen() {
-  const { me } = useAuth();
+  const { me, session } = useAuth();
   const { pending, signOut } = useSignOut();
   const settings = useFocusedData(async () => (await api.catalogue.get()).settings);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -75,42 +76,68 @@ export default function ProfileScreen() {
 
   return (
     <TabScreen>
-      <Panel tone="subtle">
-        <View className="flex-row items-center gap-4">
-          <View className="h-14 w-14 items-center justify-center rounded-full bg-ink">
-            <Text className="font-display text-headline-sm uppercase text-white">
-              {(me?.fullName || me?.email || '?').slice(0, 1)}
-            </Text>
-          </View>
-          <View className="flex-1">
-            <Text variant="h3">{me?.fullName}</Text>
-            <Text className="font-mono text-code text-slate">{me?.email}</Text>
-          </View>
-        </View>
-        <View className="rounded-xl border border-hairline bg-canvas">
-          <View className="flex-row items-center gap-3 px-4 py-3">
-            <Icon as={Phone} size={16} className="text-slate" />
-            <Text variant="muted" className="flex-1">
-              Phone
-            </Text>
-            <Text className="font-mono text-code text-ink">{me?.phone}</Text>
-          </View>
-          <View className="h-px bg-hairline" />
-          <View className="flex-row items-center gap-3 px-4 py-3">
-            <Icon as={Mail} size={16} className="text-slate" />
-            <Text variant="muted" className="flex-1">
-              Email
-            </Text>
-            <Text numberOfLines={1} className="max-w-[60%] font-mono text-code text-ink">
-              {me?.email}
-            </Text>
-          </View>
-        </View>
-      </Panel>
+      {session ? (
+        <>
+          <Panel tone="subtle">
+            <View className="flex-row items-center gap-4">
+              <View className="h-14 w-14 items-center justify-center rounded-full bg-brand">
+                <Text className="font-display text-headline-sm uppercase text-white">
+                  {(me?.fullName || me?.email || '?').slice(0, 1)}
+                </Text>
+              </View>
+              <View className="flex-1">
+                <Text variant="h3">{me?.fullName}</Text>
+                <Text className="text-body-sm text-slate">{me?.email}</Text>
+              </View>
+            </View>
+            <View className="rounded-lg border border-hairline bg-paper">
+              <View className="flex-row items-center gap-3 px-4 py-3">
+                <Icon as={Phone} size={16} className="text-slate" />
+                <Text variant="muted" className="flex-1">
+                  Phone
+                </Text>
+                <Text className="text-body-sm text-ink">{me?.phone}</Text>
+              </View>
+              <View className="h-px bg-hairline" />
+              <View className="flex-row items-center gap-3 px-4 py-3">
+                <Icon as={Mail} size={16} className="text-slate" />
+                <Text variant="muted" className="flex-1">
+                  Email
+                </Text>
+                <Text numberOfLines={1} className="max-w-[60%] text-body-sm text-ink">
+                  {me?.email}
+                </Text>
+              </View>
+            </View>
+          </Panel>
 
-      <ListGroup>
-        <ListRow icon={Bell} label="Notifications" onPress={() => router.push('/notifications')} />
-      </ListGroup>
+          <ListGroup>
+            <ListRow
+              icon={Bell}
+              label="Notifications"
+              onPress={() => router.push('/notifications')}
+            />
+          </ListGroup>
+        </>
+      ) : (
+        <Panel tone="subtle" className="gap-3">
+          <Text variant="h3">You&apos;re browsing as a guest</Text>
+          <Text variant="p">
+            Fact checks are free without an account. Log in to check more each day, save your story,
+            pay and track your orders.
+          </Text>
+          <ActionButton
+            title="Log in"
+            variant="accent"
+            onPress={() => promptSignIn({ mode: 'login' })}
+          />
+          <ActionButton
+            title="Create an account"
+            variant="outline"
+            onPress={() => promptSignIn({ mode: 'signup' })}
+          />
+        </Panel>
+      )}
 
       <View className="gap-3">
         <Eyebrow>Support{hours ? ` · ${hours}` : ''}</Eyebrow>
@@ -153,32 +180,36 @@ export default function ProfileScreen() {
         </ListGroup>
       </View>
 
-      <ActionButton
-        title="Sign out"
-        variant="outline"
-        icon={LogOut}
-        loading={pending}
-        onPress={() => void signOut()}
-      />
+      {session ? (
+        <>
+          <ActionButton
+            title="Sign out"
+            variant="outline"
+            icon={LogOut}
+            loading={pending}
+            onPress={() => void signOut()}
+          />
 
-      <View className="gap-3 rounded-2xl border border-danger/25 p-5">
-        <View className="flex-row items-center gap-2">
-          <Icon as={TriangleAlert} size={16} className="text-danger" />
-          <Text className="font-sans-medium text-label-md text-danger">Delete account</Text>
-        </View>
-        <Text className="text-body-sm text-body">
-          Deletes your profile, notifications, devices and fact-check uploads. Completed order
-          records are kept. Not possible while an order is in progress.
-        </Text>
-        <ActionButton
-          title="Delete account…"
-          variant="destructive-outline"
-          size="default"
-          icon={Trash2}
-          onPress={confirmDelete}
-        />
-        <ErrorText>{deleteError}</ErrorText>
-      </View>
+          <View className="gap-3 rounded-xl border border-danger/25 bg-paper p-5">
+            <View className="flex-row items-center gap-2">
+              <Icon as={TriangleAlert} size={16} className="text-danger" />
+              <Text className="font-sans-semibold text-label-md text-danger">Delete account</Text>
+            </View>
+            <Text className="text-body-sm text-body">
+              Deletes your profile, notifications, devices and fact-check uploads. Completed order
+              records are kept. Not possible while an order is in progress.
+            </Text>
+            <ActionButton
+              title="Delete account…"
+              variant="destructive-outline"
+              size="default"
+              icon={Trash2}
+              onPress={confirmDelete}
+            />
+            <ErrorText>{deleteError}</ErrorText>
+          </View>
+        </>
+      ) : null}
     </TabScreen>
   );
 }

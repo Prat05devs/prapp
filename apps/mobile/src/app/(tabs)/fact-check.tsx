@@ -7,23 +7,19 @@ import {
   Link as LinkIcon,
   MessageSquareText,
   Share2,
-  ShieldCheck,
   Upload,
-  Zap,
 } from 'lucide-react-native';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Share, View } from 'react-native';
 import { FC_TOOL_LABELS } from '@prapp/shared';
 import { ReportView } from '@/components/report-view';
 import {
   ActionButton,
-  Badge,
   CheckRow,
-  Eyebrow,
   Field,
   Icon,
   LiveDot,
-  LivePill,
   Notice,
   PageHeader,
   Panel,
@@ -35,7 +31,9 @@ import {
 } from '@/components/ui';
 import { useFactCheck } from '@/hooks/use-fact-check';
 import { appEnv } from '@/lib/env';
+import { SIGN_IN_REASONS, promptSignIn } from '@/lib/sign-in-prompt';
 import { COLORS } from '@/lib/theme';
+import { useAuth } from '@/providers/auth-provider';
 
 type Mode = 'text' | 'url' | 'image';
 
@@ -62,17 +60,38 @@ const TEXT_MAX = 10_000;
 
 export default function FactCheckScreen() {
   const fc = useFactCheck();
+  const { session } = useAuth();
+  const params = useLocalSearchParams<{ text?: string }>();
   const [mode, setMode] = useState<Mode>('text');
   const [text, setText] = useState('');
   const [url, setUrl] = useState('');
+  // Sent from the home page's "Check it": fill in the message (during render, React's pattern for
+  // state that follows a prop), then run the check and clear the param.
+  const sent = typeof params.text === 'string' ? params.text : '';
+  const [filled, setFilled] = useState('');
+  if (sent !== filled) {
+    setFilled(sent);
+    if (sent) {
+      setMode('text');
+      setText(sent);
+    }
+  }
+  useEffect(() => {
+    if (!sent) return;
+    router.setParams({ text: undefined });
+    void fc.checkText(sent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per message sent from home
+  }, [sent]);
+
   const busy = fc.phase === 'submitting' || fc.phase === 'checking';
-  const reportUrl = fc.report ? `${appEnv().EXPO_PUBLIC_API_URL}/r/${fc.report.reportId}` : '';
+  const reportId = fc.report?.reportId;
+  const reportUrl = reportId ? `${appEnv().EXPO_PUBLIC_API_URL}/r/${reportId}` : '';
 
   async function shareImage() {
     // Share image (LLD §11.4): download the PNG card and hand it to the share sheet.
     const file = await File.downloadFileAsync(
       `${reportUrl}/image.png`,
-      new File(Paths.cache, `${fc.report!.reportId}.png`),
+      new File(Paths.cache, `${reportId ?? 'report'}.png`),
       {
         idempotent: true,
       },
@@ -118,23 +137,14 @@ export default function FactCheckScreen() {
 
   return (
     <TabScreen>
-      <View className="gap-4">
-        <LivePill>Free · with sources</LivePill>
-        <PageHeader
-          title="Is this forward true?"
-          lede="Paste a message, a link or a screenshot. We check it against public sources."
-        />
-      </View>
+      <PageHeader
+        eyebrow="Free fact check"
+        title="Is this forward true?"
+        lede="Paste a message, a link or a screenshot. We check it against public sources."
+      />
 
-      <Panel className="gap-5">
-        <View className="gap-1">
-          <View className="flex-row items-center gap-2">
-            <Eyebrow accent>01</Eyebrow>
-            <Text className="text-xs text-faint">/</Text>
-            <Text variant="h3">Paste the forward</Text>
-          </View>
-          <Text variant="muted">A message, a link or a screenshot.</Text>
-        </View>
+      <Panel className="gap-4">
+        <Text variant="label">What do you want to check?</Text>
 
         <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
           <TabsList className="mr-0 w-full">
@@ -143,7 +153,7 @@ export default function FactCheckScreen() {
                 <Icon
                   as={m.icon}
                   size={15}
-                  className={mode === m.mode ? 'text-emerald-strong' : 'text-slate'}
+                  className={mode === m.mode ? 'text-brand' : 'text-slate'}
                 />
                 <Text>{m.label}</Text>
               </TabsTrigger>
@@ -159,7 +169,7 @@ export default function FactCheckScreen() {
             onChangeText={setText}
             multiline
             placeholder="Paste the message or forward you want to check"
-            className="min-h-36 bg-subtle"
+            className="min-h-36"
             maxLength={TEXT_MAX}
           />
         ) : mode === 'url' ? (
@@ -169,12 +179,11 @@ export default function FactCheckScreen() {
             onChangeText={setUrl}
             autoCapitalize="none"
             keyboardType="url"
-            className="bg-subtle"
             placeholder="Paste a link to a post, article or video"
           />
         ) : (
-          <View className="items-center gap-2 rounded-xl border border-dashed border-hairline bg-subtle px-4 py-8">
-            <View className="h-10 w-10 items-center justify-center rounded-full border border-hairline bg-canvas">
+          <View className="items-center gap-2 rounded-md border border-dashed border-input bg-paper px-4 py-8">
+            <View className="h-10 w-10 items-center justify-center rounded-full bg-subtle">
               <Icon as={Upload} size={18} className="text-slate" />
             </View>
             <Text variant="label">Pick a screenshot of the forward</Text>
@@ -195,10 +204,7 @@ export default function FactCheckScreen() {
                 : fc.checkScreenshot())
           }
         />
-        <View className="flex-row items-center gap-2">
-          <Icon as={ShieldCheck} size={14} className="text-emerald-strong" />
-          <Text className="font-mono text-code text-slate">Every answer lists its sources</Text>
-        </View>
+        <Text variant="muted">Every answer links to its sources.</Text>
       </Panel>
 
       {fc.phase === 'checking' || fc.phase === 'submitting' ? (
@@ -208,23 +214,18 @@ export default function FactCheckScreen() {
               <LiveDot />
               <Text variant="label">Checking sources</Text>
             </View>
-            <Badge variant="emerald">
-              <Text>Running</Text>
-            </Badge>
           </View>
           <View className="flex-row items-center gap-2">
-            <ActivityIndicator size="small" color={COLORS.emerald} />
+            <ActivityIndicator size="small" color={COLORS.brand} />
             <Text variant="muted">This usually takes under a minute.</Text>
           </View>
-          <View className="gap-2">
-            {STEPS[mode].map((tool, i) => (
-              <View
-                key={tool}
-                className="flex-row items-center gap-3 rounded-lg border border-divider bg-subtle px-3 py-2"
-              >
-                <Text className="font-mono text-code text-faint">
-                  {String(i + 1).padStart(2, '0')}
-                </Text>
+          <View className="gap-1.5">
+            <Text className="font-sans-semibold text-label-sm text-ink">
+              What we&apos;re running
+            </Text>
+            {STEPS[mode].map((tool) => (
+              <View key={tool} className="flex-row items-center gap-2.5">
+                <View className="h-1 w-1 rounded-full bg-faint" />
                 <Text className="flex-1 text-body-sm text-body">{FC_TOOL_LABELS[tool]}</Text>
               </View>
             ))}
@@ -236,14 +237,28 @@ export default function FactCheckScreen() {
           We&apos;ll notify you when your report is ready.
         </Notice>
       ) : null}
-      {fc.error ? <Notice tone="danger">{fc.error.message}</Notice> : null}
+      {fc.error?.code === 'fact_check_limit_reached' && !session ? (
+        <Panel tone="subtle" className="gap-3">
+          <Text variant="h3">Keep checking for free</Text>
+          <Text variant="p">{SIGN_IN_REASONS['fact-check']}</Text>
+          <ActionButton
+            title="Create a free account"
+            variant="accent"
+            onPress={() => promptSignIn({ mode: 'signup', reason: 'fact-check' })}
+          />
+          <ActionButton
+            title="I already have an account"
+            variant="outline"
+            onPress={() => promptSignIn({ mode: 'login', reason: 'fact-check' })}
+          />
+        </Panel>
+      ) : fc.error ? (
+        <Notice tone="danger">{fc.error.message}</Notice>
+      ) : null}
 
-      <View className="flex-row items-center gap-2 self-center">
-        <Icon as={Zap} size={12} className="text-faint" />
-        <Text className="font-mono text-[11px] uppercase text-faint">
-          Google Fact Check Tools · Gemini · GDELT · Wikipedia · RDAP
-        </Text>
-      </View>
+      <Text variant="muted">
+        Tools we use: Google Fact Check Tools, Gemini with Google Search, GDELT, Wikipedia and RDAP.
+      </Text>
     </TabScreen>
   );
 }

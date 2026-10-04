@@ -16,19 +16,25 @@ export function PublishSteps({ current }: { current: 1 | 2 | 3 }) {
           <View key={label} className="flex-row items-center gap-2">
             <View
               className={`h-6 w-6 items-center justify-center rounded-full ${
-                done ? 'bg-emerald-strong' : active ? 'bg-ink' : 'border border-hairline'
+                done ? 'bg-brand-tint' : active ? 'bg-brand' : 'border border-input'
               }`}
             >
               {done ? (
-                <Icon as={Check} size={12} className="text-white" />
+                <Icon as={Check} size={12} className="text-brand" />
               ) : (
-                <Text className={`font-mono text-[11px] ${active ? 'text-white' : 'text-faint'}`}>
-                  {String(n).padStart(2, '0')}
+                <Text
+                  className={`font-sans-semibold text-[12px] ${active ? 'text-white' : 'text-slate'}`}
+                >
+                  {n}
                 </Text>
               )}
             </View>
-            <Text className={`text-label-sm ${active ? 'text-ink' : 'text-slate'}`}>{label}</Text>
-            {n < STEPS.length ? <View className="h-px w-3 bg-hairline" /> : null}
+            <Text
+              className={`text-body-sm ${active ? 'font-sans-semibold text-ink' : 'text-slate'}`}
+            >
+              {label}
+            </Text>
+            {n < STEPS.length ? <View className="h-px w-3 bg-input" /> : null}
           </View>
         );
       })}

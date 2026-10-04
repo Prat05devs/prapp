@@ -17,7 +17,7 @@ export function PortalWall({ portals, limit }: { portals: CataloguePortal[]; lim
           accessibilityRole="link"
           accessibilityLabel={p.name}
           onPress={() => void Linking.openURL(p.homepageUrl)}
-          className="h-20 w-[48.5%] items-center justify-center gap-1.5 rounded-xl border border-hairline bg-canvas px-3 active:border-ink"
+          className="h-20 w-[48.5%] items-center justify-center gap-1.5 rounded-md border border-hairline bg-paper px-3 active:border-ink"
         >
           {p.logoPath ? (
             <Image
@@ -27,11 +27,9 @@ export function PortalWall({ portals, limit }: { portals: CataloguePortal[]; lim
               accessibilityIgnoresInvertColors
             />
           ) : (
-            <Text className="text-center font-display text-[15px] font-bold text-ink">
-              {p.name}
-            </Text>
+            <Text className="text-center font-display text-[15px] text-ink">{p.name}</Text>
           )}
-          <Text className="font-mono text-[9px] text-faint">{p.domain}</Text>
+          <Text className="text-[11px] text-slate">{p.domain}</Text>
         </Pressable>
       ))}
     </View>

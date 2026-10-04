@@ -57,7 +57,7 @@ export const OCR_PROMPT =
   'Transcribe all readable text in this image exactly as written (any language, keep line breaks). If there is no readable text, return an empty string. Return only the text.';
 
 /** Models sometimes wrap JSON in ```json fences or add prose; take the first JSON object. */
-export function parseJsonLoose<T>(raw: string): T {
+function parseJsonLoose<T>(raw: string): T {
   const cleaned = raw.replace(/```(?:json)?/gi, '').trim();
   const start = cleaned.indexOf('{');
   const end = cleaned.lastIndexOf('}');

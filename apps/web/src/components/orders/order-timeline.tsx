@@ -22,20 +22,20 @@ export function OrderTimeline({ status }: { status: string }) {
         return (
           <li key={s} className="flex flex-col gap-2">
             <span
-              className={`h-1.5 rounded-full ${
+              className={`h-1 rounded-full ${
                 done
-                  ? 'bg-emerald-strong'
+                  ? 'bg-verified'
                   : current
                     ? status === 'changes_requested'
                       ? 'bg-warn'
-                      : 'bg-ink'
+                      : 'bg-brand'
                     : 'bg-elevated'
               }`}
             />
             <span
               className={`flex items-center gap-1 text-label-sm ${done || current ? 'text-ink' : 'text-faint'}`}
             >
-              {done ? <Icon name="check" size={14} className="text-emerald-strong" /> : null}
+              {done ? <Icon name="check" size={14} className="text-verified" /> : null}
               <span className="truncate">{label}</span>
             </span>
           </li>

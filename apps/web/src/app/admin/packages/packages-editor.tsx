@@ -237,7 +237,7 @@ export function PackagesEditor({
               <td>
                 <button
                   type="button"
-                  className="text-xs font-medium text-emerald-strong hover:underline"
+                  className="text-xs font-medium text-brand hover:underline"
                   onClick={() => edit(p)}
                 >
                   Edit

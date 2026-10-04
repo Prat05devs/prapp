@@ -1,11 +1,10 @@
-import { Check } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import type { CataloguePackage } from '@prapp/api-client';
 import { formatMoney } from '@prapp/shared';
-import { Badge, Icon, RadioGroup, RadioGroupItem, Text } from '@/components/ui';
+import { RadioGroup, RadioGroupItem, Text } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
-/** Package cards on a Reusables RadioGroup (Stitch "distribution tier" cards). */
+/** Package cards on a Reusables RadioGroup. */
 export function PackagePicker({
   packages,
   value,
@@ -30,8 +29,10 @@ export function PackagePicker({
               disabled={disabled}
               onPress={() => onChange(p.id)}
               className={cn(
-                'flex-row items-start gap-4 rounded-2xl border bg-canvas p-5',
-                selected ? 'border-2 border-emerald-strong' : 'border-hairline active:border-ink',
+                'flex-row items-start gap-4 rounded-lg border p-5',
+                selected
+                  ? 'border-brand bg-brand-tint/40'
+                  : 'border-hairline bg-paper active:border-ink',
                 disabled && 'opacity-60',
               )}
             >
@@ -50,18 +51,12 @@ export function PackagePicker({
                   {p.includesInstagram ? ' + 1 Instagram collaboration post' : ''} · live within{' '}
                   {p.turnaroundHours} h
                 </Text>
-                {selected ? (
-                  <Badge variant="emerald" className="mt-2 rounded-md">
-                    <Icon as={Check} size={12} className="text-emerald-deep" />
-                    <Text>Selected</Text>
-                  </Badge>
-                ) : null}
               </View>
             </Pressable>
           );
         })}
       </RadioGroup>
-      <Text className="font-mono text-code text-slate">Prices are inclusive of all taxes</Text>
+      <Text variant="muted">Prices include all taxes.</Text>
     </View>
   );
 }

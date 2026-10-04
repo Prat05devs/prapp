@@ -89,11 +89,6 @@ export function razorpayGateway(): RazorpayGateway {
   return gateway;
 }
 
-/** For tests only. */
-export function setRazorpayGateway(next: RazorpayGateway | undefined) {
-  gateway = next;
-}
-
 export function hmacSha256Hex(data: string, secret: string): string {
   return createHmac('sha256', secret).update(data).digest('hex');
 }

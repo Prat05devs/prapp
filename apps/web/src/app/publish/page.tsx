@@ -3,12 +3,15 @@ import { PublishSteps } from '@/components/orders/publish-steps';
 import { PortalWall } from '@/components/site/portal-wall';
 import { Notice, Page, PageHeader } from '@/components/ui';
 import { publicEnv } from '@/lib/env';
-import { requireCompleteUser } from '@/server/session';
+import { getCurrentUser } from '@/server/session';
 import { createServerSupabase } from '@/server/supabase/server';
 import { PublishForm } from './publish-form';
 
+// Open to guests: they can write the story and pick a package; saving asks them to log in
+// (LLD §13, "When we ask for an account").
 export default async function PublishPage({ searchParams }: PageProps<'/publish'>) {
-  await requireCompleteUser('/publish');
+  const me = await getCurrentUser().catch(() => null);
+  const account = !me ? 'guest' : me.profileComplete ? 'ready' : 'incomplete';
   const params = await searchParams;
   const { packages, portals } = await fetchCatalogue(await createServerSupabase());
   const preselected = typeof params.package === 'string' ? params.package : undefined;
@@ -38,8 +41,8 @@ export default async function PublishPage({ searchParams }: PageProps<'/publish'
                 Our team picks the best 5 for your story. Tap to see them all.
               </span>
             </span>
-            <span className="text-label-sm text-emerald-strong group-open:hidden">Show</span>
-            <span className="hidden text-label-sm text-emerald-strong group-open:inline">Hide</span>
+            <span className="text-label-sm text-brand group-open:hidden">Show</span>
+            <span className="hidden text-label-sm text-brand group-open:inline">Hide</span>
           </summary>
           <PortalWall
             className="pt-5"
@@ -54,7 +57,12 @@ export default async function PublishPage({ searchParams }: PageProps<'/publish'
         </details>
       ) : null}
       {packages.length ? (
-        <PublishForm packages={packages} initialPackageId={initialPackageId} />
+        <PublishForm
+          packages={packages}
+          initialPackageId={initialPackageId}
+          account={account}
+          resume={params.resume === '1'}
+        />
       ) : (
         <Notice>No packages are available right now. Please check back soon.</Notice>
       )}

@@ -3,22 +3,22 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot } from 'radix-ui';
 import { cn } from '@/lib/utils';
 
-// shadcn/ui button, restyled to the Stitch spec: 8px radius, obsidian primary,
-// emerald accent for the main call to action, hairline outline that darkens on hover.
+// shadcn/ui button (docs/DESIGN.md): 6px radius, ink primary, brand blue for the one main
+// action on a screen, hairline outline that darkens on hover. No scale or glow on press.
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap transition-colors duration-150 outline-none active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-ring/25 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md font-semibold whitespace-nowrap transition-colors duration-150 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-ink-soft',
-        accent: 'bg-emerald-strong text-white hover:bg-emerald-deep',
-        outline: 'border border-hairline bg-background text-ink hover:border-ink',
+        accent: 'bg-brand text-white hover:bg-brand-deep',
+        outline: 'border border-input bg-paper text-ink hover:border-ink',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'text-body hover:bg-subtle hover:text-ink',
         destructive: 'bg-destructive text-white hover:bg-danger-deep',
         'destructive-outline':
           'border border-destructive/30 bg-background text-destructive hover:border-destructive hover:bg-danger-tint/40',
-        link: 'text-emerald-strong underline-offset-4 hover:underline',
+        link: 'text-brand underline underline-offset-4 decoration-brand-soft hover:decoration-brand',
       },
       size: {
         default: 'h-10 px-4 text-label-md',

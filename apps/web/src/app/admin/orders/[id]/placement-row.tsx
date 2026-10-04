@@ -138,7 +138,7 @@ export function PlacementRow({
             ) : (
               <button
                 type="button"
-                className="self-start text-xs font-medium text-emerald-strong hover:underline"
+                className="self-start text-xs font-medium text-brand hover:underline"
                 onClick={() => setShowFail(true)}
               >
                 Portal down?

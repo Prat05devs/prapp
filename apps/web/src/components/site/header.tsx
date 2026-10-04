@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { BRAND_NAME } from '@prapp/shared';
 import { buttonVariants } from '@/components/ui';
@@ -7,16 +6,8 @@ import { NavLink } from './nav-link';
 
 export function BrandMark() {
   return (
-    <Link href="/" className="flex shrink-0 items-center gap-2.5">
-      <Image src="/brand-mark.png" alt="" width={32} height={32} priority className="rounded-lg" />
-      <span className="flex flex-col">
-        <span className="font-display text-[17px] leading-none font-bold tracking-tight text-ink">
-          {BRAND_NAME}
-        </span>
-        <span className="mt-1 font-mono text-[10px] leading-none tracking-wider text-faint uppercase">
-          Fact check · Publish
-        </span>
-      </span>
+    <Link href="/" className="flex shrink-0 items-center">
+      <span className="font-display text-[22px] leading-none font-bold text-ink">{BRAND_NAME}</span>
     </Link>
   );
 }
@@ -25,7 +16,7 @@ export async function SiteHeader() {
   const me = await getCurrentUser().catch(() => null);
   const staff = me && (me.role === 'editor' || me.role === 'admin');
   return (
-    <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/95 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-hairline bg-canvas">
       <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6 md:h-16 md:flex-nowrap md:py-0">
         <BrandMark />
         <nav className="order-last -mx-1 flex w-full gap-1 overflow-x-auto md:order-none md:mx-0 md:ml-4 md:w-auto">
@@ -41,7 +32,7 @@ export async function SiteHeader() {
               href="/account"
               className="flex items-center gap-2 rounded-full border border-hairline py-1 pr-3 pl-1 text-label-md text-ink transition-colors hover:border-ink"
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink font-mono text-[11px] text-white uppercase">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[12px] font-semibold text-white uppercase">
                 {(me.fullName || me.email || '?').slice(0, 1)}
               </span>
               <span className="max-w-32 truncate">{me.fullName || 'Account'}</span>

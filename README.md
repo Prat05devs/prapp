@@ -92,6 +92,26 @@ fallbacks for the local stack; never expose a secret key to a browser or mobile 
   (`com.prapp.app` placeholders), icons.
 - Manual checklist: every row of LLD §9.10 with a real payment and refund.
 
+## Mobile release builds
+
+Release bundles read `apps/mobile/.env.production` (public `EXPO_PUBLIC_*` values only).
+
+- **iOS:** open `apps/mobile/ios/NewsVio.xcworkspace` → Product → Archive → Distribute. Bump
+  `CURRENT_PROJECT_VERSION` (and `ios.buildNumber` in `app.json`) for every TestFlight upload.
+- **Android:** `android/` is generated: `npx dotenv -e .env.production -- npx expo prebuild -p android`
+  in `apps/mobile`. Release builds are signed with the upload key via `plugins/with-release-signing.js`,
+  which reads `NEWSVIO_UPLOAD_*` from `~/.gradle/gradle.properties` (keystore kept outside the repo).
+  Then in `apps/mobile/android`: `./gradlew bundleRelease` (AAB for Play) or `./gradlew assembleRelease`
+  (APK). Bump `android.versionCode` in `app.json` for every Play upload.
+
+## Security settings that live outside the repo
+
+- Supabase Auth → Providers → Email: **Confirm email on**, minimum password length **8** (the app
+  confirms sign-ups with the 6-digit code; without it anyone could pre-register someone else's email).
+  The "Confirm signup" email template must show `{{ .Token }}` (see `supabase/templates/confirmation.html`).
+- Payment-link orders (`PAYMENTS_MODE=link`) can only be started by editors after an admin clears
+  "verify payment" in Admin → Attention (migration `20261004000000_security_hardening.sql`).
+
 ## Decisions taken where the spec was silent
 
 Marked `// DECISION:` in code. Main ones: `validation_failed` / `rate_limited` /

@@ -59,7 +59,7 @@ export function SettingsEditor({ settings }: { settings: Setting[] }) {
   return (
     <div className="flex flex-col gap-3">
       <ErrorText>{action.error}</ErrorText>
-      {action.notice ? <p className="text-sm text-emerald-strong">{action.notice}</p> : null}
+      {action.notice ? <p className="text-sm text-brand">{action.notice}</p> : null}
       {settings.map((s) => (
         <div key={s.key} className="flex flex-wrap items-center gap-2">
           <label className="w-72 text-sm">

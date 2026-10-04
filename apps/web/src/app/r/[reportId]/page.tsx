@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { BRAND_NAME, FC_VERDICT_LABELS } from '@prapp/shared';
 import { ReportView } from '@/components/fact-check/report-view';
 import { Icon } from '@/components/icon';
-import { LivePill, Page, buttonVariants } from '@/components/ui';
+import { Page, buttonVariants } from '@/components/ui';
 import { reportUrl } from '@/server/fc-assets';
 import { loadPublicReport } from './load';
 import { ShareBar } from './share-bar';
@@ -38,17 +38,17 @@ export default async function PublicReportPage({ params }: PageProps<'/r/[report
   return (
     <Page width="md">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-hairline pb-6">
-        <LivePill>{BRAND_NAME} fact check</LivePill>
+        <p className="text-label-sm text-slate">{BRAND_NAME} fact check</p>
         <ShareBar
           url={url}
           title={`${FC_VERDICT_LABELS[report.verdict ?? 'unverified']} · ${BRAND_NAME} fact check`}
         />
       </div>
       <ReportView report={report} reportUrl={url} />
-      <section className="flex flex-col gap-5 rounded-2xl bg-ink p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
+      <section className="flex flex-col gap-5 border-t border-hairline pt-8 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
-          <p className="font-display text-headline-sm">Got another forward?</p>
-          <p className="text-body-md text-white/70">
+          <p className="font-display text-headline-sm text-ink">Got another forward?</p>
+          <p className="text-body-md text-slate">
             Check a message, link or screenshot for free before you share it.
           </p>
         </div>

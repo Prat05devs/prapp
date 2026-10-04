@@ -29,6 +29,20 @@ export type Catalogue = Awaited<ReturnType<typeof fetchCatalogue>>;
 export type CataloguePackage = Catalogue['packages'][number];
 export type CataloguePortal = Catalogue['portals'][number];
 
+/** Stories we've carried (admin showcase, anon-readable): home page "Recently published". */
+export async function fetchShowcase(db: Db, limit = 6) {
+  const res = await db
+    .from('showcase_stories')
+    .select('id, title, portal_name, url, image_path')
+    .eq('is_visible', true)
+    .order('sort_order')
+    .limit(limit);
+  check(res);
+  return camelize(res.data ?? []);
+}
+
+export type ShowcaseStory = Awaited<ReturnType<typeof fetchShowcase>>[number];
+
 /** Public support contacts and limits (app_settings where is_public). */
 export async function fetchPublicSettings(db: Db): Promise<Record<string, unknown>> {
   const res = await db.from('app_settings').select('key, value').eq('is_public', true);

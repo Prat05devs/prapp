@@ -10,7 +10,7 @@ export interface NewsItem extends Evidence {
 }
 
 /** IFCN signatories and established Indian fact-check desks (LLD §11.2 step 3). */
-export const INDIAN_FACT_CHECKERS = [
+const INDIAN_FACT_CHECKERS = [
   'factcheck.pib.gov.in',
   'altnews.in',
   'boomlive.in',

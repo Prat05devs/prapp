@@ -127,7 +127,7 @@ export const LIMITS = {
   reasonMin: 10,
   factCheckTextMax: 10_000,
   factCheckImageMaxBytes: 5 * 1024 * 1024,
-  guestFactChecksPerDay: 3,
+  guestFactChecksPerDay: 2,
   userFactChecksPerDay: 20,
   checkoutTokenTtlSeconds: 30 * 60,
   intentReuseHours: 12,

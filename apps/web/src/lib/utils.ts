@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
 
-// tailwind-merge must know the Stitch text-size tokens, or it treats `text-body-sm` and
+// tailwind-merge must know the design-system text-size tokens, or it treats `text-body-sm` and
 // `text-ink` as the same group (colour) and drops one of them.
 const twMerge = extendTailwindMerge({
   extend: {

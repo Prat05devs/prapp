@@ -30,9 +30,7 @@ export function ImageSlots({
     <section className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-label-md text-ink">Images (1 required, up to 2)</h2>
-        <span
-          className={`font-mono text-code uppercase ${filled ? 'text-emerald-strong' : 'text-slate'}`}
-        >
+        <span className={`tabular text-body-sm ${filled ? 'text-verified' : 'text-slate'}`}>
           {filled} of {slots.length} added
         </span>
       </div>
@@ -56,7 +54,7 @@ export function ImageSlots({
           return image ? (
             <div
               key={position}
-              className="flex flex-col overflow-hidden rounded-2xl border border-hairline bg-canvas"
+              className="flex flex-col overflow-hidden rounded-lg border border-hairline bg-paper"
             >
               <div className="relative">
                 {url ? (
@@ -65,19 +63,19 @@ export function ImageSlots({
                 ) : (
                   <div className="aspect-video w-full bg-elevated" />
                 )}
-                <span className="absolute top-3 left-3 rounded-md bg-ink/80 px-2 py-0.5 font-mono text-[11px] text-white uppercase">
+                <span className="absolute top-3 left-3 rounded-sm bg-ink/80 px-1.5 py-px text-label-sm text-white">
                   Photo {position}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3 px-4 py-3">
-                <p className="font-mono text-code text-slate">
+                <p className="tabular text-body-sm text-slate">
                   {image.width} × {image.height} px · {Math.round(image.sizeBytes / 1024)} KB
                 </p>
-                <Icon name="check_circle" className="text-emerald" />
+                <Icon name="check_circle" className="text-verified" />
               </div>
               {editable ? (
                 <div className="flex gap-4 border-t border-divider px-4 py-2.5 text-label-sm">
-                  <label className="cursor-pointer text-ink hover:text-emerald-strong">
+                  <label className="cursor-pointer text-ink hover:text-brand">
                     Replace
                     {pickInput}
                   </label>
@@ -95,11 +93,11 @@ export function ImageSlots({
           ) : (
             <label
               key={position}
-              className={`flex aspect-video flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-hairline bg-subtle p-4 text-center transition-colors ${
+              className={`flex aspect-video flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-input bg-paper p-4 text-center transition-colors ${
                 editable ? 'cursor-pointer hover:border-ink' : ''
               }`}
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-canvas text-slate">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-subtle text-slate">
                 <Icon
                   name={busy === position ? 'progress_activity' : 'upload'}
                   size={20}
@@ -109,7 +107,7 @@ export function ImageSlots({
               <span className="text-label-md text-ink">
                 {busy === position ? 'Uploading…' : `Add photo ${position}`}
               </span>
-              <span className="font-mono text-code text-slate uppercase">JPG, PNG or WebP</span>
+              <span className="text-body-sm text-slate">JPG, PNG or WebP</span>
               {editable ? pickInput : null}
             </label>
           );
