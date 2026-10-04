@@ -38,7 +38,16 @@ export async function SiteFooter() {
             ) : null}
           </div>
         </div>
-        <nav className="flex flex-wrap gap-x-6 gap-y-2 text-label-md text-body md:self-end">
+        <nav
+          aria-label="Footer"
+          className="flex flex-wrap gap-x-6 gap-y-2 text-label-md text-body md:self-end"
+        >
+          <Link className="hover:text-ink" href="/fact-check">
+            Fact checker
+          </Link>
+          <Link className="hover:text-ink" href="/publish">
+            PR publishing
+          </Link>
           <Link className="hover:text-ink" href="/support">
             Support
           </Link>

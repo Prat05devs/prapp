@@ -5,6 +5,7 @@ import { ICON_FONT_URL } from '@/components/icon';
 import { SiteFooter } from '@/components/site/footer';
 import { SiteHeader } from '@/components/site/header';
 import { publicEnv } from '@/lib/env';
+import { SITE_DESCRIPTION } from '@/lib/seo';
 
 // Type system (docs/DESIGN.md): Source Serif 4 headlines, Public Sans interface and body,
 // IBM Plex Mono only for data (order numbers, URLs, codes).
@@ -24,8 +25,10 @@ const plexMono = IBM_Plex_Mono({
 // (NEXT_PUBLIC_SITE_URL: https://newsvio.in in production).
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv().NEXT_PUBLIC_SITE_URL),
-  title: 'NewsVio',
-  description: 'Fact checker and self-serve PR publishing',
+  title: 'NewsVio — Fact Checking & Self-Service PR in India',
+  description: SITE_DESCRIPTION,
+  applicationName: 'NewsVio',
+  icons: { icon: '/brand-mark.png', apple: '/brand-mark.png' },
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {

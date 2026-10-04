@@ -1,8 +1,11 @@
-import type { Metadata } from 'next';
-import { BRAND_NAME } from '@prapp/shared';
+import { pageMetadata } from '@/lib/seo';
 import { Badge, Page } from '@/components/ui';
 
-export const metadata: Metadata = { title: `Terms · ${BRAND_NAME}` };
+export const metadata = pageMetadata(
+  '/terms',
+  'Terms of Use',
+  'Read NewsVio’s terms for AI-assisted fact checking, sponsored PR publishing, payments, refunds and accounts.',
+);
 
 // DECISION: placeholder terms covering what the product does; replace with lawyer-reviewed text before launch.
 export default function TermsPage() {

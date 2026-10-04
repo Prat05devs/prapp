@@ -1,8 +1,11 @@
-import type { Metadata } from 'next';
-import { BRAND_NAME } from '@prapp/shared';
+import { pageMetadata } from '@/lib/seo';
 import { Badge, Page } from '@/components/ui';
 
-export const metadata: Metadata = { title: `Privacy · ${BRAND_NAME}` };
+export const metadata = pageMetadata(
+  '/privacy',
+  'Privacy Policy',
+  'Read how NewsVio handles account information, fact-check submissions, AI processing, publishing orders and data retention.',
+);
 
 // LLD §13 / §15: data collected, AI providers, retention, deletion.
 // DECISION: placeholder text covering the required points; have it reviewed before launch.

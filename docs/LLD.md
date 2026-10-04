@@ -766,3 +766,5 @@ Order status shown to customers: Draft · Awaiting payment · Received (paid) ·
 
 ## 21. Changelog
 - v1.0 (2026-09-27): initial locked spec. Migration `20260927000000_init.sql` (23 tables, 42 policies), SQL tests 105/105.
+
+- 2026-10-04: User-authorized SEO/GEO improvements: canonical metadata, social cards, curated sitemap, crawler controls, service/organization structured data, and explanatory copy on existing public pages. No changes to payment or fact-check verdict logic. See `docs/SEO-GEO.md`.

@@ -19,6 +19,20 @@ const nextConfig: NextConfig = {
   // all), so clickjacking is blocked everywhere. A script CSP is left out on purpose: the Razorpay
   // checkout script and Next's inline scripts would need nonces first.
   headers: async () => [
+    ...[
+      '/login',
+      '/team-login',
+      '/complete-profile',
+      '/account',
+      '/orders',
+      '/admin',
+      '/pay',
+      '/api',
+      '/auth',
+    ].map((path) => ({
+      source: `${path}/:path*`,
+      headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+    })),
     {
       source: '/:path*',
       headers: [

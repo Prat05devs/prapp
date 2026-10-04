@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+import Link from 'next/link';
+import { pageMetadata } from '@/lib/seo';
 import { BRAND_NAME, FC_DISCLAIMER, FC_TOOL_LABELS, FC_VERDICT_LABELS } from '@prapp/shared';
 import {
   VERDICT_COLORS,
@@ -9,7 +10,11 @@ import { Icon } from '@/components/icon';
 import { Badge, Page, PageHeader } from '@/components/ui';
 import { createServerSupabase } from '@/server/supabase/server';
 
-export const metadata: Metadata = { title: `How we check · ${BRAND_NAME}` };
+export const metadata = pageMetadata(
+  '/methodology',
+  'Fact-Checking Methodology, Sources & Corrections',
+  'Learn how NewsVio uses AI, published fact checks and official sources, what each verdict means, and how to report an error.',
+);
 
 const TOOLS = [
   ['Google Fact Check Tools', 'Finds reviews already published by recognised fact-checkers.'],
@@ -42,7 +47,7 @@ export default async function MethodologyPage() {
       <PageHeader
         eyebrow="Methodology"
         title="How we check"
-        lede={`${BRAND_NAME} does not give its own opinion. Every report shows the sources we found and the tools we used, so you can verify the result yourself.`}
+        lede={`${BRAND_NAME} uses AI-assisted analysis of public evidence. Every report shows the sources found and the tools used, so you can verify the result yourself. Automated analysis can make mistakes.`}
       />
 
       <section className="flex flex-col gap-4">
@@ -101,6 +106,26 @@ export default async function MethodologyPage() {
             </li>
           ))}
         </ul>
+      </section>
+      <section className="flex flex-col gap-4">
+        <SectionTitle>Report an error or request a correction</SectionTitle>
+        <p className="text-body-md text-body">
+          If a verdict, source or claim appears incorrect,{' '}
+          <Link href="/support" className="text-brand underline">
+            contact support
+          </Link>{' '}
+          with the report link, the disputed statement and a reliable source explaining the issue.
+          Check the publication date and original context of the evidence before relying on a
+          result.
+        </p>
+      </section>
+      <section className="flex flex-col gap-4">
+        <SectionTitle>Fact checking and sponsored publishing</SectionTitle>
+        <p className="text-body-md text-body">
+          NewsVio also offers paid PR publishing. These placements are labelled as sponsored
+          content. Purchasing a story placement does not purchase a fact-check verdict or turn a
+          promotional claim into verified evidence.
+        </p>
       </section>
       <p className="border-t border-hairline pt-5 text-body-sm text-slate">{FC_DISCLAIMER}</p>
     </Page>

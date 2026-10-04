@@ -1,10 +1,13 @@
-import type { Metadata } from 'next';
-import { BRAND_NAME } from '@prapp/shared';
+import { pageMetadata } from '@/lib/seo';
 import { Icon, type IconName } from '@/components/icon';
 import { supportContacts } from '@/components/site/support';
 import { Notice, Page, PageHeader } from '@/components/ui';
 
-export const metadata: Metadata = { title: `Support · ${BRAND_NAME}` };
+export const metadata = pageMetadata(
+  '/support',
+  'Contact & Support',
+  'Contact NewsVio for help with PR publishing, payments, fact-check reports or corrections through the available support channels.',
+);
 
 export default async function SupportPage({ searchParams }: PageProps<'/support'>) {
   const s = await supportContacts();

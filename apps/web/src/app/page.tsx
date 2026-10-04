@@ -1,3 +1,5 @@
+import { JsonLd } from '@/components/site/json-ld';
+import { organizationSchema, pageMetadata, SITE_DESCRIPTION, siteUrl } from '@/lib/seo';
 import Link from 'next/link';
 import { fetchCatalogue } from '@prapp/api-client';
 import { BRAND_NAME, FC_VERDICT_LABELS, formatMoney, publicAssetUrl } from '@prapp/shared';
@@ -14,6 +16,12 @@ import {
   VERDICT_MEANINGS,
 } from '@/components/fact-check/verdict-style';
 import { FactChecker } from './fact-check/fact-checker';
+
+export const metadata = pageMetadata(
+  '/',
+  'Fact Checker & Self-Service PR in India',
+  SITE_DESCRIPTION,
+);
 
 const CHECK_STEPS = [
   {
@@ -48,7 +56,7 @@ const FAQ = [
   },
   {
     q: 'Where will my story be published?',
-    a: 'On 5 high-DA portals from our publishing network, plus one Instagram post, as a collaboration post with you when you give your handle.',
+    a: 'On news portals from our publishing network. Check the current package for the portal count and Instagram inclusion; provide your handle for a collaboration post when included.',
   },
   {
     q: 'Is a paid story marked as sponsored?',
@@ -85,16 +93,34 @@ export default async function HomePage() {
 
   return (
     <main className="flex flex-col">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@graph': [
+            organizationSchema(),
+            {
+              '@type': 'WebSite',
+              '@id': siteUrl('/#website'),
+              name: 'NewsVio',
+              url: siteUrl(),
+              description: SITE_DESCRIPTION,
+              publisher: { '@id': siteUrl('/#organization') },
+              inLanguage: 'en-IN',
+            },
+          ],
+        }}
+      />
       {/* Hero: the fact checker itself */}
       <section className="border-b border-hairline">
         <div className="mx-auto grid w-full max-w-7xl gap-12 px-4 pt-10 pb-14 sm:px-6 sm:pt-14 lg:grid-cols-12 lg:gap-16 lg:pb-20">
           <div className="flex flex-col gap-6 lg:col-span-7">
             <h1 className="max-w-2xl font-display text-display-mobile text-ink md:text-display">
-              Got a forward? Check it before you share it.
+              Fact-check a forward before you share it.
             </h1>
             <p className="max-w-xl text-body-lg text-body">
-              {BRAND_NAME} checks WhatsApp forwards, links and screenshots against live news, Indian
-              fact-checkers and official sources, and shows you every source it used.
+              {BRAND_NAME} is a free, AI-assisted fact checker for India. It checks WhatsApp
+              forwards, links and screenshots against live news, Indian fact-checkers and official
+              sources, and shows you every source it used.
             </p>
             <FactChecker
               siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL}
@@ -165,13 +191,12 @@ export default async function HomePage() {
             <div className="flex flex-col gap-4 lg:col-span-7">
               <p className="text-label-sm text-slate">Publish your story</p>
               <h2 className="font-display text-headline-lg-mobile text-ink sm:text-headline-lg">
-                Your news on {portals.length ? `${portals.length} ` : ''}news portals in our
-                network.
+                Self-service PR on news portals and Instagram.
               </h2>
               <p className="max-w-2xl text-body-lg text-body">
-                Announcements, achievements, launches and local news: written by you, published by
-                our editorial team across our network of regional and national portals, with an
-                Instagram post.
+                Do your own PR in India: submit business announcements, achievements, launches and
+                local news, written by you and published by our editorial team across our network of
+                regional and national portals, with an Instagram post.
               </p>
             </div>
             {pkg ? (
@@ -188,7 +213,7 @@ export default async function HomePage() {
                 <ul className="flex flex-col gap-2 text-body-sm text-body">
                   <li className="flex items-center gap-2">
                     <Icon name="check" size={18} className="text-slate" />
-                    {pkg.portalCount} high-DA news portals
+                    {pkg.portalCount} news portals
                   </li>
                   {pkg.includesInstagram ? (
                     <li className="flex items-center gap-2">

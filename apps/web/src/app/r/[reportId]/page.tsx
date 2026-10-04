@@ -20,6 +20,7 @@ export async function generateMetadata({ params }: PageProps<'/r/[reportId]'>): 
   return {
     title,
     description,
+    alternates: { canonical: reportUrl(reportId) },
     openGraph: {
       title,
       description,
