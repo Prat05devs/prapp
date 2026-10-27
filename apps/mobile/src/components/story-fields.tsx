@@ -1,5 +1,10 @@
 import { View } from 'react-native';
-import { INSTAGRAM_COLLAB_HINT, LIMITS, type OrderContentInput } from '@prapp/shared';
+import {
+  INSTAGRAM_COLLAB_HINT,
+  LIMITS,
+  STORY_FORM_COPY,
+  type OrderContentInput,
+} from '@prapp/shared';
 import { Field } from '@/components/ui';
 
 export function StoryFields({
@@ -18,7 +23,8 @@ export function StoryFields({
   return (
     <View className="gap-5">
       <Field
-        label="Headline"
+        label={STORY_FORM_COPY.headlineLabel}
+        hint={STORY_FORM_COPY.headlineHint}
         aside={`${headlineLen} / ${LIMITS.headlineMax}`}
         asideOk={headlineLen > 0 && headlineLen <= LIMITS.headlineMax}
         value={value.headline}
@@ -28,7 +34,8 @@ export function StoryFields({
         error={errors.headline}
       />
       <Field
-        label="Article"
+        label={STORY_FORM_COPY.bodyLabel}
+        hint={STORY_FORM_COPY.bodyHint}
         aside={`${bodyLen.toLocaleString('en-IN')} · min ${LIMITS.bodyMin}`}
         asideOk={bodyLen >= LIMITS.bodyMin}
         value={value.body}
@@ -39,7 +46,7 @@ export function StoryFields({
         error={errors.body}
       />
       <Field
-        label="Instagram handle (optional)"
+        label={STORY_FORM_COPY.handleLabel}
         value={value.instagramHandle ?? ''}
         onChangeText={(instagramHandle) => onChange({ instagramHandle })}
         autoCapitalize="none"

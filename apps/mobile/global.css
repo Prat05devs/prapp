@@ -3,31 +3,30 @@
 @tailwind utilities;
 
 /*
- * shadcn / React Native Reusables semantic variables, mapped onto the Stitch
- * "Obsidian & Emerald Minimalist" palette (same values as apps/web globals.css).
- * Light only, like the design system.
+ * shadcn / React Native Reusables semantic variables, mapped onto the NewsVio palette
+ * (docs/DESIGN.md; same values as apps/web globals.css). Light only, on purpose.
  */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 6.7%;
+    --background: 45 33.3% 97.6%;
+    --foreground: 38 21.1% 7.5%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 6.7%;
+    --card-foreground: 38 21.1% 7.5%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 6.7%;
-    --primary: 0 0% 6.7%;
+    --popover-foreground: 38 21.1% 7.5%;
+    --primary: 38 21.1% 7.5%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 10% 96.1%;
-    --secondary-foreground: 0 0% 6.7%;
-    --muted: 210 16.7% 97.6%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 210 16.7% 97.6%;
-    --accent-foreground: 0 0% 6.7%;
-    --destructive: 0 75.5% 41.6%;
+    --secondary: 42 26.3% 92.5%;
+    --secondary-foreground: 38 21.1% 7.5%;
+    --muted: 43 25.9% 94.7%;
+    --muted-foreground: 37 8.1% 38.8%;
+    --accent: 43 25.9% 94.7%;
+    --accent-foreground: 38 21.1% 7.5%;
+    --destructive: 3 71.3% 41%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 0 0% 6.7%;
-    --radius: 0.5rem;
+    --border: 41 21.6% 85.5%;
+    --input: 41 18.8% 80.2%;
+    --ring: 213 54.7% 25.1%;
+    --radius: 0.375rem;
   }
 }

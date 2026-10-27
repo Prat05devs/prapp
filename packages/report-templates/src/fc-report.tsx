@@ -11,9 +11,11 @@ import {
 } from '@react-pdf/renderer';
 import {
   BRAND_NAME,
+  FC_CORRECTION_PROMPT,
   FC_DISCLAIMER,
   FC_TOOL_LABELS,
   FC_VERDICT_LABELS,
+  FC_VERDICT_RESULTS,
   PIB_FACT_CHECK_NOTE,
   formatIST,
   type FactCheckReport,
@@ -63,15 +65,15 @@ function ensureFonts(): Promise<void> {
 
 const VERDICT_COLOR: Record<string, string> = {
   likely_false: '#b3261e',
-  misleading: '#b35c00',
-  likely_true: '#1e7b34',
-  unverified: '#555555',
+  misleading: '#8a5300',
+  likely_true: '#1e6b45',
+  unverified: '#6b655b',
 };
 
 const hasDevanagari = (s: string | null | undefined) => /[ऀ-ॿ]/.test(s ?? '');
 
 const s = StyleSheet.create({
-  page: { padding: 36, fontSize: 10, fontFamily: 'NotoSans', color: '#111' },
+  page: { padding: 36, fontSize: 10, fontFamily: 'NotoSans', color: '#17140f' },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   brand: { fontSize: 16, fontWeight: 700 },
   muted: { color: '#555' },
@@ -79,7 +81,7 @@ const s = StyleSheet.create({
   claim: { fontSize: 12, marginTop: 10 },
   verdict: { fontSize: 18, fontWeight: 700, marginTop: 8 },
   item: { marginBottom: 4 },
-  link: { color: '#0b57d0', textDecoration: 'none' },
+  link: { color: '#1d3d63', textDecoration: 'none' },
   badge: { fontSize: 8, color: '#555' },
   disclaimer: { marginTop: 14, fontSize: 8, color: '#555' },
   qr: { width: 72, height: 72 },
@@ -106,11 +108,11 @@ export function FactCheckPdf({
   const evidence = report.claims.flatMap((c) => c.sources.filter((x) => !x.isExistingFactCheck));
   const gov = report.claims.some((c) => c.isGovernmentRelated);
   return (
-    <Document title={`Fact check ${report.reportId}`} author={BRAND_NAME}>
+    <Document title={`${BRAND_NAME} fact-check: ${report.reportId}`} author={BRAND_NAME}>
       <Page size="A4" style={s.page}>
         <View style={s.row}>
           <View>
-            <Text style={s.brand}>{BRAND_NAME} fact check</Text>
+            <Text style={s.brand}>{BRAND_NAME} fact-check</Text>
             <Text style={s.muted}>
               {report.reportId} · checked {report.checkedAt ? formatIST(report.checkedAt) : '-'}
             </Text>
@@ -123,6 +125,9 @@ export function FactCheckPdf({
         ))}
         <Text style={[s.verdict, { color: VERDICT_COLOR[verdict] }]}>
           {FC_VERDICT_LABELS[verdict]} · {report.confidence ?? 'low'} confidence
+        </Text>
+        <Text style={{ marginTop: 6 }}>
+          {`${FC_VERDICT_RESULTS[verdict].headline} ${FC_VERDICT_RESULTS[verdict].detail}`}
         </Text>
         {report.summary ? <T style={{ marginTop: 6 }}>{report.summary}</T> : null}
 
@@ -171,14 +176,15 @@ export function FactCheckPdf({
           ))}
         {report.mode === 'reduced' ? (
           <Text style={{ marginTop: 6 }}>
-            Reduced check: our AI tools were at capacity. Full check pending — this report will
-            update.
+            Reduced check: our AI tools were at capacity. A full check is pending, and this report
+            will update.
           </Text>
         ) : null}
         {gov ? <Text style={{ marginTop: 8 }}>{PIB_FACT_CHECK_NOTE}</Text> : null}
         <Text style={s.disclaimer}>{FC_DISCLAIMER}</Text>
+        <Text style={s.disclaimer}>{FC_CORRECTION_PROMPT}</Text>
         <Text style={s.disclaimer}>
-          Verify this report: <Link src={reportUrl}>{reportUrl}</Link>
+          Read the full report: <Link src={reportUrl}>{reportUrl}</Link>
         </Text>
       </Page>
     </Document>

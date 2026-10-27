@@ -1,28 +1,33 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { ArrowUpRight, Download, Globe, LifeBuoy, Lock, Pencil } from 'lucide-react-native';
-import { Linking, Pressable, View } from 'react-native';
+import { ArrowUpRight, Download, LifeBuoy, Lock, Pencil } from 'lucide-react-native';
+import { Linking, View } from 'react-native';
 import { formatIST, formatMoney } from '@prapp/shared';
 import { OrderTimeline } from '@/components/order-timeline';
+import { PressableScale } from '@/components/motion/pressable-scale';
 import { StatusBadge } from '@/components/status-badge';
 import {
   ActionButton,
   Badge,
+  Card,
   Centered,
   ErrorText,
-  Eyebrow,
+  Group,
+  HeaderButton,
   Icon,
   Notice,
-  Panel,
+  Row,
   ScrollScreen,
+  Section,
   Text,
 } from '@/components/ui';
 import { useCheckout } from '@/hooks/use-checkout';
 import { useOrder } from '@/hooks/use-order';
-import { appEnv } from '@/lib/env';
+import { appEnv, siteUrl } from '@/lib/env';
 import { api } from '@/lib/api';
 
-// Order detail (LLD §13): status, links + report after publish, edit & resubmit on changes.
+// Order detail (LLD §13, wireframe in docs/MOBILE-UX.md): status, links + report after publish,
+// edit & resubmit on changes. The action for the order's status sits in the bottom bar.
 export default function OrderScreen() {
   const { id, payment, reason } = useLocalSearchParams<{
     id: string;
@@ -56,6 +61,13 @@ export default function OrderScreen() {
   }
 
   const facts: [string, string][] = [
+    ['Package', order.packageName ?? 'Package'],
+    [
+      'Amount',
+      order.amountMinor != null && order.currency
+        ? formatMoney(order.amountMinor, order.currency)
+        : '-',
+    ],
     ['Created', formatIST(order.createdAt)],
     ...(order.paidAt ? [['Paid', formatIST(order.paidAt)] as [string, string]] : []),
     ...(order.deadlineAt && ['paid', 'in_progress'].includes(order.status)
@@ -64,184 +76,185 @@ export default function OrderScreen() {
     ...(order.publishedAt ? [['Published', formatIST(order.publishedAt)] as [string, string]] : []),
   ];
 
+  const showPayLink = Boolean(payLink && order.status === 'paid' && order.amountMinor);
+  const reportReady = order.status === 'published' && order.reportStatus === 'ready';
+  const action = showPayLink ? (
+    <ActionButton
+      title={`Pay ${formatMoney(order.amountMinor ?? 0, order.currency ?? 'INR')} on Razorpay`}
+      variant="accent"
+      icon={ArrowUpRight}
+      onPress={() => payLink && void WebBrowser.openBrowserAsync(payLink)}
+    />
+  ) : reportReady ? (
+    <ActionButton
+      title="Download PDF report"
+      variant="accent"
+      icon={Download}
+      onPress={() => void openReport()}
+    />
+  ) : order.status === 'draft' ? (
+    <ActionButton title="Continue editing" variant="accent" icon={Pencil} onPress={edit} />
+  ) : order.status === 'changes_requested' ? (
+    <ActionButton title="Edit and resubmit" variant="accent" icon={Pencil} onPress={edit} />
+  ) : order.status === 'pending_payment' || order.status === 'expired' ? (
+    <View className="flex-row gap-2">
+      <ActionButton
+        title="Edit"
+        variant="outline"
+        icon={Pencil}
+        onPress={() => void checkout.reopen()}
+      />
+      <ActionButton
+        title="Pay now"
+        variant="accent"
+        icon={Lock}
+        className="flex-1"
+        loading={checkout.pending}
+        onPress={() => void checkout.pay()}
+      />
+    </View>
+  ) : null;
+
   return (
-    <ScrollScreen refreshing={loading} onRefresh={() => void refresh()}>
-      <Panel tone="subtle" className="gap-5">
-        <View className="flex-row items-center justify-between">
-          <Text className="font-mono text-code uppercase text-slate">
-            Order <Text className="font-mono text-code text-ink">{order.orderNumber}</Text>
-          </Text>
-          <StatusBadge status={order.status} />
-        </View>
-        <Text variant="h2">{order.headline}</Text>
-        <View className="flex-row gap-3">
-          <View className="flex-1 gap-1 rounded-xl border border-hairline bg-canvas p-3.5">
-            <Eyebrow>Package</Eyebrow>
-            <Text variant="label">{order.packageName ?? 'Package'}</Text>
-          </View>
-          <View className="flex-1 gap-1 rounded-xl border border-hairline bg-canvas p-3.5">
-            <Eyebrow>Amount</Eyebrow>
-            <Text variant="label">
-              {order.amountMinor != null && order.currency
-                ? formatMoney(order.amountMinor, order.currency)
-                : '-'}
-            </Text>
-          </View>
-        </View>
-        <OrderTimeline status={order.status} />
-        <View className="border-t border-hairline">
-          {facts.map(([k, v]) => (
-            <View
-              key={k}
-              className="flex-row justify-between gap-4 border-b border-hairline py-2.5"
-            >
-              <Text variant="muted">{k}</Text>
-              <Text className="text-body-sm text-ink">{v}</Text>
-            </View>
-          ))}
-        </View>
-      </Panel>
-
-      {payment && unpaid ? (
-        payment === 'failed' ? (
-          <Notice tone="danger" title="Payment failed">
-            {`${reason ? `${reason}. ` : ''}No money was taken. You can try again.`}
-          </Notice>
-        ) : (
-          <Notice title="Confirming your payment…" />
-        )
-      ) : null}
-      {payLink && order.status === 'paid' && order.amountMinor ? (
-        <Notice
-          tone={payment === 'link' ? 'success' : 'info'}
-          title={payment === 'link' ? 'Order received: complete your payment' : 'Payment'}
-        >
-          {`Pay ${formatMoney(order.amountMinor, order.currency ?? 'INR')} on our Razorpay page and write your order number ${order.orderNumber} in the note. We check every payment and then publish your story. Already paid? Nothing more to do.`}
-        </Notice>
-      ) : null}
-      {payLink && order.status === 'paid' && order.amountMinor ? (
-        <ActionButton
-          title={`Pay ${formatMoney(order.amountMinor, order.currency ?? 'INR')} on Razorpay`}
-          variant="accent"
-          icon={ArrowUpRight}
-          onPress={() => void WebBrowser.openBrowserAsync(payLink)}
-        />
-      ) : null}
-      {payment && !unpaid && !payLink ? (
-        <Notice
-          tone="success"
-          title={order.amountMinor === 0 ? 'Order confirmed' : 'Payment received'}
-        >
-          Your story will be published within 24 hours.
-        </Notice>
-      ) : null}
-
-      {order.status === 'changes_requested' ? (
-        <Notice tone="warn" title="Our team asked for changes">
-          {order.changesRequestedReason}
-        </Notice>
-      ) : null}
-      {order.status === 'rejected' ? (
-        <Notice tone="danger" title="We could not publish your story">
-          {`${order.rejectionReason ?? ''}\nA full refund has been initiated. Banks can take 5–7 working days to show it.`}
-        </Notice>
-      ) : null}
-
-      {placements.length ? (
-        <View className="gap-3">
-          <View className="flex-row items-center gap-2">
-            <Icon as={Globe} size={18} className="text-emerald-strong" />
-            <Text variant="h3">Your story is live</Text>
-          </View>
-          {placements.map((p) => (
-            <View key={p.id} className="gap-3 rounded-2xl border border-hairline p-4">
-              <View className="flex-row items-center justify-between">
-                <Text variant="label">{p.platform}</Text>
-                <Badge variant="emerald">
-                  <View className="h-1.5 w-1.5 rounded-full bg-emerald-deep" />
-                  <Text>Live</Text>
-                </Badge>
-              </View>
-              <Pressable
-                onPress={() => void Linking.openURL(p.liveUrl)}
-                className="flex-row items-center gap-2 rounded-lg border border-hairline bg-subtle px-3 py-2 active:border-ink"
-              >
-                <Text numberOfLines={1} className="flex-1 font-mono text-code text-body">
-                  {p.liveUrl}
-                </Text>
-                <Icon as={ArrowUpRight} size={14} className="text-slate" />
-              </Pressable>
-            </View>
-          ))}
-        </View>
-      ) : null}
-
-      {refunds.length ? (
-        <View className="gap-2">
-          <Text variant="h3">Refunds</Text>
-          {refunds.map((r) => (
-            <View
-              key={r.id}
-              className="flex-row items-center justify-between rounded-xl border border-hairline px-4 py-3"
-            >
-              <Text variant="label">{formatMoney(r.amountMinor, order.currency ?? 'INR')}</Text>
-              <Badge>
-                <Text>{r.status}</Text>
-              </Badge>
-            </View>
-          ))}
-        </View>
-      ) : null}
-
-      <View className="gap-3">
-        {order.status === 'published' ? (
-          order.reportStatus === 'ready' ? (
-            <ActionButton
-              title="Download report (PDF)"
-              icon={Download}
-              onPress={() => void openReport()}
+    <>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <HeaderButton
+              icon={LifeBuoy}
+              label="Help with this order"
+              onPress={() =>
+                void WebBrowser.openBrowserAsync(`${siteUrl()}/support?order=${order.orderNumber}`)
+              }
             />
-          ) : (
-            <Notice>
-              Your report is being prepared. We&apos;ll notify you when it&apos;s ready.
+          ),
+        }}
+      />
+      <ScrollScreen
+        refreshing={loading}
+        onRefresh={() => void refresh()}
+        footer={
+          action ? (
+            <>
+              <ErrorText>{checkout.error}</ErrorText>
+              {action}
+            </>
+          ) : undefined
+        }
+      >
+        <View className="gap-2.5">
+          <View className="flex-row items-center gap-2">
+            <StatusBadge status={order.status} />
+            <Text className="font-mono text-code text-slate">{order.orderNumber}</Text>
+          </View>
+          <Text className="font-display text-headline-md text-ink">
+            {order.headline || 'Untitled story'}
+          </Text>
+        </View>
+
+        {payment && unpaid ? (
+          payment === 'failed' ? (
+            <Notice tone="danger" title="Payment was not completed">
+              {`${reason ? `${reason}. ` : ''}No charge was confirmed. Try again or choose another payment method.`}
             </Notice>
+          ) : (
+            <Notice title="Confirming your payment…" />
           )
         ) : null}
-        {order.status === 'draft' ? (
-          <ActionButton title="Continue editing" icon={Pencil} onPress={edit} />
+        {showPayLink ? (
+          <Notice
+            tone={payment === 'link' ? 'success' : 'info'}
+            title={payment === 'link' ? 'Order received: complete your payment' : 'Payment'}
+          >
+            {`Pay ${formatMoney(order.amountMinor ?? 0, order.currency ?? 'INR')} on our Razorpay page and write your order number ${order.orderNumber} in the note. We check every payment and then publish your story. Already paid? Nothing more to do.`}
+          </Notice>
+        ) : null}
+        {payment && !unpaid && !payLink ? (
+          <Notice tone="success" title="Your story is with our editorial team.">
+            {`We have received your submission${order.amountMinor === 0 ? '' : ' and payment'}. We will review the story before publication and notify you when the links are live.`}
+          </Notice>
         ) : null}
         {order.status === 'changes_requested' ? (
-          <ActionButton title="Edit and resubmit" icon={Pencil} onPress={edit} />
+          <Notice tone="warn" title="Your story needs a few changes before publication">
+            {order.changesRequestedReason}
+          </Notice>
         ) : null}
-        {order.status === 'pending_payment' || order.status === 'expired' ? (
-          <>
-            <ActionButton
-              title="Pay now"
-              variant="accent"
-              icon={Lock}
-              loading={checkout.pending}
-              onPress={() => void checkout.pay()}
-            />
-            <ActionButton
-              title="Edit story"
-              variant="outline"
-              icon={Pencil}
-              onPress={() => void checkout.reopen()}
-            />
-          </>
+        {order.status === 'rejected' ? (
+          <Notice tone="danger" title="We can't publish this story">
+            {`${order.rejectionReason ?? ''}\nWe have started a full refund. Banks can take 5–7 working days to show it.`}
+          </Notice>
         ) : null}
-        <ErrorText>{checkout.error}</ErrorText>
-        <ActionButton
-          title="Need help with this order?"
-          variant="ghost"
-          icon={LifeBuoy}
-          onPress={() =>
-            void WebBrowser.openBrowserAsync(
-              `${appEnv().EXPO_PUBLIC_API_URL}/support?order=${order.orderNumber}`,
-            )
-          }
-        />
-      </View>
-    </ScrollScreen>
+        {order.status === 'published' && order.reportStatus !== 'ready' ? (
+          <Notice>
+            Your delivery report is being prepared. We&apos;ll notify you when it&apos;s ready.
+          </Notice>
+        ) : null}
+
+        {[
+          'draft',
+          'pending_payment',
+          'paid',
+          'in_progress',
+          'changes_requested',
+          'published',
+        ].includes(order.status) ? (
+          <Section title="Progress">
+            <Card>
+              <OrderTimeline status={order.status} />
+            </Card>
+          </Section>
+        ) : null}
+
+        {placements.length ? (
+          <Section title="Your story is live." footer="Every live link included in your package.">
+            <Group>
+              {placements.map((p) => (
+                <PressableScale
+                  scaleTo={0.985}
+                  key={p.id}
+                  accessibilityRole="link"
+                  onPress={() => void Linking.openURL(p.liveUrl)}
+                  className="flex-row items-center gap-3 px-4 py-3 active:bg-subtle"
+                >
+                  <View className="flex-1 gap-0.5">
+                    <Text className="font-sans-medium text-[16px] text-ink">{p.platform}</Text>
+                    <Text numberOfLines={1} className="font-mono text-code text-slate">
+                      {p.liveUrl}
+                    </Text>
+                  </View>
+                  <Icon as={ArrowUpRight} size={18} className="text-faint" />
+                </PressableScale>
+              ))}
+            </Group>
+          </Section>
+        ) : null}
+
+        <Section title="Details">
+          <Group>
+            {facts.map(([k, v]) => (
+              <Row key={k} label={k} value={v} />
+            ))}
+          </Group>
+        </Section>
+
+        {refunds.length ? (
+          <Section title="Refunds">
+            <Group>
+              {refunds.map((r) => (
+                <Row
+                  key={r.id}
+                  label={formatMoney(r.amountMinor, order.currency ?? 'INR')}
+                  trailing={
+                    <Badge>
+                      <Text>{r.status}</Text>
+                    </Badge>
+                  }
+                />
+              ))}
+            </Group>
+          </Section>
+        ) : null}
+      </ScrollScreen>
+    </>
   );
 }

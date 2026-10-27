@@ -25,6 +25,7 @@ export async function applyRazorpayPayment(
   gw: RazorpayGateway,
   fetched: RzpPayment,
 ): Promise<ApplyResult> {
+  gw = gw.resolveOrder ? await gw.resolveOrder(fetched.order_id) : gw;
   let p = fetched;
   if (p.status === 'authorized') {
     try {
@@ -68,6 +69,7 @@ export async function settleRazorpayOrder(
   gw: RazorpayGateway,
   razorpayOrderId: string,
 ): Promise<{ results: ApplyResult[]; moneyReceived: boolean }> {
+  gw = gw.resolveOrder ? await gw.resolveOrder(razorpayOrderId) : gw;
   const payments = await gw.fetchOrderPayments(razorpayOrderId);
   const results: ApplyResult[] = [];
   let moneyReceived = false;

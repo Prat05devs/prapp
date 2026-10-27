@@ -43,9 +43,9 @@ describe('fact checks (LLD §11)', () => {
     expect(isOwner(r, null, 'someone-else-device')).toBe(false);
   }, 70_000);
 
-  it('enforces the guest daily limit (3) per device', async () => {
+  it('enforces the guest daily limit (2) per device: the 3rd asks to log in', async () => {
     const caller = guest();
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       await submitFactCheck(service, caller, {
         type: 'text',
         text: `claim number ${i} ${randomUUID()}`,

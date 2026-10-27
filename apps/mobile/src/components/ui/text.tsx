@@ -4,8 +4,8 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { Platform, Text as RNText, type Role } from 'react-native';
 
-// React Native Reusables Text with the Stitch type scale: Manrope headings, Inter body,
-// JetBrains Mono micro-labels. Custom fonts carry their weight in the family name.
+// React Native Reusables Text with the NewsVio type scale (docs/DESIGN.md): Source Serif 4
+// headings, Public Sans body, Plex Mono only for data. Fonts carry their weight in the name.
 const textVariants = cva(
   cn(
     'font-sans text-body-md text-ink',
@@ -17,19 +17,19 @@ const textVariants = cva(
     variants: {
       variant: {
         default: '',
-        h1: 'font-display-bold text-display-mobile text-ink',
+        h1: 'font-display text-headline-lg-mobile text-ink',
         h2: 'font-display text-headline-lg-mobile text-ink',
         h3: 'font-display text-headline-sm text-ink',
         h4: 'font-sans-semibold text-body-lg text-ink',
         p: 'text-body-md text-body',
-        blockquote: 'border-l-2 border-hairline pl-3 font-display text-headline-sm text-ink',
+        blockquote: 'font-display text-headline-sm text-ink',
         code: 'font-mono text-code text-slate',
-        lead: 'text-body-lg text-slate',
+        lead: 'text-body-lg text-body',
         large: 'font-sans-semibold text-body-lg',
         small: 'font-sans-medium text-label-md',
         muted: 'text-body-sm text-slate',
-        label: 'font-sans-medium text-label-md text-ink',
-        eyebrow: 'font-mono text-label-sm uppercase tracking-wider text-slate',
+        label: 'font-sans-semibold text-label-md text-ink',
+        eyebrow: 'font-sans-semibold text-label-sm text-slate',
       },
     },
     defaultVariants: {

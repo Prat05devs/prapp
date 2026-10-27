@@ -1,26 +1,34 @@
-import { router } from 'expo-router';
 import {
-  ArrowRight,
-  Bell,
+  ArrowUpRight,
   ChevronRight,
   CircleAlert,
   CircleCheck,
   Info,
-  ShieldCheck,
   TriangleAlert,
   type LucideIcon,
 } from 'lucide-react-native';
-import { Children, Fragment, type ReactNode } from 'react';
+import {
+  Children,
+  Fragment,
+  isValidElement,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import {
   ActivityIndicator,
-  Pressable,
+  KeyboardAvoidingView,
   RefreshControl,
   ScrollView,
   View,
   type TextInputProps,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BRAND_NAME } from '@prapp/shared';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Enter, Pop } from '@/components/motion/enter';
+import { PressableScale } from '@/components/motion/pressable-scale';
+import { haptics } from '@/lib/haptics';
 import { COLORS } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from './alert';
@@ -31,131 +39,146 @@ import { Input } from './input';
 import { Text } from './text';
 import { Textarea } from './textarea';
 
-// App-level building blocks for the Stitch design system, composed from the
-// React Native Reusables (shadcn for React Native) components in this folder.
+// App-level building blocks for the mobile app (docs/MOBILE-UX.md on top of docs/DESIGN.md),
+// composed from the React Native Reusables components in this folder.
 
 export { Badge } from './badge';
 export { Button } from './button';
-export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
-export { Checkbox } from './checkbox';
 export { Icon } from './icon';
 export { Input } from './input';
-export { Label } from './label';
 export { RadioGroup, RadioGroupItem } from './radio-group';
 export { Separator } from './separator';
-export { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
 export { Text } from './text';
-export { Textarea } from './textarea';
-export { Alert, AlertDescription, AlertTitle } from './alert';
 
-/** Stitch mobile top bar: wordmark + notifications bell. */
-export function AppBar() {
-  return (
-    <View className="flex-row items-center justify-between border-b border-hairline bg-canvas px-5 py-3">
-      <View className="flex-row items-center gap-2.5">
-        <View className="h-8 w-8 items-center justify-center rounded-lg bg-ink">
-          <Icon as={ShieldCheck} size={18} className="text-white" />
-        </View>
-        <View>
-          <Text className="font-display-bold text-[17px] leading-5 text-ink">{BRAND_NAME}</Text>
-          <Text className="font-mono text-[10px] uppercase leading-3 tracking-wider text-faint">
-            Fact check · Publish
-          </Text>
-        </View>
-      </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Notifications"
-        hitSlop={8}
-        onPress={() => router.push('/notifications')}
-        className="h-10 w-10 items-center justify-center rounded-full border border-hairline active:bg-subtle"
-      >
-        <Icon as={Bell} size={18} className="text-ink" />
-      </Pressable>
-    </View>
-  );
-}
-
-/** A tab root: safe area, the Stitch app bar, then scrolling content. */
-export function TabScreen({
-  children,
-  refreshing,
-  onRefresh,
-}: {
+type ScrollProps = {
   children: ReactNode;
   refreshing?: boolean;
   onRefresh?: () => void;
-}) {
-  const insets = useSafeAreaInsets();
+  /** pinned under the scroll: the screen's main action (see BottomBar) */
+  footer?: ReactNode;
+  /** add the home-indicator inset under the footer (screens outside the tab bar) */
+  footerInset?: boolean;
+  /** fade each top-level child in, one after another, when the screen mounts (default on) */
+  animateIn?: boolean;
+  /**
+   * A tab's own header, drawn in the scroll right under the status bar (docs/MOBILE-UX.md). Use it
+   * on tab roots whose native header is hidden (TAB_ROOT): it replaces the large-title bar.
+   */
+  header?: ScreenHeaderProps;
+};
+
+type ScreenHeaderProps = {
+  title: string;
+  /** a short line above the title ("Namaste, Prateek") */
+  kicker?: string;
+  /** a sentence under the title */
+  lede?: string;
+  /** buttons on the right of the title row */
+  right?: ReactNode;
+};
+
+/** Compact tab header: kicker, serif title and actions on one row, then an optional lede. */
+function ScreenHeader({ title, kicker, lede, right }: ScreenHeaderProps) {
   return (
-    <View className="flex-1 bg-canvas" style={{ paddingTop: insets.top }}>
-      <AppBar />
-      <ScrollBody refreshing={refreshing} onRefresh={onRefresh}>
-        {children}
-      </ScrollBody>
+    <View className="gap-1.5">
+      <View className="flex-row items-center justify-between gap-3">
+        <View className="flex-1 gap-0.5">
+          {kicker ? <Text className="text-[14px] text-slate">{kicker}</Text> : null}
+          <Text
+            accessibilityRole="header"
+            className="font-display-bold text-[30px] leading-9 tracking-[-0.3px] text-ink"
+          >
+            {title}
+          </Text>
+        </View>
+        {right ? <View className="flex-row items-center gap-2">{right}</View> : null}
+      </View>
+      {lede ? <Text className="text-body-md text-body">{lede}</Text> : null}
     </View>
   );
 }
 
-/** Scrolling content for screens under a native stack header. */
+/** Wraps each child in an entrance, keyed by its place so siblings that come and go don't replay. */
+function staggered(children: ReactNode) {
+  return Children.toArray(children).map((child, i) => (
+    <Enter key={isValidElement(child) ? (child.key ?? i) : i} index={i}>
+      {child}
+    </Enter>
+  ));
+}
+
+/**
+ * A screen under a native stack header. The ScrollView comes first so the iOS large title
+ * collapses on scroll; the footer stays above the keyboard and the tab bar.
+ */
 export function ScrollScreen({
   children,
   refreshing,
   onRefresh,
-}: {
-  children: ReactNode;
-  refreshing?: boolean;
-  onRefresh?: () => void;
-}) {
+  footer,
+  footerInset,
+  animateIn = true,
+  header,
+}: ScrollProps) {
+  const insets = useSafeAreaInsets();
+  const content = header ? [<ScreenHeader key="header" {...header} />, children] : children;
   return (
-    <ScrollBody refreshing={refreshing} onRefresh={onRefresh}>
-      {children}
-    </ScrollBody>
+    <KeyboardAvoidingView behavior="padding" className="flex-1 bg-canvas">
+      <ScrollView
+        className="flex-1 bg-canvas"
+        contentInsetAdjustmentBehavior={header ? 'never' : 'automatic'}
+        style={header ? { marginTop: insets.top } : undefined}
+        contentContainerClassName={header ? 'gap-6 px-4 pb-10 pt-2' : 'gap-7 px-4 pb-10 pt-3'}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={Boolean(refreshing)}
+              onRefresh={onRefresh}
+              tintColor={COLORS.slate}
+            />
+          ) : undefined
+        }
+      >
+        {animateIn ? staggered(content) : content}
+      </ScrollView>
+      {footer ? <BottomBar inset={footerInset}>{footer}</BottomBar> : null}
+    </KeyboardAvoidingView>
   );
 }
 
-function ScrollBody({
-  children,
-  refreshing,
-  onRefresh,
-}: {
-  children: ReactNode;
-  refreshing?: boolean;
-  onRefresh?: () => void;
-}) {
-  return (
-    <ScrollView
-      className="flex-1 bg-canvas"
-      contentContainerClassName="gap-6 px-5 pb-12 pt-6"
-      keyboardShouldPersistTaps="handled"
-      refreshControl={
-        onRefresh ? (
-          <RefreshControl
-            refreshing={Boolean(refreshing)}
-            onRefresh={onRefresh}
-            tintColor={COLORS.slate}
-          />
-        ) : undefined
-      }
-    >
-      {children}
-    </ScrollView>
-  );
-}
-
-/** Full-screen, safe-area page for flows outside the tabs (sign in, profile setup). */
-export function Screen({ children }: { children: ReactNode }) {
+/** Bar pinned to the bottom of a screen for its main action, within thumb reach. */
+function BottomBar({ children, inset }: { children: ReactNode; inset?: boolean }) {
   const insets = useSafeAreaInsets();
   return (
-    <View className="flex-1 bg-canvas" style={{ paddingTop: insets.top }}>
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="gap-6 px-5 pb-12 pt-8"
-        keyboardShouldPersistTaps="handled"
-      >
+    <View
+      className="border-t border-rule bg-paper px-4 pt-3"
+      style={{ paddingBottom: inset ? Math.max(insets.bottom, 12) : 12 }}
+    >
+      <Enter index={2} style={{ gap: 8 }}>
         {children}
-      </ScrollView>
+      </Enter>
     </View>
+  );
+}
+
+/** Full-screen modal page (sign in, profile setup): its own safe area, no navigation bar. */
+export function ModalScreen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
+  return (
+    <SafeAreaView edges={['top', 'bottom']} className="flex-1 bg-canvas">
+      <KeyboardAvoidingView behavior="padding" className="flex-1">
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="gap-6 px-5 pb-10 pt-2"
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+        >
+          {children}
+        </ScrollView>
+        {footer ? <View className="gap-2 px-5 pb-2 pt-3">{footer}</View> : null}
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -163,95 +186,300 @@ export function Centered({ children }: { children: ReactNode }) {
   return <View className="flex-1 items-center justify-center gap-4 bg-canvas p-6">{children}</View>;
 }
 
-/** Mono micro-label, e.g. "01 / Paste the forward". */
-export function Eyebrow({
-  children,
-  accent = false,
-  className,
-}: {
-  children: ReactNode;
-  accent?: boolean;
-  className?: string;
-}) {
+/** Serif title block for modal pages, where there is no navigation bar to carry the title. */
+export function ModalTitle({ title, lede }: { title: ReactNode; lede?: ReactNode }) {
   return (
-    <Text variant="eyebrow" className={cn(accent && 'text-emerald-strong', className)}>
-      {children}
-    </Text>
+    <View className="gap-2">
+      <Text variant="h1">{title}</Text>
+      {lede ? <Text className="text-body-md text-body">{lede}</Text> : null}
+    </View>
   );
 }
 
-/** Screen title block: eyebrow, Manrope headline, slate lede. */
-export function PageHeader({
-  eyebrow,
-  title,
-  lede,
+/** Round icon button for the navigation bar (bell, new, help). */
+export function HeaderButton({
+  icon,
+  label,
+  onPress,
 }: {
-  eyebrow?: ReactNode;
-  title: ReactNode;
-  lede?: ReactNode;
+  icon: LucideIcon;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={8}
+      scaleTo={0.88}
+      haptic="tap"
+      onPress={onPress}
+      className="h-10 w-10 items-center justify-center rounded-full active:bg-elevated"
+    >
+      <Icon as={icon} size={22} className="text-ink" />
+    </PressableScale>
+  );
+}
+
+/**
+ * A block of content with a short sentence-case label above it (and an optional action on the
+ * right) and an optional note below, like a settings section.
+ */
+export function Section({
+  title,
+  action,
+  footer,
+  children,
+}: {
+  title?: string;
+  action?: { label: string; onPress: () => void };
+  footer?: ReactNode;
+  children: ReactNode;
 }) {
   return (
     <View className="gap-2">
-      {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
-      <Text variant="h1">{title}</Text>
-      {lede ? <Text variant="lead">{lede}</Text> : null}
-    </View>
-  );
-}
-
-/** Numbered section heading: [01] Title … aside. */
-export function StepHeading({
-  step,
-  title,
-  aside,
-}: {
-  step: string;
-  title: ReactNode;
-  aside?: ReactNode;
-}) {
-  return (
-    <View className="flex-row items-center justify-between gap-3">
-      <View className="flex-row items-center gap-2.5">
-        <View className="rounded-md bg-ink px-1.5 py-0.5">
-          <Text className="font-mono text-code text-white">{step}</Text>
+      {title || action ? (
+        <View className="min-h-6 flex-row items-end justify-between px-1">
+          {title ? (
+            <Text accessibilityRole="header" className="font-sans-semibold text-[15px] text-ink">
+              {title}
+            </Text>
+          ) : null}
+          {action ? (
+            <PressableScale
+              accessibilityRole="button"
+              hitSlop={10}
+              scaleTo={0.92}
+              onPress={action.onPress}
+            >
+              <Text className="font-sans-semibold text-label-sm text-brand">{action.label}</Text>
+            </PressableScale>
+          ) : null}
         </View>
-        <Text variant="h3">{title}</Text>
-      </View>
-      {aside ? <Eyebrow>{aside}</Eyebrow> : null}
+      ) : null}
+      {children}
+      {footer ? <Text className="px-1 text-label-sm text-slate">{footer}</Text> : null}
     </View>
   );
 }
 
-/** "01 / Title" heading used inside reports. */
-export function SectionTitle({ index, children }: { index: string; children: ReactNode }) {
+/** A white sheet on the canvas for free-form content (forms, a summary). */
+export function Card({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <View className="flex-row items-center gap-2">
-      <Eyebrow accent>{index}</Eyebrow>
-      <Text className="text-xs text-faint">/</Text>
-      <Text variant="h3">{children}</Text>
+    <View className={cn('gap-4 rounded-lg border border-hairline bg-paper p-4', className)}>
+      {children}
     </View>
   );
 }
 
-/** Flat Stitch card: hairline border, 16px radius, canvas or subtle plane. */
-export function Panel({
-  children,
-  tone = 'canvas',
-  className,
+/** Rounded group of rows separated by inset hairlines. */
+export function Group({ children }: { children: ReactNode }) {
+  const rows = Children.toArray(children).filter(Boolean);
+  return (
+    <View className="overflow-hidden rounded-lg border border-hairline bg-paper">
+      {rows.map((row, i) => (
+        <Fragment key={i}>
+          {i > 0 ? <View className="ml-4 h-px bg-divider" /> : null}
+          {row}
+        </Fragment>
+      ))}
+    </View>
+  );
+}
+
+/**
+ * A row in a Group: optional icon, label (+ subtitle), value on the right, and a chevron when it
+ * navigates (or an arrow when it leaves the app). Without onPress it's a read-only row.
+ */
+export function Row({
+  icon,
+  iconColor,
+  label,
+  subtitle,
+  value,
+  mono,
+  trailing,
+  onPress,
+  external,
+  destructive,
+  disabled,
 }: {
-  children: ReactNode;
-  tone?: 'canvas' | 'subtle';
-  className?: string;
+  icon?: LucideIcon;
+  /** a meaningful colour for the icon (a verdict); slate otherwise */
+  iconColor?: string;
+  label: string;
+  subtitle?: string;
+  value?: string;
+  /** set the value in the data font (order numbers, URLs) */
+  mono?: boolean;
+  trailing?: ReactNode;
+  onPress?: () => void;
+  external?: boolean;
+  destructive?: boolean;
+  disabled?: boolean;
 }) {
+  const Glyph = icon;
+  const content = (
+    <>
+      {Glyph && iconColor ? <Glyph size={20} color={iconColor} /> : null}
+      {Glyph && !iconColor ? (
+        <Icon as={Glyph} size={20} className={destructive ? 'text-danger' : 'text-slate'} />
+      ) : null}
+      <View className="flex-1 gap-0.5">
+        <Text
+          className={cn(
+            'font-sans-medium text-[16px] leading-[22px]',
+            destructive ? 'text-danger' : 'text-ink',
+          )}
+        >
+          {label}
+        </Text>
+        {subtitle ? <Text className="text-label-sm text-slate">{subtitle}</Text> : null}
+      </View>
+      {value ? (
+        <Text
+          numberOfLines={1}
+          className={cn(
+            'max-w-[58%] text-right',
+            mono ? 'font-mono text-code text-body' : 'text-[15px] text-slate',
+          )}
+        >
+          {value}
+        </Text>
+      ) : null}
+      {trailing}
+      {onPress && !destructive ? (
+        <Icon as={external ? ArrowUpRight : ChevronRight} size={18} className="text-faint" />
+      ) : null}
+    </>
+  );
+  const className = cn(
+    'min-h-[52px] flex-row items-center gap-3 px-4 py-3',
+    disabled && 'opacity-50',
+  );
+  return onPress ? (
+    <PressableScale
+      accessibilityRole={external ? 'link' : 'button'}
+      disabled={disabled}
+      scaleTo={0.985}
+      onPress={onPress}
+      className={cn(className, 'active:bg-subtle')}
+    >
+      {content}
+    </PressableScale>
+  ) : (
+    <View className={className}>{content}</View>
+  );
+}
+
+/** iOS-style segmented control: the selected thumb slides between options with a spring. */
+export function SegmentedControl<T extends string>({
+  value,
+  onChange,
+  options,
+}: {
+  value: T;
+  onChange: (value: T) => void;
+  options: { value: T; label: string; icon?: LucideIcon }[];
+}) {
+  const [width, setWidth] = useState(0);
+  const index = Math.max(
+    options.findIndex((o) => o.value === value),
+    0,
+  );
+  const segment = width / options.length;
+  const x = useSharedValue(0);
+  const placed = useRef(false);
+  useEffect(() => {
+    if (!segment) return;
+    // Jump into place on first layout; slide after that.
+    x.set(placed.current ? withSpring(index * segment, SEGMENT_SPRING) : index * segment);
+    placed.current = true;
+  }, [x, index, segment]);
+  const thumb = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }] }));
+
   return (
     <View
-      className={cn(
-        'gap-4 rounded-2xl border border-hairline p-5',
-        tone === 'subtle' ? 'bg-subtle' : 'bg-canvas',
-        className,
-      )}
+      accessibilityRole="tablist"
+      className="flex-row rounded-md bg-elevated p-1"
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width - 8)}
     >
-      {children}
+      {segment ? (
+        <Animated.View
+          style={[
+            {
+              position: 'absolute',
+              top: 4,
+              bottom: 4,
+              left: 4,
+              width: segment,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: COLORS.hairline,
+              backgroundColor: COLORS.paper,
+            },
+            thumb,
+          ]}
+        />
+      ) : null}
+      {options.map((o) => {
+        const selected = o.value === value;
+        return (
+          <PressableScale
+            key={o.value}
+            accessibilityRole="tab"
+            accessibilityState={{ selected }}
+            scaleTo={0.95}
+            onPress={() => {
+              if (!selected) haptics.select();
+              onChange(o.value);
+            }}
+            className="h-9 flex-1 flex-row items-center justify-center gap-1.5"
+          >
+            {o.icon ? (
+              <Icon as={o.icon} size={15} className={selected ? 'text-ink' : 'text-slate'} />
+            ) : null}
+            <Text
+              className={cn(
+                'font-sans-semibold text-label-sm',
+                selected ? 'text-ink' : 'text-slate',
+              )}
+            >
+              {o.label}
+            </Text>
+          </PressableScale>
+        );
+      })}
+    </View>
+  );
+}
+
+const SEGMENT_SPRING = { damping: 20, stiffness: 260, mass: 0.8 } as const;
+
+/** Centred state for an empty list or a gated screen: icon, title, line of text, actions. */
+export function EmptyState({
+  icon,
+  title,
+  body,
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  body?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <View className="items-center gap-4 px-4 py-12">
+      <Pop delay={120} bounce={14}>
+        <View className="h-16 w-16 items-center justify-center rounded-full bg-elevated">
+          <Icon as={icon} size={28} className="text-slate" />
+        </View>
+      </Pop>
+      <View className="items-center gap-1.5">
+        <Text className="text-center font-display text-headline-sm text-ink">{title}</Text>
+        {body ? <Text className="text-center text-body-md text-slate">{body}</Text> : null}
+      </View>
+      {children ? <View className="w-full gap-2 pt-2">{children}</View> : null}
     </View>
   );
 }
@@ -292,19 +520,19 @@ export function ActionButton({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={light ? '#ffffff' : COLORS.ink} />
+        <ActivityIndicator color={light ? COLORS.paper : COLORS.ink} />
       ) : (
         <>
           {leading}
           <Text>{title}</Text>
-          {icon ? <Icon as={icon} size={16} /> : null}
+          {icon ? <Icon as={icon} size={18} /> : null}
         </>
       )}
     </Button>
   );
 }
 
-/** Label + input (or textarea) + hint/error, with an optional mono counter on the right. */
+/** Label + input (or textarea) + hint/error, with an optional counter on the right. */
 export function Field({
   label,
   error,
@@ -323,26 +551,23 @@ export function Field({
   className?: string;
 }) {
   return (
-    <View className="gap-2">
+    <View className="gap-1.5">
       <View className="flex-row items-baseline justify-between gap-3">
-        <Text variant="label">{label}</Text>
+        <Text className="font-sans-semibold text-label-md text-ink">{label}</Text>
         {aside ? (
           <Text
-            className={cn(
-              'font-mono text-code uppercase',
-              asideOk ? 'text-emerald-strong' : 'text-slate',
-            )}
+            className={cn('text-label-sm tabular-nums', asideOk ? 'text-verified' : 'text-slate')}
           >
             {aside}
           </Text>
         ) : null}
       </View>
       {multiline ? (
-        <Textarea className={className} {...props} />
+        <Textarea className={cn(error && 'border-danger', className)} {...props} />
       ) : (
-        <Input className={className} {...props} />
+        <Input className={cn(error && 'border-danger', className)} {...props} />
       )}
-      {hint ? <Text variant="muted">{hint}</Text> : null}
+      {hint ? <Text className="text-label-sm text-slate">{hint}</Text> : null}
       <ErrorText>{error}</ErrorText>
     </View>
   );
@@ -361,12 +586,14 @@ export function CheckRow({
   disabled?: boolean;
 }) {
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="checkbox"
       accessibilityState={{ checked, disabled }}
       disabled={disabled}
+      scaleTo={0.985}
+      haptic="select"
       onPress={() => onChange(!checked)}
-      className="flex-row items-start gap-3"
+      className="flex-row items-start gap-3 py-1"
     >
       <Checkbox
         checked={checked}
@@ -375,7 +602,7 @@ export function CheckRow({
         className="mt-0.5"
       />
       <Text className="flex-1 text-body-sm text-body">{children}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -386,7 +613,7 @@ const NOTICE = {
   danger: { variant: 'destructive', icon: CircleAlert },
 } as const;
 
-/** Reusables Alert with a Stitch tone and matching icon. */
+/** Reusables Alert with a semantic tone and matching icon. */
 export function Notice({
   tone = 'info',
   title,
@@ -402,71 +629,5 @@ export function Notice({
       {title ? <AlertTitle>{title}</AlertTitle> : null}
       {children ? <AlertDescription>{children}</AlertDescription> : null}
     </Alert>
-  );
-}
-
-/** Emerald dot, as in the Stitch live pills. */
-export function LiveDot() {
-  return <View className="h-2 w-2 rounded-full bg-emerald" />;
-}
-
-export function LivePill({ children }: { children: ReactNode }) {
-  return (
-    <View className="flex-row items-center gap-2 self-start rounded-full border border-hairline bg-subtle px-3 py-1">
-      <LiveDot />
-      <Text className="font-mono text-label-sm uppercase tracking-wider text-ink">{children}</Text>
-    </View>
-  );
-}
-
-/** Settings-style row: icon, label, optional detail, chevron. */
-export function ListRow({
-  icon,
-  label,
-  detail,
-  onPress,
-  destructive,
-}: {
-  icon?: LucideIcon;
-  label: string;
-  detail?: string;
-  onPress: () => void;
-  destructive?: boolean;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      className="flex-row items-center gap-3 px-4 py-3.5 active:bg-subtle"
-    >
-      {icon ? (
-        <Icon as={icon} size={18} className={destructive ? 'text-danger' : 'text-slate'} />
-      ) : null}
-      <Text
-        className={cn(
-          'flex-1 font-sans-medium text-label-md',
-          destructive ? 'text-danger' : 'text-ink',
-        )}
-      >
-        {label}
-      </Text>
-      {detail ? <Text className="font-mono text-code text-slate">{detail}</Text> : null}
-      <Icon as={destructive ? ArrowRight : ChevronRight} size={16} className="text-faint" />
-    </Pressable>
-  );
-}
-
-/** Rounded group of rows separated by hairlines. */
-export function ListGroup({ children }: { children: ReactNode }) {
-  const rows = Children.toArray(children).filter(Boolean);
-  return (
-    <View className="overflow-hidden rounded-2xl border border-hairline bg-canvas">
-      {rows.map((row, i) => (
-        <Fragment key={i}>
-          {i > 0 ? <View className="h-px bg-divider" /> : null}
-          {row}
-        </Fragment>
-      ))}
-    </View>
   );
 }

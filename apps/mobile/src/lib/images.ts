@@ -22,6 +22,10 @@ export async function pickImage(opts: { base64?: boolean } = {}): Promise<Picked
   if (!perm.granted) throw new Error('Allow photo access in Settings to add an image.');
   const res = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
+    // Multi-select with a limit of 1 gives the picker an explicit Add button; the single-select
+    // mode can leave a ticked photo hanging on iOS 26.
+    allowsMultipleSelection: true,
+    selectionLimit: 1,
     quality: 1,
     exif: false,
   });
@@ -54,8 +58,4 @@ export async function pickImage(opts: { base64?: boolean } = {}): Promise<Picked
     fileName: asset.fileName ?? null,
     base64: saved.base64,
   };
-}
-
-export async function readBytes(uri: string): Promise<ArrayBuffer> {
-  return new File(uri).arrayBuffer();
 }

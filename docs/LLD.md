@@ -67,6 +67,12 @@ Companion files: `CONTEXT.md` (rules) and `supabase/migrations/20260927000000_in
 
 ## 3. Architecture and hosting
 
+**Hosting direction updated 2026-10-26:** the owner intends to use Hostinger for the
+website/admin and DigitalOcean for the API and private PostgreSQL. The diagram below
+describes the existing implementation. `docs/DEPLOYMENT.md` records the migration gaps;
+the owner selected a full move off Supabase. The auth/storage/worker replacements and
+frontend/API split must be implemented before cutover.
+
 ```
  Expo app ──HTTPS (Bearer JWT)──┐
                                 ├──> Next.js on Vercel  (/api/*, /pay/*, /r/*, website, /admin)
@@ -118,7 +124,7 @@ Commit `.env.example` with these names. `NEXT_PUBLIC_*` and `EXPO_PUBLIC_*` are 
 | `NEXT_PUBLIC_SUPABASE_URL` | web | Supabase URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | web | publishable key |
 | `SUPABASE_SECRET_KEY` | web server | secret API key (server only) |
-| `NEXT_PUBLIC_SITE_URL` | web | e.g. `https://example.in` |
+| `NEXT_PUBLIC_SITE_URL` | web | `https://newsvio.in` in production, `http://localhost:3000` locally |
 | `RAZORPAY_KEY_ID` | web server | also sent to the /pay page (public by design) |
 | `RAZORPAY_KEY_SECRET` | web server | signature verification + API |
 | `RAZORPAY_WEBHOOK_SECRET` | web server | webhook signature |
@@ -292,7 +298,6 @@ Everything involving money, secrets or other users goes through the API.
 |---|---|---|
 | `POST /api/fact-checks` | guest (device id) or user | submit; returns `{ id, reportId, status }` |
 | `GET /api/fact-checks/:id` | owner (user or same device id) | poll result |
-| `GET /api/me/fact-checks` | user | history (or direct select) |
 | `PATCH /api/fact-checks/:id` | owner | `{ isPublic }` |
 | `GET /r/[reportId]` (page) | public if `is_public` | report page with OG tags |
 | `GET /r/[reportId]/image.png` | public if `is_public` | share image (cached in `fact-check-share`) |
@@ -508,7 +513,7 @@ Admin-only sections are hidden for editors **and** the DB rejects them anyway.
 ### 11.1 Submit — `POST /api/fact-checks`
 Body: `{ type: 'text'|'url'|'image', text?, url?, imageBase64? | uploadPath?, deviceId }` (images ≤ 5 MB; client compresses).
 1. Identify the caller: user (JWT) or guest (`deviceId` + IP).
-2. Limits (`svc_consume_quota`): guest `guest_device:<id>` and `guest_ip:<ip>` ≤ `factcheck.guest_daily_limit` (3); user ≤ `factcheck.user_daily_limit` (20). Over the limit → 429 `fact_check_limit_reached` (guests are told to log in for more).
+2. Limits (`svc_consume_quota`): guest `guest_device:<id>` and `guest_ip:<ip>` ≤ `factcheck.guest_daily_limit` (2); user ≤ `factcheck.user_daily_limit` (20). Over the limit → 429 `fact_check_limit_reached` (guests are told to log in for more).
 3. Normalise the input (trim, collapse whitespace, lowercase for the hash; for URLs strip tracking params) → `input_hash = sha256(type + normalised)`.
 4. Cache: a `done` fact check with the same hash in the last 7 days → create a new row copying the result (so the user gets their own report id/history) and return `done` immediately. It does not count against the limit.
 5. Otherwise insert `fact_checks` (`status='queued'`), upload the image to `fact-check-uploads`, and return `{ id, reportId, status: 'queued' }`.
@@ -587,7 +592,7 @@ Mobile: request push permission after the first successful action (not on launch
 
 ---
 
-## 13. Screens and pages inventory (system level; visual design comes from Stitch)
+## 13. Screens and pages inventory (system level; visual design: docs/DESIGN.md)
 
 ### Website (Next.js)
 - `/` landing: fact-check hero (text / link / screenshot) · PR section (₹499, portal names) · recently published (showcase) · how it works · footer (support, terms, privacy)
@@ -605,6 +610,17 @@ Mobile: request push permission after the first successful action (not on launch
 - Orders: list → detail (status timeline, links + report after publish, "edit & resubmit" when changes are requested)
 - Profile: details, notifications list, support (call / email / WhatsApp with order id prefilled), terms, privacy, sign out, delete account
 - Auth: welcome (Google / email) → OTP → complete profile
+
+### When we ask for an account (both apps)
+Everything is usable without an account; login is asked only where an account is needed
+(client feedback, Oct 2026, modelled on how Amazon lets you browse and asks at checkout):
+- **Fact check:** 2 free checks a day as a guest; the 3rd returns `fact_check_limit_reached` and
+  the screen offers "Create a free account" / "Log in".
+- **Publish:** a guest fills in the story and picks a package; "Save and add images" asks to
+  log in (then name + phone if missing), keeps what they typed, and continues to the photos step.
+- **Orders, notifications, account:** show a log-in prompt for guests.
+- **Always available:** "Log in" / "Sign up" in the web header; "Log in" in the app bar and a
+  guest card on the Profile tab.
 
 Order status shown to customers: Draft · Awaiting payment · Received (paid) · In progress · Changes needed · Published · Rejected · Refunded · Cancelled · Expired.
 ("In progress" covers both `paid` and `in_progress` if you prefer fewer states: show `paid` as "Received".)
@@ -665,6 +681,7 @@ Order status shown to customers: Draft · Awaiting payment · Received (paid) ·
 | `order_not_resubmittable` | This order isn't waiting for changes. |
 | `illegal_transition` | That action isn't allowed for this order's current status. |
 | `order_not_claimable` | Someone else already picked up this order. |
+| `payment_unverified` | An admin needs to confirm this payment in the Razorpay dashboard before the order can be started. |
 | `order_not_releasable` / `order_assigned_to_someone_else` | This order is assigned to another editor. |
 | `order_not_in_progress` | Claim the order first. |
 | `placement_not_found` / `placement_swapped` | This placement was replaced. Refresh. |
@@ -740,8 +757,8 @@ Order status shown to customers: Draft · Awaiting payment · Received (paid) ·
 
 | Decision | Default |
 |---|---|
-| App name / domain / deep link scheme | placeholder `prapp`; scheme `prapp://` |
-| Guest fact-check limit | 3/day; logged-in 20/day (app_settings) |
+| App name / domain / deep link scheme | newsVio / `newsvio.in`; configured mobile scheme `newsvio://`. Historical `prapp://` examples above need reconciliation before deployment. |
+| Guest fact-check limit | 2/day (the 3rd asks to log in); logged-in 20/day (app_settings) |
 | Phone unique per account? | No (shared numbers allowed) |
 | Portal down | Editor swaps to a similar portal; partial delivery + partial refund only if no replacement |
 | Currency | INR only until Razorpay international payments are activated |
@@ -754,4 +771,18 @@ Order status shown to customers: Draft · Awaiting payment · Received (paid) ·
 | UI language | English (strings centralised for Hindi later) |
 
 ## 21. Changelog
+- 2026-10-26: Owner requested admin-managed, encrypted Razorpay test/live credentials and
+  Gemini project configurations. Payment intents pin credential versions. Provider guidance
+  led to durable webhook processing, checkout leases, refund reservations with provider
+  idempotency, and atomic rejection/refund obligations. These supersede §9.7's synchronous
+  dispatch/finish-on-error flow and §9.9's separate rejection/refund reservation. See
+  `docs/PAYMENT-RELIABILITY.md` for sources, operating requirements, and verification scope.
+- 2026-10-26: Owner confirmed the product name newsVio and the working directory
+  `/Volumes/ProjectsSSD/prapp` after moving to ProjectsSSD. Recorded the intended
+  Hostinger/DigitalOcean hosting migration in `docs/DEPLOYMENT.md`; no runtime,
+  database, or production configuration changes are included in this documentation update.
 - v1.0 (2026-09-27): initial locked spec. Migration `20260927000000_init.sql` (23 tables, 42 policies), SQL tests 105/105.
+
+- 2026-10-04: User-authorized SEO/GEO improvements: canonical metadata, social cards, curated sitemap, crawler controls, service/organization structured data, and explanatory copy on existing public pages. No changes to payment or fact-check verdict logic. See `docs/SEO-GEO.md`.
+
+- 2026-10-06: User-authorized completion of verbal-system alignment and integration of the six supplied campaign images. GST-inclusive launch pricing is retained. See `VERBAL_SYSTEM.md` §21, `public/USAGE.md` and `docs/MOBILE-UX.md`; existing navigation and business flows are unchanged.

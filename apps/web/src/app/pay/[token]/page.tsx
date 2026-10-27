@@ -1,12 +1,18 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { BRAND_NAME, formatMoney, type Currency } from '@prapp/shared';
+import {
+  BRAND_NAME,
+  SPONSORED_DISCLOSURE,
+  formatMoney,
+  offerChannels,
+  type Currency,
+} from '@prapp/shared';
 import { Icon } from '@/components/icon';
 import { Eyebrow } from '@/components/ui';
 import { publicEnv } from '@/lib/env';
 import { verifyCheckoutToken } from '@/server/checkout-token';
-import { razorpayEnv } from '@/server/env';
-import { RAZORPAY_APP_TAG } from '@/server/razorpay';
+import { checkoutTokenSecret } from '@/server/env';
+import { RAZORPAY_APP_TAG, razorpayRecoveryGateway } from '@/server/razorpay';
 import { paymentResultUrl } from '@/server/payment-redirect';
 import { createServiceClient } from '@/server/supabase/service';
 import { PayButton } from './pay-button';
@@ -34,7 +40,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <span className="font-display text-headline-sm leading-tight text-ink">
             Secure checkout
           </span>
-          <span className="font-mono text-code text-slate uppercase">Payments by Razorpay</span>
+          <span className="text-body-sm text-slate">Payments by Razorpay</span>
         </div>
       </div>
       {children}
@@ -56,8 +62,7 @@ function Message({ title, children }: { title: string; children?: React.ReactNod
 /** Hosted Razorpay checkout for web and app (LLD §9.5). */
 export default async function PayPage({ params }: PageProps<'/pay/[token]'>) {
   const { token } = await params;
-  const env = razorpayEnv();
-  const check = verifyCheckoutToken(token, env.CHECKOUT_TOKEN_SECRET);
+  const check = verifyCheckoutToken(token, checkoutTokenSecret());
 
   if (!check.ok && check.reason === 'invalid') {
     return (
@@ -106,7 +111,7 @@ export default async function PayPage({ params }: PageProps<'/pay/[token]'>) {
       <Shell>
         <Message title="This payment link expired">
           {payload.r === 'app' ? (
-            <p>Go back to the app and tap Pay again.</p>
+            <p>Go back to the app and start the payment again from your order.</p>
           ) : (
             <RetryCheckout orderId={order.id} />
           )}
@@ -115,7 +120,23 @@ export default async function PayPage({ params }: PageProps<'/pay/[token]'>) {
     );
   }
 
-  const snapshot = (order.package_snapshot ?? {}) as { name?: string };
+  // What this payment buys, from the snapshot taken at checkout (VERBAL_SYSTEM.md §19 rule 7).
+  const snapshot = (order.package_snapshot ?? {}) as {
+    name?: string;
+    portal_count?: number;
+    includes_instagram?: boolean;
+    includes_facebook?: boolean;
+    turnaround_hours?: number;
+  };
+  const inclusions = offerChannels({
+    priceInrPaise: intent.amount_minor,
+    portalCount: snapshot.portal_count ?? 0,
+    includesInstagram: Boolean(snapshot.includes_instagram),
+    includesFacebook: Boolean(snapshot.includes_facebook),
+    turnaroundHours: snapshot.turnaround_hours ?? 24,
+  });
+  const activeGateway = razorpayRecoveryGateway();
+  const gateway = await activeGateway.resolveOrder!(intent.razorpay_order_id);
   const amount = formatMoney(intent.amount_minor, intent.currency as Currency);
   return (
     <Shell>
@@ -125,13 +146,27 @@ export default async function PayPage({ params }: PageProps<'/pay/[token]'>) {
             <Eyebrow>
               Order <span className="text-ink">{order.order_number}</span>
             </Eyebrow>
-            <span className="text-label-md text-ink">{snapshot.name ?? 'PR package'}</span>
+            <span className="text-label-md text-ink">{snapshot.name ?? 'Story package'}</span>
           </div>
           <div className="flex flex-col items-end">
             <span className="font-display text-headline-md text-ink">{amount}</span>
-            <span className="font-mono text-code text-emerald-strong">All taxes included</span>
+            <span className="text-body-sm text-slate">GST included</span>
           </div>
         </div>
+        {inclusions.length ? (
+          <ul className="flex flex-col gap-1.5 text-body-sm text-body">
+            {[
+              ...inclusions,
+              'Editorial review before publication',
+              'PDF delivery report with live links',
+            ].map((line) => (
+              <li key={line} className="flex items-center gap-2">
+                <Icon name="check" size={16} className="text-slate" />
+                {line}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <p className="rounded-xl border border-hairline bg-subtle p-3 text-body-sm text-body">
           {order.headline}
         </p>
@@ -139,7 +174,7 @@ export default async function PayPage({ params }: PageProps<'/pay/[token]'>) {
       <PayButton
         label={`Pay ${amount}`}
         options={{
-          key: env.RAZORPAY_KEY_ID,
+          key: gateway.keyId,
           amount: intent.amount_minor,
           currency: intent.currency,
           order_id: intent.razorpay_order_id,
@@ -156,9 +191,10 @@ export default async function PayPage({ params }: PageProps<'/pay/[token]'>) {
         }}
       />
       <p className="flex items-start gap-2 text-body-sm text-slate">
-        <Icon name="shield" size={16} className="mt-0.5 text-emerald-strong" />
+        <Icon name="shield" size={16} className="mt-0.5 text-brand" />
         Payments are processed securely by Razorpay. We never see your card or UPI details.
       </p>
+      <p className="text-[12px] leading-4 text-slate">{SPONSORED_DISCLOSURE}</p>
     </Shell>
   );
 }

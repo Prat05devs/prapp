@@ -1,10 +1,13 @@
 import { TextClassContext } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Platform, Pressable } from 'react-native';
+import { Platform } from 'react-native';
+import { PressableScale, type PressableScaleProps } from '@/components/motion/pressable-scale';
 
-// React Native Reusables button, restyled to the Stitch spec (same variants as the web app):
-// 8px radius, obsidian primary, emerald accent for the main action, hairline outline.
+// React Native Reusables button (docs/DESIGN.md, same variants as the web app; mobile shape from
+// docs/MOBILE-UX.md): 12px radius, ink primary, brand blue for the one main action on a screen.
+// Pressed state darkens the fill and the button sinks slightly (docs/DESIGN.md, Motion); filled
+// buttons give a light haptic.
 const buttonVariants = cva(
   cn(
     'group shrink-0 flex-row items-center justify-center gap-2 rounded-lg',
@@ -16,19 +19,19 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-ink active:bg-ink-soft',
-        accent: 'bg-emerald-strong active:bg-emerald-deep',
-        outline: 'border border-hairline bg-background active:border-ink active:bg-subtle',
+        accent: 'bg-brand active:bg-brand-deep',
+        outline: 'border border-input bg-paper active:border-ink active:bg-subtle',
         secondary: 'bg-elevated active:bg-hairline',
         ghost: 'active:bg-subtle',
         destructive: 'bg-danger active:bg-danger-deep',
-        'destructive-outline': 'border border-danger/30 bg-background active:bg-danger-tint/40',
+        'destructive-outline': 'border border-danger/30 bg-paper active:bg-danger-tint/40',
         link: '',
       },
       size: {
-        default: 'h-11 px-4',
-        sm: 'h-9 gap-1.5 px-3',
-        lg: 'h-12 px-6',
-        icon: 'h-10 w-10',
+        default: 'h-12 px-5',
+        sm: 'h-9 gap-1.5 rounded-md px-3',
+        lg: 'h-[52px] px-6',
+        icon: 'h-11 w-11',
       },
     },
     defaultVariants: {
@@ -38,7 +41,7 @@ const buttonVariants = cva(
   },
 );
 
-const buttonTextVariants = cva('font-sans-medium text-label-md text-ink', {
+const buttonTextVariants = cva('font-sans-semibold text-label-md text-ink', {
   variants: {
     variant: {
       default: 'text-white',
@@ -48,12 +51,12 @@ const buttonTextVariants = cva('font-sans-medium text-label-md text-ink', {
       ghost: 'text-body',
       destructive: 'text-white',
       'destructive-outline': 'text-danger',
-      link: 'text-emerald-strong group-active:underline',
+      link: 'text-brand underline',
     },
     size: {
       default: '',
       sm: 'text-label-sm',
-      lg: '',
+      lg: 'text-[16px]',
       icon: '',
     },
   },
@@ -63,16 +66,17 @@ const buttonTextVariants = cva('font-sans-medium text-label-md text-ink', {
   },
 });
 
-type ButtonProps = React.ComponentProps<typeof Pressable> &
-  React.RefAttributes<typeof Pressable> &
-  VariantProps<typeof buttonVariants>;
+type ButtonProps = PressableScaleProps & VariantProps<typeof buttonVariants>;
+
+const FILLED = new Set(['default', 'accent', 'destructive']);
 
 function Button({ className, variant, size, ...props }: ButtonProps) {
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
-      <Pressable
+      <PressableScale
         className={cn(props.disabled && 'opacity-50', buttonVariants({ variant, size }), className)}
         role="button"
+        haptic={FILLED.has(variant ?? 'default') ? 'tap' : false}
         {...props}
       />
     </TextClassContext.Provider>

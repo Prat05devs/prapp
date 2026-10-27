@@ -1,11 +1,11 @@
-import { Check } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { PressableScale } from '@/components/motion/pressable-scale';
 import type { CataloguePackage } from '@prapp/api-client';
-import { formatMoney } from '@prapp/shared';
-import { Badge, Icon, RadioGroup, RadioGroupItem, Text } from '@/components/ui';
+import { formatMoney, offerChannelsSentence } from '@prapp/shared';
+import { RadioGroup, RadioGroupItem, Text } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
-/** Package cards on a Reusables RadioGroup (Stitch "distribution tier" cards). */
+/** Package cards on a Reusables RadioGroup. */
 export function PackagePicker({
   packages,
   value,
@@ -23,45 +23,43 @@ export function PackagePicker({
         {packages.map((p) => {
           const selected = value === p.id;
           return (
-            <Pressable
+            <PressableScale
               key={p.id}
               accessibilityRole="radio"
               accessibilityState={{ checked: selected, disabled }}
               disabled={disabled}
+              scaleTo={0.98}
+              haptic={selected ? false : 'select'}
               onPress={() => onChange(p.id)}
               className={cn(
-                'flex-row items-start gap-4 rounded-2xl border bg-canvas p-5',
-                selected ? 'border-2 border-emerald-strong' : 'border-hairline active:border-ink',
+                'flex-row items-start gap-3.5 rounded-lg border p-4',
+                selected
+                  ? 'border-brand bg-brand-tint/40'
+                  : 'border-hairline bg-paper active:bg-subtle',
                 disabled && 'opacity-60',
               )}
             >
               <RadioGroupItem value={p.id} aria-labelledby={`package-${p.id}`} className="mt-0.5" />
               <View className="flex-1 gap-1">
                 <View className="flex-row items-start justify-between gap-3">
-                  <Text nativeID={`package-${p.id}`} variant="label">
+                  <Text
+                    nativeID={`package-${p.id}`}
+                    className="font-sans-semibold text-[16px] text-ink"
+                  >
                     {p.name}
                   </Text>
-                  <Text className="font-display text-headline-sm text-ink">
+                  <Text className="font-sans-semibold text-[16px] tabular-nums text-ink">
                     {formatMoney(p.priceInrPaise)}
                   </Text>
                 </View>
-                <Text variant="muted">
-                  {p.portalCount} high-DA news portal{p.portalCount === 1 ? '' : 's'}
-                  {p.includesInstagram ? ' + 1 Instagram collaboration post' : ''} · live within{' '}
-                  {p.turnaroundHours} h
+                <Text className="text-body-sm text-slate">
+                  {`${offerChannelsSentence(p)}. Live within ${p.turnaroundHours} hours of payment, once approved.`}
                 </Text>
-                {selected ? (
-                  <Badge variant="emerald" className="mt-2 rounded-md">
-                    <Icon as={Check} size={12} className="text-emerald-deep" />
-                    <Text>Selected</Text>
-                  </Badge>
-                ) : null}
               </View>
-            </Pressable>
+            </PressableScale>
           );
         })}
       </RadioGroup>
-      <Text className="font-mono text-code text-slate">Prices are inclusive of all taxes</Text>
     </View>
   );
 }

@@ -20,7 +20,7 @@ function Checkbox({
   return (
     <CheckboxPrimitive.Root
       className={cn(
-        'size-[18px] shrink-0 rounded-[4px] border-[1.5px] border-hairline bg-background',
+        'size-[18px] shrink-0 rounded-[4px] border-[1.5px] border-input bg-paper',
         Platform.select({
           web: 'focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive peer cursor-default outline-none transition-shadow focus-visible:ring-[3px] disabled:cursor-not-allowed',
           native: 'overflow-hidden',

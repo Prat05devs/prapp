@@ -84,7 +84,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<'/admi
                 <td className="py-2 pr-4 whitespace-nowrap">
                   <Link
                     href={`/admin/orders/${o.id}`}
-                    className="font-medium text-emerald-strong hover:underline"
+                    className="font-medium text-brand hover:underline"
                   >
                     {o.order_number}
                   </Link>

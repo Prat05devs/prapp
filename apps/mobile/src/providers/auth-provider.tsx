@@ -9,9 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { MeResponse } from '@prapp/shared';
-import * as Linking from 'expo-linking';
 import { api } from '@/lib/api';
-import { completeSignInFromUrl } from '@/lib/auth-link';
 import { supabase } from '@/lib/supabase';
 
 interface AuthState {
@@ -45,13 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setMeError(null);
       }
     });
-    // Sign-in links from the email open the app (newsvio://auth-callback#…): finish them here,
-    // whether the app was closed (initial URL) or already running (url event).
-    void Linking.getInitialURL().then((url) => completeSignInFromUrl(url));
-    const linkSub = Linking.addEventListener('url', ({ url }) => void completeSignInFromUrl(url));
     return () => {
       data.subscription.unsubscribe();
-      linkSub.remove();
     };
   }, []);
 

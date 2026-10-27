@@ -13,6 +13,7 @@ import {
 } from '../../../packages/fact-check/src/index.ts';
 import type { SourceTier } from '../../../packages/shared/src/constants.ts';
 import { env } from '../_shared/env.ts';
+import { activeGeminiConfiguration } from '../_shared/integrations.ts';
 import { isServiceCaller, json, serviceClient, type ServiceClient } from '../_shared/supabase.ts';
 
 // Fact-check worker (LLD §11.2). Invoked by the insert webhook and by pg_cron every minute.
@@ -24,16 +25,20 @@ const JOB_TIMEOUT_MS = 60_000;
 // DECISION: default daily call budgets for free tiers; tune per model in provider_usage.daily_quota.
 const GEMINI_DAILY_QUOTA = Number(env('GEMINI_DAILY_QUOTA') ?? 200);
 
-function buildProviders(): { llms: LLM[]; searches: WebSearch[] } {
+function buildProviders(config: Awaited<ReturnType<typeof activeGeminiConfiguration>>): {
+  llms: LLM[];
+  searches: WebSearch[];
+} {
   const llms: LLM[] = [];
   const searches: WebSearch[] = [];
-  const gemini = env('GEMINI_API_KEY');
-  const model = env('GEMINI_MODEL') ?? 'gemini-3.5-flash';
-  const lite = env('GEMINI_LITE_MODEL') ?? 'gemini-3.5-flash-lite';
+  const gemini = config?.apiKey ?? env('GEMINI_API_KEY');
+  const model = config?.model ?? env('GEMINI_MODEL') ?? 'gemini-3.5-flash';
+  const lite = config?.ocrModel ?? env('GEMINI_LITE_MODEL') ?? 'gemini-3.5-flash-lite';
   if (gemini) {
     llms.push(geminiLLM({ apiKey: gemini, model, ocrModel: lite }));
     // Search grounding is paid-tier only; the free tier answers 429. Opt in once billing is on.
-    if (env('GEMINI_SEARCH') === 'on') searches.push(geminiSearch({ apiKey: gemini, model }));
+    if (config ? config.searchEnabled : env('GEMINI_SEARCH') === 'on')
+      searches.push(geminiSearch({ apiKey: gemini, model }));
   }
   const groq = env('GROQ_API_KEY');
   if (groq) {
@@ -85,19 +90,25 @@ function buildProviders(): { llms: LLM[]; searches: WebSearch[] } {
   return { llms, searches };
 }
 
-function quotaStore(db: ServiceClient): QuotaStore {
+function quotaStore(
+  db: ServiceClient,
+  config: Awaited<ReturnType<typeof activeGeminiConfiguration>>,
+): QuotaStore {
+  const quotaProvider = (name: string) =>
+    name === 'gemini' && config ? `gemini:${config.projectId}` : name;
   return {
     async use(provider, model) {
       const { data, error } = await db.rpc('svc_use_provider', {
-        p_provider: provider,
+        p_provider: quotaProvider(provider),
         p_model: model,
-        p_default_quota: provider === 'gemini' ? GEMINI_DAILY_QUOTA : undefined,
+        p_default_quota:
+          provider === 'gemini' ? (config?.dailyQuota ?? GEMINI_DAILY_QUOTA) : undefined,
       });
       return !error && data === true;
     },
     async usageRatio(provider, model) {
       const { data } = await db.rpc('svc_provider_usage_ratio', {
-        p_provider: provider,
+        p_provider: quotaProvider(provider),
         p_model: model,
       });
       return Number(data ?? 0);
@@ -155,6 +166,7 @@ async function processJob(
   job: Record<string, unknown>,
   providers: ReturnType<typeof buildProviders>,
   trusted: Map<string, SourceTier>,
+  config: Awaited<ReturnType<typeof activeGeminiConfiguration>>,
 ) {
   const id = job.id as string;
   const wasQueuedForFull = job.full_check_status === 'queued';
@@ -185,7 +197,7 @@ async function processJob(
       },
       {
         ...providers,
-        quota: quotaStore(db),
+        quota: quotaStore(db, config),
         trusted,
         factCheckApiKey: env('GOOGLE_FACTCHECK_API_KEY'),
         imageUrl,
@@ -203,12 +215,17 @@ async function processJob(
   if (error) throw new Error(`save_failed: ${error.message}`);
 
   // Reduced → full re-check finished: tell the signed-in owner (LLD §11.3, §12).
-  if (wasQueuedForFull && result.mode === 'full' && job.user_id) {
+  if (
+    wasQueuedForFull &&
+    result.mode === 'full' &&
+    typeof job.user_id === 'string' &&
+    typeof job.report_id === 'string'
+  ) {
     await db.from('notifications').insert({
-      user_id: job.user_id as string,
+      user_id: job.user_id,
       type: 'fact_check_full_ready',
-      title: 'Your full fact check is ready',
-      body: 'We finished the full check you asked for earlier. Tap to see the updated report.',
+      title: 'Your full fact-check is ready',
+      body: 'Your report has been updated. Review the verdict and sources.',
       data: { report_id: job.report_id, deep_link: `/r/${job.report_id}` },
       channels: ['in_app', 'push'],
     });
@@ -216,16 +233,19 @@ async function processJob(
   return { id, verdict: result.verdict, mode: result.mode };
 }
 
-async function alertAdminsAt80Percent(db: ServiceClient) {
-  const model = env('GEMINI_MODEL') ?? 'gemini-3.5-flash';
+async function alertAdminsAt80Percent(
+  db: ServiceClient,
+  config: Awaited<ReturnType<typeof activeGeminiConfiguration>>,
+) {
+  const model = config?.model ?? env('GEMINI_MODEL') ?? 'gemini-3.5-flash';
   const { data: ratio } = await db.rpc('svc_provider_usage_ratio', {
-    p_provider: 'gemini',
+    p_provider: config ? `gemini:${config.projectId}` : 'gemini',
     p_model: model,
   });
   if (Number(ratio ?? 0) < 0.8) return;
   const { data: first } = await db.rpc('svc_consume_quota', {
     p_scope: 'alert',
-    p_key: 'gemini_80',
+    p_key: config ? `gemini_80:${config.projectId}` : 'gemini_80',
     p_limit: 1,
   });
   if (!first) return;
@@ -251,7 +271,8 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'method' }, 405);
   if (!isServiceCaller(req)) return json({ error: 'forbidden' }, 403);
   const db = serviceClient();
-  const providers = buildProviders();
+  const config = await activeGeminiConfiguration(db);
+  const providers = buildProviders(config);
   const trusted = await trustedSources(db);
   const started = Date.now();
   const done: unknown[] = [];
@@ -261,7 +282,7 @@ Deno.serve(async (req) => {
     if (error || !job || !(job as { id?: string }).id) break;
     const row = job as Record<string, unknown>;
     try {
-      done.push(await processJob(db, row, providers, trusted));
+      done.push(await processJob(db, row, providers, trusted, config));
     } catch (e) {
       const input = e instanceof FactCheckInputError;
       const message = e instanceof Error ? e.message : String(e);
@@ -283,6 +304,6 @@ Deno.serve(async (req) => {
       done.push({ id: row.id, error: message });
     }
   }
-  await alertAdminsAt80Percent(db).catch(() => {});
+  await alertAdminsAt80Percent(db, config).catch(() => {});
   return json({ processed: done.length, jobs: done });
 });

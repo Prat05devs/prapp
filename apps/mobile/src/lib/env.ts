@@ -6,7 +6,10 @@ import { parsePaymentsMode } from '@prapp/shared';
 const schema = z.object({
   EXPO_PUBLIC_SUPABASE_URL: z.url(),
   EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
+  /** the API the app calls; may be a deployment URL (no redirects: they drop the auth header) */
   EXPO_PUBLIC_API_URL: z.url(),
+  /** the public website: every link a person sees, opens or shares (report links, PDFs, support) */
+  EXPO_PUBLIC_SITE_URL: z.url(),
   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: z.string().optional(),
   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: z.string().optional(),
   /** Labels only; the server's PAYMENTS_MODE decides what checkout does. */
@@ -26,6 +29,7 @@ export function appEnv(): AppEnv {
     EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
       process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
     EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
+    EXPO_PUBLIC_SITE_URL: process.env.EXPO_PUBLIC_SITE_URL,
     EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || undefined,
     EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || undefined,
     EXPO_PUBLIC_PAYMENTS_MODE: parsePaymentsMode(process.env.EXPO_PUBLIC_PAYMENTS_MODE),
@@ -37,4 +41,9 @@ export function appEnv(): AppEnv {
   }
   cached = result.data;
   return cached;
+}
+
+/** A link on the public website, e.g. siteUrl('/r/FC-123'). Never the API's deployment URL. */
+export function siteUrl(path = ''): string {
+  return `${appEnv().EXPO_PUBLIC_SITE_URL.replace(/\/$/, '')}${path}`;
 }

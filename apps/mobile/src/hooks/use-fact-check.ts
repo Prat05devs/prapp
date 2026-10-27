@@ -1,10 +1,16 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ApiError } from '@prapp/api-client';
-import type { FactCheckReport, FactCheckSubmitInput } from '@prapp/shared';
+import {
+  FC_FAILURE_FALLBACK,
+  FC_FAILURE_MESSAGES,
+  type FactCheckReport,
+  type FactCheckSubmitInput,
+} from '@prapp/shared';
 import { api } from '@/lib/api';
 import { deviceId } from '@/lib/device-id';
 import { pickImage } from '@/lib/images';
 import { registerForPush } from '@/lib/push';
+import { useAuth } from '@/providers/auth-provider';
 
 export type Phase = 'idle' | 'submitting' | 'checking' | 'done' | 'failed' | 'slow';
 
@@ -19,6 +25,11 @@ export function useFactCheck() {
   const [report, setReport] = useState<FactCheckReport | null>(null);
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
   const run = useRef(0);
+  const { session } = useAuth();
+  const signedIn = useRef(false);
+  useEffect(() => {
+    signedIn.current = Boolean(session);
+  }, [session]);
 
   async function poll(id: string, token: number) {
     const started = Date.now();
@@ -33,13 +44,12 @@ export function useFactCheck() {
           if (r.status === 'failed') {
             setError({
               code: r.error ?? 'failed',
-              message:
-                r.error === 'no_text_in_image'
-                  ? "We couldn't find any text in this image."
-                  : 'We could not check this. Please try again.',
+              message: (r.error && FC_FAILURE_MESSAGES[r.error]) ?? FC_FAILURE_FALLBACK,
             });
           } else {
-            void registerForPush().catch(() => {}); // first successful action (LLD §12)
+            // First successful action (LLD §12). Device tokens belong to an account, so guests
+            // aren't asked for notification permission until they log in.
+            if (signedIn.current) void registerForPush().catch(() => {});
           }
           return;
         }
@@ -66,7 +76,10 @@ export function useFactCheck() {
       setError(
         e instanceof ApiError
           ? { code: e.code, message: e.message }
-          : { code: 'internal_error', message: 'Something went wrong.' },
+          : {
+              code: 'internal_error',
+              message: "We couldn't complete this check. Please try again.",
+            },
       );
     }
   }

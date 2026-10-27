@@ -93,7 +93,7 @@ export function PaymentPanel({
                 {['captured', 'partially_refunded'].includes(p.status) ? (
                   <button
                     type="button"
-                    className="text-xs font-medium text-emerald-strong hover:underline"
+                    className="text-xs font-medium text-brand hover:underline"
                     onClick={() => {
                       setRefundFor(p.id);
                       setAmount(String((p.amount_minor - p.amount_refunded_minor) / 100));

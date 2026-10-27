@@ -42,7 +42,7 @@ export function useStaffAction() {
           ? e.message
           : e instanceof Error
             ? e.message
-            : 'Something went wrong.',
+            : "That action didn't complete. Please try again.",
       );
       return false;
     } finally {

@@ -1,4 +1,5 @@
 import 'server-only';
+import { retryRefundRequests } from './refunds';
 import { applyRazorpayRefund, settleRazorpayOrder } from '@/server/payments';
 import type { RazorpayGateway } from '@/server/razorpay';
 import type { ServiceSupabase } from '@/server/service-types';
@@ -69,13 +70,21 @@ export async function reconcilePayments(
       break;
     }
     try {
-      const fresh = await deps.gateway.fetchRefund(r.razorpay_refund_id!);
+      const gateway = deps.gateway.resolveRefund
+        ? await deps.gateway.resolveRefund(r.razorpay_refund_id!)
+        : deps.gateway;
+      const fresh = await gateway.fetchRefund(r.razorpay_refund_id!);
       await applyRazorpayRefund(deps.service, fresh, r.reason, r.initiated_by);
       counts.refunds += 1;
     } catch (e) {
       counts.errors += 1;
       console.error('reconcile: refund', r.razorpay_refund_id, e instanceof Error ? e.message : e);
     }
+  }
+  if (!timeUp()) {
+    const requests = await retryRefundRequests(deps, timeUp);
+    counts.refunds += requests.completed;
+    counts.errors += requests.failed;
   }
   return counts;
 }

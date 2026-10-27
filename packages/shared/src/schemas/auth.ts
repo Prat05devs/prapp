@@ -11,6 +11,21 @@ export const otpSchema = z
 export const emailOtpRequestSchema = z.object({ email: emailSchema });
 export const emailOtpVerifySchema = z.object({ email: emailSchema, token: otpSchema });
 
+/** Customer password (mobile app): Supabase's minimum is 6; we ask for 8. */
+export const customerPasswordSchema = z
+  .string()
+  .min(8, 'Use at least 8 characters')
+  .max(72, 'Use at most 72 characters');
+
+export const customerLoginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'Enter your password'),
+});
+export const customerSignupSchema = z.object({
+  email: emailSchema,
+  password: customerPasswordSchema,
+});
+
 /** Team (editor/admin) passwords, set by an admin: long enough to resist guessing. */
 export const staffPasswordSchema = z
   .string()

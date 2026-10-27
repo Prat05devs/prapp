@@ -46,11 +46,13 @@ export function OrderActions({
       ) : null}
       {status === 'published' && hasReport ? (
         <a href={`/api/orders/${orderId}/report`} className={buttonVariants({ size: 'lg' })}>
-          <Icon name="download" /> Download report (PDF)
+          <Icon name="download" /> Download PDF report
         </a>
       ) : null}
       {status === 'published' && !hasReport && reportStatus !== 'ready' ? (
-        <Notice>Your report is being prepared. We&apos;ll notify you when it&apos;s ready.</Notice>
+        <Notice>
+          Your delivery report is being prepared. We&apos;ll notify you when it&apos;s ready.
+        </Notice>
       ) : null}
       <ErrorText>{checkout.error}</ErrorText>
     </div>

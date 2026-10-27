@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from './alert';
-import { Badge, type badgeVariants } from './badge';
+import type { badgeVariants } from './badge';
 import { Card as ShadcnCard } from './card';
 import { Checkbox } from './checkbox';
 import { Label } from './label';
 import type { VariantProps } from 'class-variance-authority';
 
-// App-level building blocks for the Stitch design system (Obsidian & Emerald Minimalist),
+// App-level building blocks for the NewsVio design system (docs/DESIGN.md),
 // composed from the shadcn/ui components in this folder. Import shadcn pieces directly
 // (`@/components/ui/button` …) or the compositions below from `@/components/ui`.
 
@@ -25,7 +25,7 @@ export { Label } from './label';
 
 export type BadgeTone = NonNullable<VariantProps<typeof badgeVariants>['variant']>;
 
-/** Label + control + hint/error, with an optional mono counter on the right. */
+/** Label + control + hint/error, with an optional counter on the right. */
 export function Field({
   label,
   error,
@@ -43,7 +43,7 @@ export function Field({
     <Label className="flex flex-col items-stretch gap-2 font-normal">
       <span className="flex items-baseline justify-between gap-3">
         <span className="text-label-md text-ink">{label}</span>
-        {aside ? <span className="font-mono text-code text-slate uppercase">{aside}</span> : null}
+        {aside ? <span className="tabular text-body-sm text-slate">{aside}</span> : null}
       </span>
       {children}
       {hint ? <span className="text-body-sm text-slate">{hint}</span> : null}
@@ -60,7 +60,7 @@ export function ErrorText({ children }: { children: ReactNode }) {
   ) : null;
 }
 
-/** Flat card: white (or subtle) plane with a hairline border, no shadow. */
+/** Flat card: a white sheet on the paper canvas (or a tinted plane), hairline border, no shadow. */
 export function Card({
   children,
   className,
@@ -76,8 +76,8 @@ export function Card({
     <ShadcnCard
       role={as === 'section' ? 'region' : undefined}
       className={cn(
-        'block gap-0 rounded-2xl border-hairline p-5 shadow-none sm:p-6',
-        tone === 'subtle' ? 'bg-subtle' : 'bg-card',
+        'block gap-0 rounded-lg border-hairline p-5 shadow-none sm:p-6',
+        tone === 'subtle' ? 'border-transparent bg-subtle' : 'bg-paper',
         className,
       )}
     >
@@ -86,7 +86,10 @@ export function Card({
   );
 }
 
-/** Mono micro-label, e.g. "01 / Paste the forward". */
+/**
+ * Section kicker: a short sentence-case label above a heading. Sans, not mono; no caps or
+ * tracking. Use it only when it adds information the heading doesn't.
+ */
 export function Eyebrow({
   children,
   accent = false,
@@ -97,58 +100,45 @@ export function Eyebrow({
   className?: string;
 }) {
   return (
-    <span
-      className={cn(
-        'font-mono text-label-sm tracking-wider uppercase',
-        accent ? 'text-emerald-strong' : 'text-slate',
-        className,
-      )}
-    >
+    <span className={cn('text-label-sm', accent ? 'text-brand' : 'text-slate', className)}>
       {children}
     </span>
   );
 }
 
-/** Numbered section heading used across Stitch screens: [01] Title. */
+/**
+ * Heading for a section of a form. `step` is kept for the call sites but rendered as plain
+ * "Step 1" text, only where the sequence is real (the publish flow).
+ */
 export function StepHeading({
   step,
   title,
   aside,
 }: {
-  step: string;
+  step?: string;
   title: ReactNode;
   aside?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 className="flex items-center gap-3 font-display text-headline-sm text-ink">
-        <Badge variant="ink" className="rounded-md px-1.5 text-code tracking-normal">
-          {step}
-        </Badge>
+    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-hairline pb-3">
+      <h2 className="flex items-baseline gap-3 font-display text-headline-sm text-ink">
+        {step ? (
+          <span className="font-sans text-label-sm text-slate">Step {Number(step)}</span>
+        ) : null}
         {title}
       </h2>
-      {aside ? <Eyebrow>{aside}</Eyebrow> : null}
+      {aside ? <span className="text-body-sm text-slate">{aside}</span> : null}
     </div>
   );
 }
 
-/** Emerald dot with a soft ping ring. */
+/** Solid dot for work that is genuinely in progress (a running check). No ping animation. */
 export function LiveDot({ className }: { className?: string }) {
   return (
-    <span className={cn('relative flex h-2 w-2', className)}>
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald opacity-60 motion-reduce:hidden" />
-      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald" />
-    </span>
-  );
-}
-
-/** Pill with a live dot, used for hero kickers. */
-export function LivePill({ children }: { children: ReactNode }) {
-  return (
-    <Badge variant="outline" className="gap-2 bg-subtle px-3 py-1 text-label-sm tracking-wider">
-      <LiveDot />
-      {children}
-    </Badge>
+    <span
+      aria-hidden
+      className={cn('inline-flex h-2 w-2 shrink-0 rounded-full bg-brand', className)}
+    />
   );
 }
 
@@ -183,7 +173,7 @@ export function Notice({
   );
 }
 
-/** Page title block: mono eyebrow, Manrope headline, slate lede. */
+/** Page title block: optional kicker, serif headline, slate lede. */
 export function PageHeader({
   eyebrow,
   title,

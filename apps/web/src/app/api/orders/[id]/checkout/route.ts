@@ -26,7 +26,7 @@ export const POST = handleApi(
         service: createServiceClient(),
         mode,
         paymentUrl: paymentLinkUrl(),
-        gateway: mode === 'razorpay' ? razorpayGateway() : undefined,
+        gateway: mode === 'razorpay' ? await razorpayGateway() : undefined,
       },
       id,
       returnTo,

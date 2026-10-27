@@ -1,6 +1,7 @@
 import { Check, ChevronDown, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { FlatList, Modal, Pressable, View } from 'react-native';
+import { FlatList, Modal, View } from 'react-native';
+import { PressableScale } from '@/components/motion/pressable-scale';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { phoneCountries } from '@prapp/shared';
 import { Icon, Text } from '@/components/ui';
@@ -20,17 +21,17 @@ export function CountryPicker({
 
   return (
     <>
-      <Pressable
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel="Country code"
         onPress={() => setOpen(true)}
-        className="h-11 flex-row items-center gap-1.5 rounded-lg border border-hairline bg-background px-3 active:border-ink"
+        className="h-12 flex-row items-center gap-1.5 rounded-md border border-input bg-paper px-3.5 active:bg-subtle"
       >
         <Text className="font-mono text-code text-ink">
           {value} +{selected?.callingCode}
         </Text>
         <Icon as={ChevronDown} size={14} className="text-slate" />
-      </Pressable>
+      </PressableScale>
       <Modal
         visible={open}
         animationType="slide"
@@ -38,16 +39,16 @@ export function CountryPicker({
         onRequestClose={() => setOpen(false)}
       >
         <View className="flex-1 bg-canvas">
-          <View className="flex-row items-center justify-between border-b border-hairline px-5 py-4">
+          <View className="flex-row items-center justify-between border-b border-rule px-5 py-4">
             <Text variant="h3">Country code</Text>
-            <Pressable
+            <PressableScale
               accessibilityLabel="Close"
               hitSlop={8}
               onPress={() => setOpen(false)}
               className="h-9 w-9 items-center justify-center rounded-full border border-hairline"
             >
               <Icon as={X} size={16} className="text-ink" />
-            </Pressable>
+            </PressableScale>
           </View>
           <FlatList
             data={countries}
@@ -55,7 +56,7 @@ export function CountryPicker({
             contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
             ItemSeparatorComponent={() => <View className="mx-5 h-px bg-divider" />}
             renderItem={({ item }) => (
-              <Pressable
+              <PressableScale
                 onPress={() => {
                   onChange(item.code);
                   setOpen(false);
@@ -65,10 +66,8 @@ export function CountryPicker({
                 <Text className="font-mono text-code text-ink">
                   {item.code} +{item.callingCode}
                 </Text>
-                {item.code === value ? (
-                  <Icon as={Check} size={16} className="text-emerald-strong" />
-                ) : null}
-              </Pressable>
+                {item.code === value ? <Icon as={Check} size={16} className="text-brand" /> : null}
+              </PressableScale>
             )}
           />
         </View>

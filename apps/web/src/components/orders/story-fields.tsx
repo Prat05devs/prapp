@@ -1,4 +1,9 @@
-import { INSTAGRAM_COLLAB_HINT, LIMITS, type OrderContentInput } from '@prapp/shared';
+import {
+  INSTAGRAM_COLLAB_HINT,
+  LIMITS,
+  STORY_FORM_COPY,
+  type OrderContentInput,
+} from '@prapp/shared';
 import { Field, Input, Textarea } from '@/components/ui';
 import type { OrderFieldErrors } from '@/lib/form-errors';
 
@@ -16,12 +21,13 @@ export function StoryFields({
   const headlineLen = value.headline.trim().length;
   const bodyLen = value.body.trim().length;
   const count = (ok: boolean, text: string) => (
-    <span className={ok ? 'text-emerald-strong' : ''}>{text}</span>
+    <span className={ok ? 'text-verified' : ''}>{text}</span>
   );
   return (
     <div className="flex flex-col gap-6">
       <Field
-        label="Headline"
+        label={STORY_FORM_COPY.headlineLabel}
+        hint={STORY_FORM_COPY.headlineHint}
         error={errors.headline}
         aside={count(
           headlineLen > 0 && headlineLen <= LIMITS.headlineMax,
@@ -37,7 +43,8 @@ export function StoryFields({
         />
       </Field>
       <Field
-        label="Article"
+        label={STORY_FORM_COPY.bodyLabel}
+        hint={STORY_FORM_COPY.bodyHint}
         error={errors.body}
         aside={count(
           bodyLen >= LIMITS.bodyMin,
@@ -53,7 +60,7 @@ export function StoryFields({
         />
       </Field>
       <Field
-        label="Instagram handle (optional)"
+        label={STORY_FORM_COPY.handleLabel}
         error={errors.instagramHandle}
         hint={INSTAGRAM_COLLAB_HINT}
       >

@@ -20,18 +20,18 @@ export function SourceStrip() {
         {CHECKED_SOURCES.map((s) => (
           <View
             key={s.domain}
-            className="flex-row items-center gap-2 rounded-full border border-hairline bg-canvas py-1.5 pl-1.5 pr-3"
+            className="flex-row items-center gap-2 rounded-full border border-hairline bg-paper py-1 pl-1 pr-3"
           >
             <Image
               source={{ uri: publicAssetUrl(supabaseUrl, `sources/${s.domain}.webp`) }}
               contentFit="contain"
               style={{ width: 22, height: 22, borderRadius: 11 }}
             />
-            <Text className="text-label-sm text-ink">{s.name}</Text>
+            <Text className="text-body-sm text-ink">{s.name}</Text>
           </View>
         ))}
       </ScrollView>
-      <Text className="font-mono text-[10px] text-slate">
+      <Text variant="muted">
         {`Plus ${CHECKED_SOURCES_TEXT_ONLY.join(', ')} and 100+ trusted outlets. Not partners or endorsements.`}
       </Text>
     </View>

@@ -70,6 +70,34 @@ jobs:
           missing=$(psql -d prtest -tAc "select tablename from pg_tables where schemaname='public' and not rowsecurity")
           if [ -n "$missing" ]; then echo "RLS disabled on: $missing"; exit 1; fi
 
+  standalone:
+    name: Standalone PostgreSQL 17 isolation and backup checks
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: newsvio
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      STANDALONE_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/newsvio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: psql -v ON_ERROR_STOP=1 -d newsvio -f infra/database/provision.sql
+      - run: pnpm --filter @prapp/server-db test:standalone
+
   integration:
     name: Integration tests (local Supabase)
     runs-on: ubuntu-latest

@@ -8,9 +8,8 @@ import {
   ErrorText,
   Field,
   Input,
-  PageHeader,
-  Panel,
-  Screen,
+  ModalScreen,
+  ModalTitle,
   Text,
 } from '@/components/ui';
 import { useCompleteProfile } from '@/hooks/use-complete-profile';
@@ -22,13 +21,12 @@ export default function CompleteProfileScreen() {
   const [phone, setPhone] = useState('');
 
   return (
-    <Screen>
-      <PageHeader
-        eyebrow="One last step"
+    <ModalScreen>
+      <ModalTitle
         title="Complete your profile"
-        lede="We need your name and phone number before you can place an order."
+        lede="One last step: we need your name and phone number before you can place an order."
       />
-      <Panel tone="subtle">
+      <View className="gap-4">
         <Field
           label="Full name"
           value={fullName}
@@ -38,7 +36,7 @@ export default function CompleteProfileScreen() {
           error={fieldErrors.fullName}
         />
         <View className="gap-2">
-          <Text variant="label">Phone number</Text>
+          <Text className="font-sans-semibold text-label-md text-ink">Phone number</Text>
           <View className="flex-row gap-2">
             <CountryPicker value={country} onChange={setCountry} />
             <Input
@@ -61,7 +59,7 @@ export default function CompleteProfileScreen() {
           loading={pending}
           onPress={() => void submit({ fullName, country, phone })}
         />
-      </Panel>
-    </Screen>
+      </View>
+    </ModalScreen>
   );
 }

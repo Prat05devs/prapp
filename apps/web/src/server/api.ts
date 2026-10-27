@@ -1,6 +1,7 @@
 import 'server-only';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { readLimitedText } from './request-body';
 import { apiErrorBody, errorCodeFromDb, httpStatusFor, type ErrorCode } from '@prapp/shared';
 
 /** Throw from route handlers to return `{ error: { code, message } }` (CONTEXT §5). */
@@ -14,7 +15,7 @@ export class AppError extends Error {
   }
 }
 
-export function jsonError(code: ErrorCode, details?: unknown): NextResponse {
+function jsonError(code: ErrorCode, details?: unknown): NextResponse {
   return NextResponse.json(apiErrorBody(code, details), { status: httpStatusFor(code) });
 }
 
@@ -31,7 +32,7 @@ export function parseBody<T extends z.ZodType>(schema: T, body: unknown): z.infe
 
 export async function readJson(req: Request): Promise<unknown> {
   try {
-    return await req.json();
+    return JSON.parse(await readLimitedText(req, 256 * 1024)) as unknown;
   } catch {
     throw new AppError('validation_failed', { formErrors: ['Body must be JSON'] });
   }

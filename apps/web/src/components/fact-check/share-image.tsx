@@ -1,18 +1,40 @@
-import { BRAND_NAME, FC_VERDICT_LABELS, type FactCheckReport } from '@prapp/shared';
+import {
+  BRAND_NAME,
+  FC_VERDICT_LABELS,
+  FC_VERDICT_RESULTS,
+  formatIST,
+  type FactCheckReport,
+} from '@prapp/shared';
 import { VERDICT_COLORS } from './verdict-style';
-
-export { VERDICT_COLORS };
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
-const FOOTER = 'AI-assisted analysis of public sources · verify at the QR link';
+const FOOTER = 'Read the full report and every source: scan the QR code';
+
+/** One-sentence finding (VERBAL_SYSTEM.md §10 share card): the summary's first sentence. */
+function finding(report: FactCheckReport): string {
+  const verdict = report.verdict ?? 'unverified';
+  const first = report.summary?.match(/^.*?[.!?।](\s|$)/)?.[0]?.trim() ?? report.summary?.trim();
+  return clip(first || FC_VERDICT_RESULTS[verdict].headline, 170);
+}
+
+function sourceCount(report: FactCheckReport): number {
+  return new Set(report.claims.flatMap((c) => c.sources.map((x) => x.url))).size;
+}
+
+function meta(report: FactCheckReport): string {
+  const n = sourceCount(report);
+  return `Checked ${report.checkedAt ? formatIST(report.checkedAt) : '-'} · ${n} linked source${n === 1 ? '' : 's'}`;
+}
 
 /** Every character drawn on the card, so the Google Fonts subset covers all of it. */
 export function shareImageText(report: FactCheckReport): string {
   return [
-    `${BRAND_NAME} fact check`,
+    `${BRAND_NAME} fact-check`,
     FOOTER,
-    'Sources',
+    'ClaimFinding',
+    finding(report),
+    meta(report),
     report.reportId,
     ...Object.values(FC_VERDICT_LABELS),
     ...report.claims.map((c) => c.claimText),
@@ -25,7 +47,8 @@ export function shareImageText(report: FactCheckReport): string {
 }
 
 /**
- * Satori element for the 1080×1350 share card (flexbox only).
+ * Satori element for the 1080×1350 share card (flexbox only), laid out as the VERBAL_SYSTEM.md
+ * §10 share card: verdict, claim, one-sentence finding, check date, source count, report link.
  * Known limitation: satori does not shape Devanagari (matras can look misplaced); the web
  * report page and the app render Hindi correctly.
  */
@@ -33,10 +56,6 @@ export function buildShareElement(report: FactCheckReport, qr: string) {
   const verdict = report.verdict ?? 'unverified';
   const color = VERDICT_COLORS[verdict];
   const claim = report.claims[0]?.claimText ?? report.inputText ?? '';
-  const sources = report.claims
-    .flatMap((c) => c.sources)
-    .filter((s) => s.tier !== 'unknown')
-    .slice(0, 2);
   return (
     <div
       style={{
@@ -44,40 +63,35 @@ export function buildShareElement(report: FactCheckReport, qr: string) {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#fbfaf7',
         padding: 72,
         fontFamily: 'Noto, NotoDeva',
         color: '#111',
       }}
     >
-      <div style={{ display: 'flex', fontSize: 40, fontWeight: 700 }}>{BRAND_NAME} fact check</div>
-      <div style={{ display: 'flex', fontSize: 52, lineHeight: 1.3, marginTop: 64 }}>
-        “{clip(claim, 180)}”
-      </div>
+      <div style={{ display: 'flex', fontSize: 40, fontWeight: 700 }}>{BRAND_NAME} fact-check</div>
       <div
         style={{
           display: 'flex',
-          marginTop: 56,
+          marginTop: 48,
           alignSelf: 'flex-start',
           backgroundColor: color,
           color: '#fff',
-          fontSize: 64,
+          fontSize: 60,
           fontWeight: 700,
-          padding: '16px 36px',
+          padding: '14px 34px',
           borderRadius: 16,
         }}
       >
         {FC_VERDICT_LABELS[verdict]}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 56, fontSize: 32 }}>
-        {sources.length ? (
-          <div style={{ display: 'flex', color: '#555', marginBottom: 12 }}>Sources</div>
-        ) : null}
-        {sources.map((s) => (
-          <div key={s.url} style={{ display: 'flex', marginBottom: 12 }}>
-            {s.domain} · {clip(s.title ?? s.publisher ?? '', 60)}
-          </div>
-        ))}
+      <div style={{ display: 'flex', fontSize: 30, color: '#555', marginTop: 48 }}>Claim</div>
+      <div style={{ display: 'flex', fontSize: 46, lineHeight: 1.3, marginTop: 8 }}>
+        “{clip(claim, 160)}”
+      </div>
+      <div style={{ display: 'flex', fontSize: 30, color: '#555', marginTop: 40 }}>Finding</div>
+      <div style={{ display: 'flex', fontSize: 36, lineHeight: 1.35, marginTop: 8 }}>
+        {finding(report)}
       </div>
       <div
         style={{
@@ -98,8 +112,9 @@ export function buildShareElement(report: FactCheckReport, qr: string) {
             color: '#555',
           }}
         >
-          <div style={{ display: 'flex' }}>{report.reportId}</div>
+          <div style={{ display: 'flex' }}>{meta(report)}</div>
           <div style={{ display: 'flex' }}>{FOOTER}</div>
+          <div style={{ display: 'flex' }}>{report.reportId}</div>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element -- satori needs <img> */}
         <img src={qr} width={200} height={200} alt="" style={{ flexShrink: 0 }} />

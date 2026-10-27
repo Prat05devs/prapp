@@ -2,14 +2,14 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-// shadcn/ui alert with the Stitch semantic tones (tinted plane + matching hairline).
+// shadcn/ui alert with semantic tones (tinted plane + matching hairline).
 const alertVariants = cva(
-  'relative grid w-full grid-cols-[0_1fr] items-start gap-y-1 rounded-xl border p-4 text-body-sm has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] has-[>svg]:gap-x-3 [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current',
+  'relative grid w-full grid-cols-[0_1fr] items-start gap-y-1 rounded-md border p-4 text-body-sm has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] has-[>svg]:gap-x-3 [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current',
   {
     variants: {
       variant: {
         default: 'border-hairline bg-subtle text-ink',
-        success: 'border-emerald/30 bg-emerald-tint text-emerald-deep',
+        success: 'border-verified/25 bg-verified-tint text-verified-deep',
         warn: 'border-warn/25 bg-warn-tint text-warn-deep',
         destructive: 'border-danger/20 bg-danger-tint/60 text-danger-deep',
       },

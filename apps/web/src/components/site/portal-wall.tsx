@@ -32,7 +32,7 @@ export function PortalWall({
             target="_blank"
             rel="noreferrer"
             title={`${p.name} · ${p.domain}`}
-            className="group flex h-24 flex-col items-center justify-center gap-2 rounded-xl border border-hairline bg-canvas px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-ink hover:shadow-sm"
+            className="group flex h-24 flex-col items-center justify-center gap-2 rounded-md border border-hairline bg-paper px-4 py-3 transition-colors hover:border-ink"
           >
             {p.logoPath ? (
               // eslint-disable-next-line @next/next/no-img-element -- public bucket asset
@@ -43,13 +43,11 @@ export function PortalWall({
                 className="h-11 w-full max-w-[150px] object-contain"
               />
             ) : (
-              <span className="text-center font-display text-[17px] leading-tight font-bold tracking-tight text-ink">
+              <span className="text-center font-display text-[17px] leading-tight font-semibold text-ink">
                 {p.name}
               </span>
             )}
-            <span className="font-mono text-[10px] tracking-wide text-faint group-hover:text-slate">
-              {p.domain}
-            </span>
+            <span className="text-[12px] text-slate group-hover:text-ink">{p.domain}</span>
           </a>
         </li>
       ))}

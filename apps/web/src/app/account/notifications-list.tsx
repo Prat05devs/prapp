@@ -13,7 +13,7 @@ export function NotificationsList({ initial }: { initial: NotificationItem[] }) 
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-display text-headline-sm text-ink">
           <Icon name="notifications" className="text-slate" /> Notifications
-          {unread ? <Badge variant="emerald">{unread} new</Badge> : null}
+          {unread ? <Badge variant="verified">{unread} new</Badge> : null}
         </h2>
         {unread ? (
           <button
@@ -34,7 +34,7 @@ export function NotificationsList({ initial }: { initial: NotificationItem[] }) 
           {items.map((n) => (
             <li key={n.id} className="flex gap-3 px-4 py-3">
               <span
-                className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${n.read_at ? 'bg-transparent' : 'bg-emerald'}`}
+                className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${n.read_at ? 'bg-transparent' : 'bg-verified'}`}
               />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className={`text-label-md ${n.read_at ? 'text-slate' : 'text-ink'}`}>
@@ -45,7 +45,7 @@ export function NotificationsList({ initial }: { initial: NotificationItem[] }) 
                   {formatIST(n.created_at)}
                   {n.data?.deep_link ? (
                     <Link
-                      className="inline-flex items-center gap-1 text-emerald-strong hover:text-emerald-deep"
+                      className="inline-flex items-center gap-1 text-brand hover:text-brand-deep"
                       href={n.data.deep_link}
                       onClick={() => void markRead([n.id])}
                     >

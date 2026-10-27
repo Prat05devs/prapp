@@ -7,11 +7,11 @@ import { CHECKED_SOURCES, CHECKED_SOURCES_TEXT_ONLY, publicAssetUrl } from '@pra
 export function SourceStrip({ supabaseUrl }: { supabaseUrl: string }) {
   return (
     <div className="flex flex-col gap-4">
-      <ul className="flex flex-wrap justify-center gap-2">
+      <ul className="flex flex-wrap gap-2">
         {CHECKED_SOURCES.map((s) => (
           <li
             key={s.domain}
-            className="inline-flex items-center gap-2 rounded-full border border-hairline bg-canvas py-1.5 pr-3.5 pl-1.5 text-label-sm text-ink"
+            className="inline-flex items-center gap-2 rounded-full border border-hairline bg-paper py-1 pr-3 pl-1 text-body-sm text-ink"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- public bucket asset */}
             <img
@@ -24,7 +24,7 @@ export function SourceStrip({ supabaseUrl }: { supabaseUrl: string }) {
           </li>
         ))}
       </ul>
-      <p className="text-center font-mono text-code text-slate">
+      <p className="max-w-3xl text-body-sm text-slate">
         Plus {CHECKED_SOURCES_TEXT_ONLY.join(', ')}, government sites and 100+ trusted outlets.
         Names show where evidence comes from; they are not partners or endorsements.
       </p>

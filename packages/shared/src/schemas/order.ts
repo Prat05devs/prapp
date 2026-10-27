@@ -13,16 +13,19 @@ export function normalizeInstagramHandle(input: string | null | undefined): stri
 export const headlineSchema = z
   .string()
   .trim()
-  .min(LIMITS.headlineMin, `Headline must be at least ${LIMITS.headlineMin} characters`)
-  .max(LIMITS.headlineMax, `Headline must be at most ${LIMITS.headlineMax} characters`);
+  .min(LIMITS.headlineMin, `Write a headline of at least ${LIMITS.headlineMin} characters.`)
+  .max(LIMITS.headlineMax, `Keep the headline to ${LIMITS.headlineMax} characters or fewer.`);
 
 export const articleSchema = z
   .string()
   .trim()
-  .min(LIMITS.bodyMin, `Article must be at least ${LIMITS.bodyMin} characters`)
+  .min(
+    LIMITS.bodyMin,
+    `Add more detail before continuing: at least ${LIMITS.bodyMin} characters covering who, what, when, where and why.`,
+  )
   .max(
     LIMITS.bodyMax,
-    `Article must be at most ${LIMITS.bodyMax.toLocaleString('en-IN')} characters`,
+    `Keep your story to ${LIMITS.bodyMax.toLocaleString('en-IN')} characters or fewer.`,
   );
 
 export const instagramHandleSchema = z
@@ -30,12 +33,12 @@ export const instagramHandleSchema = z
   .nullish()
   .transform(normalizeInstagramHandle)
   .refine((v) => v === null || PATTERNS.instagramHandle.test(v), {
-    message: 'Use letters, numbers, dots and underscores (max 30)',
+    message: 'Use only letters, numbers, dots and underscores (up to 30).',
   });
 
 /** Content columns a customer may write (column grants on public.orders). */
 export const orderContentSchema = z.object({
-  packageId: z.uuid('Pick a package'),
+  packageId: z.uuid('Choose a package.'),
   headline: headlineSchema,
   body: articleSchema,
   instagramHandle: instagramHandleSchema,
@@ -105,16 +108,30 @@ export function checkoutReadiness(input: {
   const problems: string[] = [];
   const parsed = orderContentSchema.safeParse(input.content);
   if (!parsed.success) problems.push(...parsed.error.issues.map((i) => i.message));
-  if (input.imageCount < LIMITS.imagesMin) problems.push('Add at least one image.');
-  if (input.imageCount > LIMITS.imagesMax) problems.push('You can upload up to 2 images.');
+  if (input.imageCount < LIMITS.imagesMin) problems.push('Add at least 1 supporting image.');
+  if (input.imageCount > LIMITS.imagesMax) problems.push('You can add up to 2 images.');
   if (!input.content.declarationAccepted)
-    problems.push('Please accept the declaration to continue.');
+    problems.push('Confirm the editorial declaration to continue.');
   if (!input.profileComplete) problems.push('Add your name and phone number to continue.');
   return { ready: problems.length === 0, problems };
 }
 
+/** Editorial confirmation (VERBAL_SYSTEM.md §12). */
 export const DECLARATION_TEXT =
-  'This content is mine and accurate, and I understand it will be published as sponsored content.';
-export const FEATURE_CONSENT_TEXT = 'You may feature my story on your website.';
+  'I confirm that the information is accurate to the best of my knowledge, that I have permission to use the submitted images, and that I understand the story will be published as sponsored content if approved.';
+export const FEATURE_CONSENT_TEXT =
+  'NewsVio may show my published story as an example on its website and app.';
 export const INSTAGRAM_COLLAB_HINT =
-  "We'll invite you as a collaborator. Accept the request within 24 hours or the post goes out with a tag only.";
+  'Add the account to tag or invite for collaboration. Accept our invite within 24 hours, or the post goes out with a tag only.';
+
+/** Story form labels and helpers (VERBAL_SYSTEM.md §12), shared by the site and the app. */
+export const STORY_FORM_COPY = {
+  headlineLabel: 'Story headline',
+  headlineHint: 'Write a clear headline in up to 150 characters.',
+  bodyLabel: 'Your story',
+  bodyHint:
+    'Add the main facts, names, dates, location and supporting details. Minimum 300 characters.',
+  imagesLabel: 'Supporting images',
+  imagesHint: 'Add 1–2 clear images you have permission to publish.',
+  handleLabel: 'Instagram handle (optional)',
+} as const;

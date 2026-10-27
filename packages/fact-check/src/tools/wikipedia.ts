@@ -14,8 +14,8 @@ export async function wikipediaContext(
   const lang = opts.lang ?? 'en';
   // Wikimedia rejects requests without a descriptive User-Agent (HTTP 429/403).
   const headers = {
-    'Api-User-Agent': 'NewsVio-FactCheck/1.0 (https://newsvio.vercel.app)',
-    'User-Agent': 'NewsVio-FactCheck/1.0 (https://newsvio.vercel.app)',
+    'Api-User-Agent': 'NewsVio-FactCheck/1.0 (https://newsvio.in)',
+    'User-Agent': 'NewsVio-FactCheck/1.0 (https://newsvio.in)',
   };
   const search = await f(
     // Full-text search: claim keywords rarely match an article title exactly.

@@ -1,0 +1,28 @@
+{
+  "name": "@prapp/server-db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "migrate": "tsx src/migrate-cli.ts",
+    "test:standalone": "tsx src/standalone-check.ts",
+    "backup:source": "tsx src/source-backup-cli.ts export",
+    "backup:verify": "tsx src/source-backup-cli.ts verify"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/pg": "^8.15.5",
+    "tsx": "^4.20.6",
+    "typescript": "^5",
+    "vitest": "^4.1.11"
+  }
+}

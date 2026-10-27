@@ -18,6 +18,9 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
+      // Reset links then carry a one-time code that only this install can exchange, not tokens
+      // another app could read by claiming the newsvio:// scheme (security review, Oct 2026).
+      flowType: 'pkce',
     },
   },
 );

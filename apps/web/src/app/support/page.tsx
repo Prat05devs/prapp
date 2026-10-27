@@ -1,10 +1,13 @@
-import type { Metadata } from 'next';
-import { BRAND_NAME } from '@prapp/shared';
+import { pageMetadata } from '@/lib/seo';
 import { Icon, type IconName } from '@/components/icon';
 import { supportContacts } from '@/components/site/support';
 import { Notice, Page, PageHeader } from '@/components/ui';
 
-export const metadata: Metadata = { title: `Support · ${BRAND_NAME}` };
+export const metadata = pageMetadata(
+  '/support',
+  'Contact & Support',
+  'Contact NewsVio about an order, a payment, a fact-check correction or a custom publishing plan.',
+);
 
 export default async function SupportPage({ searchParams }: PageProps<'/support'>) {
   const s = await supportContacts();
@@ -50,7 +53,7 @@ export default async function SupportPage({ searchParams }: PageProps<'/support'
       <PageHeader
         eyebrow="Support"
         title="How can we help?"
-        lede="We're happy to help with orders, payments and fact checks."
+        lede="Share your order ID and we'll check the status for you. We also help with payments, fact-check corrections and custom plans."
       />
       {order ? (
         <Notice>
@@ -66,7 +69,7 @@ export default async function SupportPage({ searchParams }: PageProps<'/support'
               rel={c.external ? 'noreferrer' : undefined}
               className="group flex h-full flex-col gap-4 rounded-2xl border border-hairline bg-canvas p-5 transition-colors hover:border-ink"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-hairline bg-subtle text-emerald-strong">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-hairline bg-subtle text-brand">
                 <Icon name={c.icon} />
               </span>
               <span className="flex flex-col gap-1">
@@ -93,6 +96,23 @@ export default async function SupportPage({ searchParams }: PageProps<'/support'
           </dd>
         </div>
       </dl>
+      <section className="grid gap-6 border-t border-hairline pt-6 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <h2 className="font-display text-headline-sm text-ink">Need a wider press push?</h2>
+          <p className="text-body-md text-body">
+            Tell us the audience, locations and number of placements you want. Our team will
+            recommend a custom mix of news portals, Instagram pages and Facebook pages with a clear
+            quote.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <h2 className="font-display text-headline-sm text-ink">Found an error in a report?</h2>
+          <p className="text-body-md text-body">
+            Send us the report link, the disputed statement and your supporting source. We correct
+            reports promptly and visibly.
+          </p>
+        </div>
+      </section>
     </Page>
   );
 }

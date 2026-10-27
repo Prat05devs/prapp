@@ -1,8 +1,14 @@
-import { useLocalSearchParams } from 'expo-router';
-import { CircleCheck, Info, Lock, ShieldCheck, Trash2 } from 'lucide-react-native';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { CircleCheck, Info, Lock, Trash2 } from 'lucide-react-native';
 import { View } from 'react-native';
 import type { CustomerOrder } from '@prapp/api-client';
-import { DECLARATION_TEXT, FEATURE_CONSENT_TEXT, formatMoney } from '@prapp/shared';
+import {
+  DECLARATION_TEXT,
+  FEATURE_CONSENT_TEXT,
+  SPONSORED_DISCLOSURE,
+  STORY_FORM_COPY,
+  formatMoney,
+} from '@prapp/shared';
 import { ImageSlots } from '@/components/image-slots';
 import { PackagePicker } from '@/components/package-picker';
 import { PublishSteps } from '@/components/publish-steps';
@@ -10,14 +16,16 @@ import { StatusBadge } from '@/components/status-badge';
 import { StoryFields } from '@/components/story-fields';
 import {
   ActionButton,
+  Card,
   Centered,
   CheckRow,
   ErrorText,
+  Group,
   Icon,
   Notice,
-  Panel,
+  Row,
   ScrollScreen,
-  StepHeading,
+  Section,
   Text,
 } from '@/components/ui';
 import { useFocusedData } from '@/hooks/use-async';
@@ -62,154 +70,157 @@ function Editor({ order }: { order: CustomerOrder }) {
       </Centered>
     );
 
-  return (
-    <ScrollScreen>
-      <View className="gap-4">
-        <View className="flex-row items-center justify-between">
-          <Text className="font-display text-headline-sm text-ink">{order.orderNumber}</Text>
-          <StatusBadge status={ed.status} />
-        </View>
-        <View className="flex-row items-center gap-1.5">
-          {ed.saveState === 'saved' ? (
-            <Icon as={CircleCheck} size={12} className="text-emerald-strong" />
-          ) : null}
-          <Text
-            className={`font-mono text-code uppercase ${
-              ed.saveState === 'saved'
-                ? 'text-emerald-strong'
-                : ed.saveState === 'invalid' || ed.saveState === 'error'
-                  ? 'text-danger'
-                  : 'text-slate'
-            }`}
-          >
-            {SAVE[ed.saveState]}
-          </Text>
-        </View>
-        {!changes ? <PublishSteps current={ed.images.length ? 3 : 2} /> : null}
-      </View>
+  const saveTone =
+    ed.saveState === 'saved'
+      ? 'text-verified'
+      : ed.saveState === 'invalid' || ed.saveState === 'error'
+        ? 'text-danger'
+        : 'text-slate';
 
+  const footer = (
+    <>
+      <ErrorText>{ed.error ?? checkout.error}</ErrorText>
       {changes ? (
-        <Notice tone="warn" title="Our team asked for changes">
-          {order.changesRequestedReason}
-        </Notice>
-      ) : null}
-
-      <View className="gap-4">
-        <StepHeading step="01" title="Your story" />
-        <Panel>
-          <StoryFields value={ed.content} onChange={ed.update} errors={ed.fieldErrors} />
-        </Panel>
-      </View>
-
-      <View className="gap-4">
-        <StepHeading step="02" title="Photos" />
-        <ImageSlots
-          orderId={order.id}
-          images={ed.images}
-          busy={ed.imageBusy}
-          editable={ed.editable}
-          onPick={(p) => void ed.addImage(p)}
-          onRemove={(img) => void ed.removeImage(img)}
+        <ActionButton
+          title="Resubmit for publishing"
+          variant="accent"
+          loading={ed.busy}
+          disabled={!ed.readiness.ready}
+          onPress={() => void ed.resubmit()}
         />
-      </View>
-
-      {catalogue.data ? (
-        <View className="gap-4">
-          <StepHeading
-            step="03"
-            title="Package"
-            aside={ed.packageLocked ? 'Locked after payment' : 'Taxes included'}
-          />
-          <PackagePicker
-            packages={catalogue.data.packages}
-            value={ed.content.packageId}
-            onChange={(packageId) => ed.update({ packageId })}
-            disabled={ed.packageLocked}
-          />
-        </View>
-      ) : null}
-
-      <Panel tone="subtle">
-        <Text variant="label">Review</Text>
-        <CheckRow
-          checked={ed.content.featureConsent ?? false}
-          onChange={(featureConsent) => ed.update({ featureConsent })}
-        >
-          {FEATURE_CONSENT_TEXT}
-        </CheckRow>
-        <CheckRow
-          checked={ed.content.declarationAccepted ?? false}
-          onChange={(declarationAccepted) => ed.update({ declarationAccepted })}
-        >
-          {DECLARATION_TEXT} <Text className="text-danger">*</Text>
-        </CheckRow>
-        {ed.readiness.problems.length ? (
-          <View className="gap-1.5 rounded-xl border border-hairline bg-canvas p-3">
-            {ed.readiness.problems.map((p) => (
-              <View key={p} className="flex-row items-start gap-2">
-                <Icon as={Info} size={14} className="mt-0.5 text-warn" />
-                <Text className="flex-1 text-body-sm text-body">{p}</Text>
-              </View>
-            ))}
-          </View>
-        ) : null}
-        {!changes && pkg ? (
-          <View className="flex-row items-center justify-between border-t border-hairline pt-4">
-            <Text variant="label">Total</Text>
-            {freeCheckout ? (
-              <View className="flex-row items-baseline gap-2">
-                <Text className="text-body-sm text-slate line-through">
+      ) : (
+        <View className="flex-row items-center gap-4">
+          <View className="gap-0.5">
+            <Text className="text-[12px] text-slate">Total, GST included</Text>
+            <View className="flex-row items-baseline gap-1.5">
+              {freeCheckout && pkg ? (
+                <Text className="text-body-sm tabular-nums text-slate line-through">
                   {formatMoney(pkg.priceInrPaise)}
                 </Text>
-                <Text className="font-display text-headline-sm text-ink">{formatMoney(0)}</Text>
-              </View>
-            ) : (
-              <Text className="font-display text-headline-sm text-ink">
-                {formatMoney(pkg.priceInrPaise)}
+              ) : null}
+              <Text className="font-sans-semibold text-[19px] tabular-nums text-ink">
+                {pkg ? formatMoney(freeCheckout ? 0 : pkg.priceInrPaise) : '-'}
               </Text>
-            )}
+            </View>
           </View>
-        ) : null}
-        <ErrorText>{ed.error ?? checkout.error}</ErrorText>
-        {changes ? (
           <ActionButton
-            title="Resubmit for publishing"
-            variant="accent"
-            loading={ed.busy}
-            disabled={!ed.readiness.ready}
-            onPress={() => void ed.resubmit()}
-          />
-        ) : (
-          <ActionButton
-            title={
-              freeCheckout ? 'Confirm order' : pkg ? `Pay ${formatMoney(pkg.priceInrPaise)}` : 'Pay'
-            }
+            title={freeCheckout ? 'Confirm order' : 'Pay securely'}
             variant="accent"
             icon={freeCheckout ? undefined : Lock}
+            className="flex-1"
             loading={checkout.pending}
             disabled={
               !ed.readiness.ready || ed.saveState === 'saving' || ed.saveState === 'unsaved'
             }
             onPress={() => void checkout.pay()}
           />
-        )}
-        {ed.status === 'draft' ? (
-          <ActionButton
-            title="Discard draft"
-            variant="destructive-outline"
-            icon={Trash2}
-            onPress={() => void ed.discard()}
-          />
-        ) : null}
-        {!changes ? (
-          <View className="flex-row items-start gap-2">
-            <Icon as={ShieldCheck} size={14} className="mt-0.5 text-slate" />
-            <Text className="flex-1 font-mono text-code text-slate">
-              Paid securely with Razorpay: UPI, card or net banking.
-            </Text>
+        </View>
+      )}
+    </>
+  );
+
+  return (
+    <>
+      <Stack.Screen options={{ title: changes ? 'Edit and resubmit' : 'Review and pay' }} />
+      <ScrollScreen footer={footer}>
+        <View className="gap-4">
+          <View className="flex-row items-center justify-between gap-3">
+            <View className="flex-row items-center gap-2">
+              <Text className="font-mono text-code text-slate">{order.orderNumber}</Text>
+              <StatusBadge status={ed.status} />
+            </View>
+            <View className="flex-row items-center gap-1.5">
+              {ed.saveState === 'saved' ? (
+                <Icon as={CircleCheck} size={13} className="text-verified" />
+              ) : null}
+              <Text className={`text-label-sm ${saveTone}`}>{SAVE[ed.saveState]}</Text>
+            </View>
           </View>
+          {!changes ? <PublishSteps current={ed.images.length ? 3 : 2} /> : null}
+        </View>
+
+        {changes ? (
+          <Notice tone="warn" title="Your story needs a few changes before publication">
+            {order.changesRequestedReason}
+          </Notice>
         ) : null}
-      </Panel>
-    </ScrollScreen>
+
+        <Section title="Your story">
+          <Card>
+            <StoryFields value={ed.content} onChange={ed.update} errors={ed.fieldErrors} />
+          </Card>
+        </Section>
+
+        <Section title={STORY_FORM_COPY.imagesLabel}>
+          <ImageSlots
+            orderId={order.id}
+            images={ed.images}
+            busy={ed.imageBusy}
+            editable={ed.editable}
+            onPick={(p) => void ed.addImage(p)}
+            onRemove={(img) => void ed.removeImage(img)}
+          />
+        </Section>
+
+        {catalogue.data ? (
+          <Section
+            title="Package"
+            footer={ed.packageLocked ? 'The package is locked after payment.' : undefined}
+          >
+            <PackagePicker
+              packages={catalogue.data.packages}
+              value={ed.content.packageId}
+              onChange={(packageId) => ed.update({ packageId })}
+              disabled={ed.packageLocked}
+            />
+          </Section>
+        ) : null}
+
+        <Section
+          title="Review your package before you pay"
+          footer={
+            changes
+              ? undefined
+              : `${SPONSORED_DISCLOSURE} Paid securely with Razorpay: UPI, card or net banking.`
+          }
+        >
+          <Card className="gap-3">
+            <CheckRow
+              checked={ed.content.featureConsent ?? false}
+              onChange={(featureConsent) => ed.update({ featureConsent })}
+            >
+              {FEATURE_CONSENT_TEXT}
+            </CheckRow>
+            <CheckRow
+              checked={ed.content.declarationAccepted ?? false}
+              onChange={(declarationAccepted) => ed.update({ declarationAccepted })}
+            >
+              {DECLARATION_TEXT} <Text className="text-danger">*</Text>
+            </CheckRow>
+            {ed.readiness.problems.length ? (
+              <View className="gap-1.5 rounded-md bg-warn-tint p-3">
+                {ed.readiness.problems.map((p) => (
+                  <View key={p} className="flex-row items-start gap-2">
+                    <Icon as={Info} size={14} className="mt-0.5 text-warn-deep" />
+                    <Text className="flex-1 text-body-sm text-warn-deep">{p}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </Card>
+        </Section>
+
+        {ed.status === 'draft' ? (
+          <Group>
+            <Row
+              icon={Trash2}
+              label="Discard draft"
+              destructive
+              onPress={() => void ed.discard()}
+            />
+          </Group>
+        ) : null}
+      </ScrollScreen>
+    </>
   );
 }

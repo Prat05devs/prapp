@@ -3,7 +3,7 @@ import { startCheckout } from '@/server/checkout';
 import { applyRazorpayPayment } from '@/server/payments';
 import { refundPayment } from '@/server/refunds';
 import { generatePrReport } from '@/server/report';
-import { handleRazorpayWebhook } from '@/server/webhook';
+import { handleRazorpayWebhook, processPaymentWebhooks } from '@/server/webhook';
 import { FakeRazorpay, webhookSignature } from '@/test/fake-razorpay';
 import {
   createUser,
@@ -102,7 +102,9 @@ describe('P4: claim lock and publishing', () => {
       const url =
         p.channel === 'instagram'
           ? 'https://www.instagram.com/p/abc123/'
-          : `https://${p.portal_id === (await portalId('Portal One')) ? 'portal-one' : 'portal-three'}.example/story`;
+          : p.channel === 'facebook'
+            ? 'https://www.facebook.com/newsvio/posts/123'
+            : `https://${p.portal_id === (await portalId('Portal One')) ? 'portal-one' : 'portal-three'}.example/story`;
       const r = await editor1.db.rpc('staff_set_placement_link', {
         p_placement_id: p.id,
         p_url: url,
@@ -147,7 +149,7 @@ describe('P4: claim lock and publishing', () => {
       .from('order_placements')
       .select('live_url')
       .eq('order_id', orderId);
-    expect(visible!.length).toBe(3);
+    expect(visible!.length).toBe(4); // 2 portals + Instagram + Facebook
   });
 
   it('editors cannot run admin actions (DB)', async () => {
@@ -189,15 +191,17 @@ describe('P3/P4: reject and refund', () => {
       { service, gateway: gw },
       {
         orderId,
+        requestId: crypto.randomUUID(),
         paymentId: order.paid_payment_id!,
         amountMinor: order.amount_minor!,
-        reason: 'rejected',
+        reason: 'Content is rejected',
         adminId: admin.id,
       },
     );
     expect((await orderRow(orderId)).status).toBe('rejected');
 
     const refund = { ...gw.refunds.get(refundId)!, status: 'processed' };
+    gw.refunds.set(refundId, { ...gw.refunds.get(refundId)!, status: 'processed' });
     const raw = JSON.stringify({
       event: 'refund.processed',
       payload: { refund: { entity: refund } },
@@ -211,6 +215,7 @@ describe('P3/P4: reject and refund', () => {
       }),
     );
     expect(out.status).toBe(200);
+    await processPaymentWebhooks({ service, gateway: gw }, () => false);
     expect((await orderRow(orderId)).status).toBe('refunded');
   });
 
@@ -221,6 +226,7 @@ describe('P3/P4: reject and refund', () => {
         { service, gateway: gw },
         {
           orderId,
+          requestId: crypto.randomUUID(),
           paymentId: order.paid_payment_id!,
           amountMinor: order.amount_minor! + 1,
           reason: 'too much',

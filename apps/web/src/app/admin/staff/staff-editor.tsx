@@ -85,7 +85,7 @@ export function StaffEditor({
                 {p.role === 'editor' || p.role === 'admin' ? (
                   <button
                     type="button"
-                    className="text-label-sm text-emerald-strong underline-offset-2 hover:underline disabled:opacity-50"
+                    className="text-label-sm text-brand underline-offset-2 hover:underline disabled:opacity-50"
                     disabled={action.pending !== null}
                     onClick={() => {
                       const password = window.prompt(

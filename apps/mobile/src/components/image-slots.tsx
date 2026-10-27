@@ -1,8 +1,10 @@
 import { Image } from 'expo-image';
 import { CircleCheck, Upload } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { PressableScale } from '@/components/motion/pressable-scale';
 import type { OrderImage } from '@prapp/api-client';
+import { STORY_FORM_COPY } from '@prapp/shared';
 import { Icon, Text } from '@/components/ui';
 import { api } from '@/lib/api';
 import { COLORS } from '@/lib/theme';
@@ -39,11 +41,9 @@ export function ImageSlots({
 
   return (
     <View className="gap-3">
-      <View className="flex-row items-baseline justify-between">
-        <Text variant="label">Images (1 required, up to 2)</Text>
-        <Text
-          className={`font-mono text-code uppercase ${images.length ? 'text-emerald-strong' : 'text-slate'}`}
-        >
+      <View className="flex-row items-baseline justify-between px-1">
+        <Text className="flex-1 text-label-sm text-slate">{STORY_FORM_COPY.imagesHint}</Text>
+        <Text className={`text-label-sm ${images.length ? 'text-verified' : 'text-slate'}`}>
           {images.length} of 2 added
         </Text>
       </View>
@@ -55,7 +55,7 @@ export function ImageSlots({
             return (
               <View
                 key={position}
-                className="flex-1 overflow-hidden rounded-2xl border border-hairline bg-canvas"
+                className="flex-1 overflow-hidden rounded-lg border border-hairline bg-paper"
               >
                 <View>
                   {url ? (
@@ -67,9 +67,9 @@ export function ImageSlots({
                   ) : (
                     <View className="aspect-[4/3] w-full bg-elevated" />
                   )}
-                  <View className="absolute left-2 top-2 rounded-md bg-ink/80 px-2 py-0.5">
-                    <Text className="font-mono text-[10px] uppercase text-white">
-                      Photo {position}
+                  <View className="absolute left-2 top-2 rounded-sm bg-ink/80 px-1.5 py-px">
+                    <Text className="font-sans-semibold text-[12px] text-white">
+                      Image {position}
                     </Text>
                   </View>
                   {busy === position ? (
@@ -79,43 +79,43 @@ export function ImageSlots({
                   ) : null}
                 </View>
                 <View className="flex-row items-center justify-between px-3 py-2">
-                  <Text className="font-mono text-[11px] text-slate">
+                  <Text className="text-[12px] text-slate">
                     {Math.round(image.sizeBytes / 1024)} KB
                   </Text>
-                  <Icon as={CircleCheck} size={14} className="text-emerald" />
+                  <Icon as={CircleCheck} size={14} className="text-verified" />
                 </View>
                 {editable ? (
                   <View className="flex-row gap-4 border-t border-divider px-3 py-2">
-                    <Pressable onPress={() => onPick(position)} disabled={busy !== null}>
-                      <Text className="font-sans-medium text-label-sm text-ink">Replace</Text>
-                    </Pressable>
-                    <Pressable onPress={() => onRemove(image)} disabled={busy !== null}>
-                      <Text className="font-sans-medium text-label-sm text-slate">Remove</Text>
-                    </Pressable>
+                    <PressableScale onPress={() => onPick(position)} disabled={busy !== null}>
+                      <Text className="font-sans-semibold text-label-sm text-ink">Replace</Text>
+                    </PressableScale>
+                    <PressableScale onPress={() => onRemove(image)} disabled={busy !== null}>
+                      <Text className="font-sans-semibold text-label-sm text-slate">Remove</Text>
+                    </PressableScale>
                   </View>
                 ) : null}
               </View>
             );
           }
           return (
-            <Pressable
+            <PressableScale
               key={position}
               accessibilityRole="button"
               disabled={!editable || busy !== null}
               onPress={() => onPick(position)}
-              className="aspect-[4/3] flex-1 items-center justify-center gap-2 rounded-2xl border border-dashed border-hairline bg-subtle p-3 active:border-ink"
+              className="aspect-[4/3] flex-1 items-center justify-center gap-2 rounded-lg border border-dashed border-input bg-paper p-3 active:bg-subtle"
             >
               {busy === position ? (
                 <ActivityIndicator color={COLORS.ink} />
               ) : (
-                <View className="h-9 w-9 items-center justify-center rounded-full border border-hairline bg-canvas">
+                <View className="h-9 w-9 items-center justify-center rounded-full bg-subtle">
                   <Icon as={Upload} size={16} className="text-slate" />
                 </View>
               )}
-              <Text className="font-sans-medium text-label-sm text-ink">
-                {busy === position ? 'Uploading…' : `Add photo ${position}`}
+              <Text className="font-sans-semibold text-label-sm text-ink">
+                {busy === position ? 'Uploading…' : `Add image ${position}`}
               </Text>
-            </Pressable>
+            </PressableScale>
           );
         })}
       </View>

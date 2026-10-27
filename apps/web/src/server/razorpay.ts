@@ -1,7 +1,8 @@
 import 'server-only';
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import Razorpay from 'razorpay';
 import { razorpayEnv } from '@/server/env';
+import { activeIntegration, integrationCredentials } from '@/server/integrations';
+import { createServiceClient } from '@/server/supabase/service';
 
 // Thin wrapper around the Razorpay Node SDK (server only, golden rule 3).
 // Route handlers depend on this interface so tests can pass a fake gateway.
@@ -45,6 +46,13 @@ export interface RzpOrder {
 
 export interface RazorpayGateway {
   livemode: boolean;
+  credentialId?: string;
+  keySecret?: string;
+  webhookSecret?: string;
+  webhookSecrets?: () => Promise<string[]>;
+  resolveOrder?: (id: string) => Promise<RazorpayGateway>;
+  resolvePayment?: (id: string) => Promise<RazorpayGateway>;
+  resolveRefund?: (id: string) => Promise<RazorpayGateway>;
   keyId: string;
   createOrder(input: {
     amount: number;
@@ -58,40 +66,168 @@ export interface RazorpayGateway {
   capturePayment(paymentId: string, amount: number, currency: string): Promise<RzpPayment>;
   refundPayment(
     paymentId: string,
-    input: { amount: number; notes: Record<string, string> },
+    input: { amount: number; notes: Record<string, string>; requestId: string },
   ): Promise<RzpRefund>;
   fetchRefund(refundId: string): Promise<RzpRefund>;
   fetchPaymentRefunds(paymentId: string): Promise<RzpRefund[]>;
 }
 
-let gateway: RazorpayGateway | undefined;
+export async function razorpayGateway(): Promise<RazorpayGateway> {
+  const active = await activeIntegration('razorpay');
+  return active ? gatewayForCredential(active.id) : legacyGateway();
+}
 
-export function razorpayGateway(): RazorpayGateway {
-  if (gateway) return gateway;
-  const env = razorpayEnv();
-  const rzp = new Razorpay({ key_id: env.RAZORPAY_KEY_ID, key_secret: env.RAZORPAY_KEY_SECRET });
-  gateway = {
-    livemode: env.RAZORPAY_LIVEMODE,
-    keyId: env.RAZORPAY_KEY_ID,
-    createOrder: async (input) => (await rzp.orders.create(input)) as unknown as RzpOrder,
-    fetchOrder: async (id) => (await rzp.orders.fetch(id)) as unknown as RzpOrder,
-    fetchOrderPayments: async (id) =>
-      ((await rzp.orders.fetchPayments(id)).items ?? []) as unknown as RzpPayment[],
-    fetchPayment: async (id) => (await rzp.payments.fetch(id)) as unknown as RzpPayment,
-    capturePayment: async (id, amount, currency) =>
-      (await rzp.payments.capture(id, amount, currency)) as unknown as RzpPayment,
-    refundPayment: async (id, input) =>
-      (await rzp.payments.refund(id, input)) as unknown as RzpRefund,
-    fetchRefund: async (id) => (await rzp.refunds.fetch(id)) as unknown as RzpRefund,
-    fetchPaymentRefunds: async (id) =>
-      ((await rzp.payments.fetchMultipleRefund(id)).items ?? []) as unknown as RzpRefund[],
-  };
+/** Recovery must work even when new checkouts are disabled or no profile is active. */
+export function razorpayRecoveryGateway(): RazorpayGateway {
+  return buildGateway({
+    RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID ?? '',
+    RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET ?? '',
+    RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET ?? '',
+    RAZORPAY_LIVEMODE: process.env.RAZORPAY_LIVEMODE === 'true',
+  });
+}
+
+function legacyGateway(): RazorpayGateway {
+  return buildGateway(razorpayEnv());
+}
+
+async function gatewayForCredential(id: string): Promise<RazorpayGateway> {
+  const config = await integrationCredentials(id);
+  if (config.provider !== 'razorpay') throw new Error('Invalid payment credential');
+  return buildGateway(
+    {
+      RAZORPAY_KEY_ID: config.keyId,
+      RAZORPAY_KEY_SECRET: config.keySecret,
+      RAZORPAY_WEBHOOK_SECRET: config.webhookSecret,
+      RAZORPAY_LIVEMODE: config.environment === 'live',
+    },
+    id,
+  );
+}
+
+async function gatewayForOrder(id: string): Promise<RazorpayGateway> {
+  const { data, error } = await createServiceClient()
+    .from('payment_intents')
+    .select('credential_id, livemode')
+    .eq('razorpay_order_id', id)
+    .single();
+  if (error || !data) throw new Error('Payment intent configuration not found');
+  const gateway = data.credential_id
+    ? await gatewayForCredential(data.credential_id)
+    : legacyGateway();
+  if (gateway.livemode !== data.livemode) throw new Error('Payment environment mismatch');
   return gateway;
 }
 
-/** For tests only. */
-export function setRazorpayGateway(next: RazorpayGateway | undefined) {
-  gateway = next;
+function buildGateway(
+  env: {
+    RAZORPAY_KEY_ID: string;
+    RAZORPAY_KEY_SECRET: string;
+    RAZORPAY_WEBHOOK_SECRET: string;
+    RAZORPAY_LIVEMODE: boolean;
+  },
+  credentialId?: string,
+): RazorpayGateway {
+  // Bounded provider calls. Only reads are automatically retried; writes need a durable identity.
+  async function call<T>(
+    method: 'GET' | 'POST',
+    path: string,
+    body?: unknown,
+    requestId?: string,
+  ): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+      const response = await fetch(`https://api.razorpay.com/v1${path}`, {
+        method,
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString('base64')}`,
+          'Content-Type': 'application/json',
+          ...(requestId ? { 'X-Refund-Idempotency': requestId } : {}),
+        },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (method === 'GET' && attempt === 0 && [429, 502, 503, 504].includes(response.status)) {
+        await response.body?.cancel();
+        await new Promise((resolve) => setTimeout(resolve, 250 + Math.floor(Math.random() * 250)));
+        continue;
+      }
+      if (!response.ok) throw new Error(`payment_provider_status_${response.status}`);
+      return (await response.json()) as T;
+    }
+  }
+  const encode = encodeURIComponent;
+  const gateway: RazorpayGateway = {
+    credentialId,
+    keySecret: env.RAZORPAY_KEY_SECRET,
+    webhookSecret: env.RAZORPAY_WEBHOOK_SECRET,
+    webhookSecrets: async () => {
+      // Webhook secrets rotate independently of the API key. Accept retained secrets in
+      // this mode; API fetches still use the payment's pinned credential before fulfilment.
+      const { data, error } = await createServiceClient()
+        .from('integration_credentials')
+        .select('id')
+        .eq('provider', 'razorpay');
+      if (error) throw new Error('webhook_configuration_unavailable');
+      const configs = await Promise.all((data ?? []).map((r) => integrationCredentials(r.id)));
+      return [
+        ...new Set([
+          env.RAZORPAY_WEBHOOK_SECRET,
+          ...configs.flatMap((c) => (c.provider === 'razorpay' ? [c.webhookSecret] : [])),
+        ]),
+      ].filter(Boolean);
+    },
+    resolveOrder: gatewayForOrder,
+    resolvePayment: async (id) => {
+      const { data, error } = await createServiceClient()
+        .from('payments')
+        .select('payment_intents!payments_intent_id_fkey(razorpay_order_id)')
+        .eq('razorpay_payment_id', id)
+        .single();
+      if (error || !data?.payment_intents) throw new Error('Payment configuration not found');
+      return gatewayForOrder(data.payment_intents.razorpay_order_id);
+    },
+    resolveRefund: async (id) => {
+      const { data, error } = await createServiceClient()
+        .from('refunds')
+        .select('payments(razorpay_payment_id)')
+        .eq('razorpay_refund_id', id)
+        .single();
+      if (error || !data?.payments) throw new Error('Refund configuration not found');
+      return gateway.resolvePayment!(data.payments.razorpay_payment_id);
+    },
+    livemode: env.RAZORPAY_LIVEMODE,
+    keyId: env.RAZORPAY_KEY_ID,
+    createOrder: (input) => call<RzpOrder>('POST', '/orders', input),
+    fetchOrder: (id) => call<RzpOrder>('GET', `/orders/${encode(id)}`),
+    fetchOrderPayments: async (id) =>
+      (await call<{ items: RzpPayment[] }>('GET', `/orders/${encode(id)}/payments`)).items,
+    fetchPayment: (id) => call<RzpPayment>('GET', `/payments/${encode(id)}`),
+    capturePayment: (id, amount, currency) =>
+      call<RzpPayment>('POST', `/payments/${encode(id)}/capture`, { amount, currency }),
+    refundPayment: (id, input) =>
+      call<RzpRefund>(
+        'POST',
+        `/payments/${encode(id)}/refund`,
+        { amount: input.amount, notes: input.notes },
+        input.requestId,
+      ),
+    fetchRefund: (id) => call<RzpRefund>('GET', `/refunds/${encode(id)}`),
+    fetchPaymentRefunds: async (id) => {
+      const results: RzpRefund[] = [];
+      const started = Date.now();
+      for (let skip = 0; skip < 1000; skip += 100) {
+        if (Date.now() - started > 15_000) throw new Error('refund_lookup_timeout');
+        const page = await call<{ items: RzpRefund[] }>(
+          'GET',
+          `/payments/${encode(id)}/refunds?count=100&skip=${skip}`,
+        );
+        results.push(...page.items);
+        if (page.items.length < 100) return results;
+      }
+      throw new Error('refund_lookup_requires_review');
+    },
+  };
+  return gateway;
 }
 
 export function hmacSha256Hex(data: string, secret: string): string {

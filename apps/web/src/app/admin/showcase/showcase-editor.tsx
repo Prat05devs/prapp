@@ -106,7 +106,7 @@ export function ShowcaseEditor({
             ) : null}
             <span className="flex-1">
               <a
-                className="font-medium text-emerald-strong hover:underline"
+                className="font-medium text-brand hover:underline"
                 href={s.url}
                 target="_blank"
                 rel="noreferrer"
@@ -132,7 +132,7 @@ export function ShowcaseEditor({
             </label>
             <button
               type="button"
-              className="font-medium text-emerald-strong hover:underline"
+              className="font-medium text-brand hover:underline"
               disabled={i === 0}
               onClick={() => move(i, -1)}
             >
@@ -140,7 +140,7 @@ export function ShowcaseEditor({
             </button>
             <button
               type="button"
-              className="font-medium text-emerald-strong hover:underline"
+              className="font-medium text-brand hover:underline"
               disabled={i === stories.length - 1}
               onClick={() => move(i, 1)}
             >

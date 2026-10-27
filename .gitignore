@@ -24,3 +24,4 @@ expo-env.d.ts
 supabase/.temp/
 supabase/.branches/
 .env*
+.migration-backups/

@@ -46,7 +46,7 @@ export default async function PaymentsPage() {
                 <td>
                   {p.order ? (
                     <Link
-                      className="font-medium text-emerald-strong hover:underline"
+                      className="font-medium text-brand hover:underline"
                       href={`/admin/orders/${p.order.id}`}
                     >
                       {p.order.order_number}
@@ -88,7 +88,7 @@ export default async function PaymentsPage() {
                 <td>
                   {r.order ? (
                     <Link
-                      className="font-medium text-emerald-strong hover:underline"
+                      className="font-medium text-brand hover:underline"
                       href={`/admin/orders/${r.order.id}`}
                     >
                       {r.order.order_number}

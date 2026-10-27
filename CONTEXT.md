@@ -15,7 +15,7 @@ and leave a `// DECISION:` comment. Do not invent features that are not in the s
 
 ## 1. What the product is
 
-A web app plus mobile app (name TBD, placeholder `prapp`) for people in India, starting in
+A web app plus mobile app named **newsVio** for people in India, starting in
 Dehradun/Uttarakhand, with two features:
 
 1. **Fact checker (the hero feature, free).** A user pastes text or a link, or uploads a
@@ -32,7 +32,26 @@ Dehradun/Uttarakhand, with two features:
 Users: customers (web + app), **editors** (data-entry staff who post, several of them),
 and **one admin**. The admin panel is **web only**.
 
-## 2. Stack (fixed)
+## 2. Stack (current implementation)
+
+**Workspace and hosting direction (owner, 2026-10-26):** work from
+`/Volumes/ProjectsSSD/prapp` on ProjectsSSD after the move from internal storage.
+`prapp` remains the repository folder and internal package namespace; the product is newsVio.
+The intended hosting is Hostinger for the website/admin and DigitalOcean for the API,
+with a private shared PostgreSQL instance and an isolated database per application.
+This is a migration target, not the current implementation. See `docs/DEPLOYMENT.md`
+for the supplied infrastructure context and compatibility gaps. The owner has confirmed a
+**full move off Supabase**, including authentication, storage, and workers.
+The existing Supabase content is test data: start a fresh server database and leave the
+old project untouched (latest owner clarification, 2026-10-26).
+Preserve the golden rules below during migration; the supplied server guide does not
+replace this project's authentication, RLS, storage, or payment requirements.
+
+**Admin integrations (owner, 2026-10-26):** admins manage encrypted, versioned Razorpay
+test/live credentials and named Gemini project configurations in `/admin/integrations`.
+Payment intents retain their credential version across mode switches. Durable webhook
+processing and reserved, idempotent refund requests extend the original deployment design;
+see `docs/PAYMENT-RELIABILITY.md`. Never create a real charge/refund as an automated test.
 
 | Layer | Choice |
 |---|---|
