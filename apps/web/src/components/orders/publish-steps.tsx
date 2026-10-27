@@ -1,6 +1,6 @@
 import { Icon } from '@/components/icon';
 
-const STEPS = ['Write your story', 'Add photos', 'Review and pay'];
+const STEPS = ['Write your story', 'Add images', 'Review and pay'];
 
 /** Where the customer is in the publish flow (LLD §9.2–9.4). */
 export function PublishSteps({ current }: { current: 1 | 2 | 3 }) {

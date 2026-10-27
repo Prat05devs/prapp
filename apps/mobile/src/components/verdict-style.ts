@@ -1,4 +1,4 @@
-import type { FcVerdict } from '@prapp/shared';
+import { FC_VERDICT_DEFINITIONS, type FcVerdict } from '@prapp/shared';
 import {
   CircleAlert,
   CircleCheck,
@@ -6,21 +6,22 @@ import {
   TriangleAlert,
   type LucideIcon,
 } from 'lucide-react-native';
+import { COLORS } from '@/lib/theme';
 
 /** Same verdict colours as the web app (docs/DESIGN.md). */
 export const VERDICT_COLORS: Record<FcVerdict, string> = {
-  likely_false: '#b3261e',
-  misleading: '#8a5300',
-  likely_true: '#1e6b45',
-  unverified: '#6b655b',
+  likely_false: COLORS.danger,
+  misleading: COLORS.warn,
+  likely_true: COLORS.verified,
+  unverified: COLORS.slate,
 };
 
 /** Verdict panel backgrounds: the tint of each verdict colour. */
 export const VERDICT_TINTS: Record<FcVerdict, string> = {
-  likely_false: '#f7e2df',
-  misleading: '#f6ead2',
-  likely_true: '#e5f0e9',
-  unverified: '#f1eee7',
+  likely_false: COLORS.dangerTint,
+  misleading: COLORS.warnTint,
+  likely_true: COLORS.verifiedTint,
+  unverified: COLORS.neutralTint,
 };
 
 export const VERDICT_TONES: Record<FcVerdict, 'danger' | 'warn' | 'verified' | 'neutral'> = {
@@ -37,10 +38,7 @@ export const VERDICT_ICONS: Record<FcVerdict, LucideIcon> = {
   unverified: Info,
 };
 
-/** What each verdict means (same copy as the web methodology page). */
-export const VERDICT_MEANINGS: [FcVerdict, string][] = [
-  ['likely_false', 'Reliable sources contradict the claim.'],
-  ['misleading', 'Partly true, missing context, or old media presented as new.'],
-  ['likely_true', 'Reliable sources confirm the claim.'],
-  ['unverified', 'We did not find enough reliable evidence either way.'],
-];
+/** What each verdict means, in the order we explain them (VERBAL_SYSTEM.md §10, shared copy). */
+export const VERDICT_MEANINGS: [FcVerdict, string][] = (
+  ['likely_false', 'misleading', 'likely_true', 'unverified'] as const
+).map((v) => [v, FC_VERDICT_DEFINITIONS[v]]);

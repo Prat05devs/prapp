@@ -115,15 +115,15 @@ export default async function OrderPage({ params, searchParams }: PageProps<'/or
       ) : null}
 
       {order.status === 'changes_requested' ? (
-        <Notice tone="warn" title="Our team asked for changes">
+        <Notice tone="warn" title="Your story needs a few changes before publication">
           <p>{order.changesRequestedReason}</p>
         </Notice>
       ) : null}
       {order.status === 'rejected' ? (
-        <Notice tone="danger" title="We could not publish your story">
+        <Notice tone="danger" title="We can't publish this story">
           <p>{order.rejectionReason}</p>
           <p className="mt-2">
-            A full refund has been initiated. Banks can take 5–7 working days to show it.
+            We have started a full refund. Banks can take 5–7 working days to show it.
           </p>
         </Notice>
       ) : null}
@@ -132,8 +132,11 @@ export default async function OrderPage({ params, searchParams }: PageProps<'/or
         <section className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <Icon name="public" className="text-brand" />
-            <h2 className="font-display text-headline-sm text-ink">Your story is live</h2>
+            <h2 className="font-display text-headline-sm text-ink">Your story is live.</h2>
           </div>
+          <p className="text-body-md text-body">
+            Every live link included in your package is below and in your delivery report.
+          </p>
           <ul className="flex flex-col gap-3">
             {placements.map((p) => (
               <li key={p.id} className="flex flex-col gap-3 rounded-2xl border border-hairline p-4">

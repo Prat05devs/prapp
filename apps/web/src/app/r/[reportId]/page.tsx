@@ -39,25 +39,25 @@ export default async function PublicReportPage({ params }: PageProps<'/r/[report
   return (
     <Page width="md">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-hairline pb-6">
-        <p className="text-label-sm text-slate">{BRAND_NAME} fact check</p>
+        <p className="text-label-sm text-slate">{BRAND_NAME} fact-check</p>
         <ShareBar
           url={url}
-          title={`${FC_VERDICT_LABELS[report.verdict ?? 'unverified']} · ${BRAND_NAME} fact check`}
+          title={`${BRAND_NAME} fact-check: ${FC_VERDICT_LABELS[report.verdict ?? 'unverified']}`}
         />
       </div>
       <ReportView report={report} reportUrl={url} />
       <section className="flex flex-col gap-5 border-t border-hairline pt-8 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
-          <p className="font-display text-headline-sm text-ink">Got another forward?</p>
+          <p className="font-display text-headline-sm text-ink">Before you forward it, check it.</p>
           <p className="text-body-md text-slate">
-            Check a message, link or screenshot for free before you share it.
+            Check a message, link or screenshot for free, and see the evidence behind the verdict.
           </p>
         </div>
         <Link
           href="/fact-check"
           className={buttonVariants({ variant: 'accent', size: 'lg', className: 'shrink-0' })}
         >
-          Check it <Icon name="arrow_forward" />
+          Check a claim <Icon name="arrow_forward" />
         </Link>
       </section>
     </Page>

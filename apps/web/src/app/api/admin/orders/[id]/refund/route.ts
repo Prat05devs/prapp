@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { LIMITS } from '@prapp/shared';
 import { handleApi, parseBody, readJson } from '@/server/api';
-import { razorpayGateway } from '@/server/razorpay';
+import { razorpayRecoveryGateway } from '@/server/razorpay';
 import { refundPayment } from '@/server/refunds';
 import { orderIdParam } from '@/server/route-params';
 import { requireStaff } from '@/server/staff';
@@ -11,8 +11,9 @@ import { createServiceClient } from '@/server/supabase/service';
 export const runtime = 'nodejs';
 
 const bodySchema = z.object({
+  requestId: z.uuid(),
   paymentId: z.uuid(),
-  amountMinor: z.number().int().positive(),
+  amountMinor: z.number().int().min(100),
   reason: z.string().trim().min(LIMITS.reasonMin),
 });
 
@@ -23,7 +24,7 @@ export const POST = handleApi(
     const { user } = await requireStaff(req, 'admin');
     const body = parseBody(bodySchema, await readJson(req));
     const refund = await refundPayment(
-      { service: createServiceClient(), gateway: razorpayGateway() },
+      { service: createServiceClient(), gateway: razorpayRecoveryGateway() },
       { orderId: id, ...body, adminId: user.id },
     );
     return NextResponse.json({ refund });

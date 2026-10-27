@@ -28,15 +28,19 @@ export default function TermsPage() {
       </p>
       <h2>Publishing your story</h2>
       <p>
-        You confirm the content you submit is yours and accurate. Stories are published as sponsored
-        content on our partner portals and our Instagram news page, usually within 24 hours of
-        payment. We may ask for changes, or reject content we cannot publish; rejected orders are
-        refunded in full.
+        You confirm that the information you submit is accurate to the best of your knowledge and
+        that you have permission to use the images. Every story is reviewed by our editorial team
+        before publication. Approved stories are published as sponsored content on the news portals,
+        Instagram page and Facebook page included in your package, within 24 hours of payment. Our
+        team selects suitable available portals from our network. We may ask for changes, or decline
+        content we cannot publish; declined orders are refunded in full. Publication does not
+        guarantee reach, search rankings, sales or followers, and is not an endorsement by a portal
+        or journalist.
       </p>
       <h2>Payments and refunds</h2>
       <p>
-        Payments are processed by Razorpay. Prices include all taxes. Refunds take 5–7 working days
-        to reach your bank. If a portal cannot carry your story and no replacement is available, we
+        Payments are processed by Razorpay. Prices include GST. Refunds take 5–7 working days to
+        reach your bank. If a portal cannot carry your story and no replacement is available, we
         refund the undelivered part.
       </p>
       <h2>Your account</h2>

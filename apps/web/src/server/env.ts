@@ -46,3 +46,8 @@ export function supabaseServerEnv() {
 }
 export const razorpayEnv = lazy(razorpaySchema);
 export const cronEnv = lazy(cronSchema);
+
+export function checkoutTokenSecret(): string {
+  return parseEnv(z.object({ CHECKOUT_TOKEN_SECRET: z.string().min(32) }), process.env)
+    .CHECKOUT_TOKEN_SECRET;
+}

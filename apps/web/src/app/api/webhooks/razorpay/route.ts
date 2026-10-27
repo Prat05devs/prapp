@@ -1,17 +1,23 @@
 import { NextResponse } from 'next/server';
-import { paymentsMode } from '@/server/env';
-import { razorpayGateway } from '@/server/razorpay';
+import { razorpayRecoveryGateway } from '@/server/razorpay';
 import { createServiceClient } from '@/server/supabase/service';
 import { handleRazorpayWebhook } from '@/server/webhook';
+
+import { readLimitedText, RequestBodyTooLarge } from '@/server/request-body';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-  // Only real Razorpay checkout has webhooks; in link/free mode there are no keys to verify with.
-  if (paymentsMode() !== 'razorpay') return new NextResponse('not in use', { status: 404 });
-  const raw = await req.text(); // raw body, before JSON.parse (signature is over the bytes)
+  let raw: string;
+  try {
+    raw = await readLimitedText(req, 256 * 1024); // Preserve raw text for signature verification.
+  } catch (error) {
+    if (error instanceof RequestBodyTooLarge)
+      return new NextResponse('body too large', { status: 413 });
+    return new NextResponse('invalid body', { status: 400 });
+  }
   const out = await handleRazorpayWebhook(
-    { service: createServiceClient(), gateway: razorpayGateway() },
+    { service: createServiceClient(), gateway: razorpayRecoveryGateway() },
     raw,
     req.headers,
   );

@@ -6,7 +6,10 @@ import { loadMe } from '@/server/profile';
 
 /** Only allow same-site relative redirects (no open redirect via ?next=). */
 export function safeNext(next: string | null | undefined, fallback = '/'): string {
-  return next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\')
+  return next &&
+    next.startsWith('/') &&
+    !next.startsWith('//') &&
+    !/[\\\u0000-\u0020\u007f]/.test(next)
     ? next
     : fallback;
 }

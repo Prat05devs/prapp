@@ -1,19 +1,18 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowRight, X } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { PressableScale } from '@/components/motion/pressable-scale';
+import { BRAND_DESCRIPTOR, BRAND_NAME } from '@prapp/shared';
 import {
   ActionButton,
   ErrorText,
   Field,
   Icon,
-  PageHeader,
-  Panel,
-  Screen,
+  ModalScreen,
+  ModalTitle,
+  SegmentedControl,
   Separator,
-  Tabs,
-  TabsList,
-  TabsTrigger,
   Text,
 } from '@/components/ui';
 import { usePasswordAuth, type AuthMode } from '@/hooks/use-password-auth';
@@ -40,9 +39,13 @@ export default function SignInScreen() {
   const [sent, setSent] = useState(false);
 
   return (
-    <Screen>
-      <View className="flex-row justify-end">
-        <Pressable
+    <ModalScreen>
+      <View className="flex-row items-center justify-between">
+        <View className="flex-1 gap-0.5">
+          <Text className="font-display-bold text-[20px] text-ink">{BRAND_NAME}</Text>
+          <Text className="text-label-sm text-slate">{BRAND_DESCRIPTOR}</Text>
+        </View>
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel="Close"
           hitSlop={8}
@@ -50,37 +53,30 @@ export default function SignInScreen() {
           className="h-11 w-11 items-center justify-center rounded-full active:bg-subtle"
         >
           <Icon as={X} size={22} className="text-ink" />
-        </Pressable>
+        </PressableScale>
       </View>
-      <PageHeader
-        title={mode === 'signup' ? 'Create your account' : 'Log in to NewsVio'}
-        lede={
-          reason ?? 'Save your fact checks, publish your story and track your orders in one place.'
-        }
+      <ModalTitle
+        title={mode === 'signup' ? 'Create your account' : 'Log in'}
+        lede={reason ?? 'Keep checking claims, publish your story and track it to live links.'}
       />
 
       {auth.confirmEmail ? (
         <ConfirmCode auth={auth} />
       ) : (
-        <Panel tone="subtle">
-          <Tabs
+        <View className="gap-4">
+          <SegmentedControl
             value={mode}
-            onValueChange={(v) => {
-              setMode(v as AuthMode);
+            onChange={(v) => {
+              setMode(v);
               setForgot(false);
               setSent(false);
               auth.setError(null);
             }}
-          >
-            <TabsList className="mr-0 w-full">
-              <TabsTrigger value="login" className="flex-1">
-                <Text>Log in</Text>
-              </TabsTrigger>
-              <TabsTrigger value="signup" className="flex-1">
-                <Text>Create account</Text>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+            options={[
+              { value: 'login', label: 'Log in' },
+              { value: 'signup', label: 'Create account' },
+            ]}
+          />
           <Field
             label="Email"
             value={email}
@@ -136,19 +132,24 @@ export default function SignInScreen() {
                 onPress={() => void auth.submit(mode, email, password)}
               />
               {mode === 'login' ? (
-                <ActionButton
-                  title="Forgot password?"
-                  variant="outline"
+                <PressableScale
+                  accessibilityRole="button"
+                  hitSlop={8}
+                  className="self-center py-1"
                   onPress={() => {
                     setForgot(true);
                     auth.setError(null);
                   }}
-                />
+                >
+                  <Text className="font-sans-semibold text-label-md text-brand">
+                    Forgot password?
+                  </Text>
+                </PressableScale>
               ) : null}
             </>
           )}
           <ErrorText>{auth.error}</ErrorText>
-        </Panel>
+        </View>
       )}
 
       {google.available ? (
@@ -168,7 +169,7 @@ export default function SignInScreen() {
           <ErrorText>{google.error}</ErrorText>
         </>
       ) : null}
-    </Screen>
+    </ModalScreen>
   );
 }
 
@@ -177,8 +178,8 @@ function ConfirmCode({ auth }: { auth: ReturnType<typeof usePasswordAuth> }) {
   const [code, setCode] = useState('');
   const [resent, setResent] = useState(false);
   return (
-    <Panel tone="subtle">
-      <Text>
+    <View className="gap-4">
+      <Text className="text-body-md text-body">
         We sent a 6-digit code to <Text className="font-semibold">{auth.confirmEmail}</Text>. Enter
         it to finish creating your account.
       </Text>
@@ -214,6 +215,6 @@ function ConfirmCode({ auth }: { auth: ReturnType<typeof usePasswordAuth> }) {
         }}
       />
       <ErrorText>{auth.error}</ErrorText>
-    </Panel>
+    </View>
   );
 }

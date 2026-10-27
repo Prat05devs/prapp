@@ -1,5 +1,5 @@
 import 'server-only';
-import type { Currency, OrderDetailResponse } from '@prapp/shared';
+import { SOCIAL_CHANNEL_LABELS, type Currency, type OrderDetailResponse } from '@prapp/shared';
 import { AppError, throwDbError } from '@/server/api';
 import type { UserSupabase } from '@/server/auth';
 
@@ -81,9 +81,9 @@ export async function loadOrderDetail(
       id: p.id,
       channel: p.channel,
       platform:
-        p.channel === 'instagram'
-          ? 'Instagram'
-          : (p.portals?.name ?? (p.live_url ? hostOf(p.live_url) : 'News portal')),
+        p.channel === 'portal'
+          ? (p.portals?.name ?? (p.live_url ? hostOf(p.live_url) : 'News portal'))
+          : SOCIAL_CHANNEL_LABELS[p.channel],
       liveUrl: p.live_url ?? '',
       postedAt: p.posted_at,
     })),

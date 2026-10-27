@@ -1,4 +1,5 @@
 import 'server-only';
+import { randomUUID } from 'node:crypto';
 import type { Json } from '@prapp/db-types';
 import {
   LIMITS,
@@ -11,7 +12,7 @@ import { publicEnv } from '@/lib/env';
 import { AppError, throwDbError } from '@/server/api';
 import type { UserSupabase } from '@/server/auth';
 import { signCheckoutToken } from '@/server/checkout-token';
-import { razorpayEnv } from '@/server/env';
+import { checkoutTokenSecret } from '@/server/env';
 import { settleRazorpayOrder } from '@/server/payments';
 import { loadMe } from '@/server/profile';
 import { RAZORPAY_APP_TAG, type RazorpayGateway } from '@/server/razorpay';
@@ -37,6 +38,27 @@ export async function startCheckout(
   deps: CheckoutDeps,
   orderId: string,
   returnTo: CheckoutReturn,
+): Promise<CheckoutResponse> {
+  const lease = randomUUID();
+  const locked = await deps.service.rpc('svc_lock_checkout', {
+    p_order_id: orderId,
+    p_user_id: deps.user.userId,
+    p_token: lease,
+  });
+  if (locked.error) throwDbError(locked.error);
+  if (!locked.data) throw new AppError('rate_limited');
+  try {
+    return await startLockedCheckout(deps, orderId, returnTo, lease);
+  } finally {
+    await deps.service.rpc('svc_unlock_checkout', { p_order_id: orderId, p_token: lease });
+  }
+}
+
+async function startLockedCheckout(
+  deps: CheckoutDeps,
+  orderId: string,
+  returnTo: CheckoutReturn,
+  lease: string,
 ): Promise<CheckoutResponse> {
   const { supabase, userId } = deps.user;
   const { service } = deps;
@@ -76,7 +98,7 @@ export async function startCheckout(
   const { data: pkg, error: pkgError } = await service
     .from('packages')
     .select(
-      'id, code, name, price_inr_paise, price_usd_cents, portal_count, includes_instagram, turnaround_hours, is_active',
+      'id, code, name, price_inr_paise, price_usd_cents, portal_count, includes_instagram, includes_facebook, turnaround_hours, is_active',
     )
     .eq('id', order.package_id)
     .maybeSingle();
@@ -92,6 +114,7 @@ export async function startCheckout(
     price_usd_cents: pkg.price_usd_cents,
     portal_count: pkg.portal_count,
     includes_instagram: pkg.includes_instagram,
+    includes_facebook: pkg.includes_facebook,
     turnaround_hours: pkg.turnaround_hours,
   };
 
@@ -120,13 +143,18 @@ export async function startCheckout(
 
   const gateway = deps.gateway;
   if (!gateway) throw new AppError('internal_error');
+  // Managed test mode is for admin testing and must not fulfil simulated customer payments.
+  if (gateway.credentialId && !gateway.livemode && me.role !== 'admin')
+    throw new AppError('not_authorized');
 
   // 4. Reuse the current intent (double tap, §9.10 row 1) or create a new one.
   let intent: { id: string; razorpay_order_id: string } | null = null;
   if (order.current_intent_id) {
     const { data: current } = await service
       .from('payment_intents')
-      .select('id, razorpay_order_id, amount_minor, currency, status, livemode, created_at')
+      .select(
+        'id, razorpay_order_id, amount_minor, currency, status, livemode, credential_id, created_at',
+      )
       .eq('id', order.current_intent_id)
       .maybeSingle();
     if (current) {
@@ -136,6 +164,7 @@ export async function startCheckout(
         current.amount_minor === amountMinor &&
         current.currency === currency &&
         current.livemode === gateway.livemode &&
+        (current.credential_id ?? undefined) === gateway.credentialId &&
         ['created', 'attempted'].includes(current.status) &&
         ageMs < LIMITS.intentReuseHours * 3600_000;
       if (reusable) {
@@ -148,6 +177,7 @@ export async function startCheckout(
           current.razorpay_order_id,
         );
         if (moneyReceived) throw new AppError('payment_already_made');
+        if (current.livemode !== gateway.livemode) throw new AppError('order_not_payable');
       }
     }
   }
@@ -159,7 +189,11 @@ export async function startCheckout(
       receipt: order.order_number,
       notes: { order_id: order.id, user_id: userId, app: RAZORPAY_APP_TAG },
     });
-    const { data: created, error: intentError } = await service.rpc('svc_create_payment_intent', {
+    if (rzpOrder.amount !== amountMinor || rzpOrder.currency.toUpperCase() !== currency)
+      throw new AppError('internal_error');
+    const { data: created, error: intentError } = await service.rpc('svc_create_checkout_intent', {
+      p_lease_token: lease,
+      ...(gateway.credentialId ? { p_credential_id: gateway.credentialId } : {}),
       p_order_id: order.id,
       p_razorpay_order_id: rzpOrder.id,
       p_amount_minor: amountMinor,
@@ -174,7 +208,7 @@ export async function startCheckout(
   // 5–6. Signed link to the hosted page.
   const token = signCheckoutToken(
     { orderId: order.id, intentId: intent.id, r: returnTo },
-    razorpayEnv().CHECKOUT_TOKEN_SECRET,
+    checkoutTokenSecret(),
     now.getTime(),
   );
   return {

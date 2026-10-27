@@ -1,11 +1,7 @@
 import 'server-only';
 import { renderPrReport, type PrReportData } from '@prapp/report-templates';
+import { SOCIAL_CHANNEL_LABELS, supportContacts } from '@prapp/shared';
 import type { ServiceSupabase } from '@/server/service-types';
-
-function settingString(v: unknown): string | undefined {
-  // Same rule as the site and app: blank or seed placeholders (+91XXXXXXXXXX) are not shown.
-  return typeof v === 'string' && v.trim() && !v.includes('XXXX') ? v : undefined;
-}
 
 /**
  * Builds the PR delivery PDF, uploads it as report-v{n}.pdf and marks it ready (LLD §9.11).
@@ -37,7 +33,10 @@ export async function generatePrReport(
       service.from('app_settings').select('key, value').like('key', 'support.%'),
     ]);
     if (plError) throw plError;
-    const support = Object.fromEntries((settings ?? []).map((s) => [s.key, s.value]));
+    // The report prints phone, email and WhatsApp (not opening hours).
+    const { phone, email, whatsapp } = supportContacts(
+      Object.fromEntries((settings ?? []).map((s) => [s.key, s.value])),
+    );
 
     const data: PrReportData = {
       orderNumber: order.order_number,
@@ -46,15 +45,14 @@ export async function generatePrReport(
       headline: order.headline,
       packageName: ((order.package_snapshot ?? {}) as { name?: string }).name ?? 'PR package',
       rows: (placements ?? []).map((p) => ({
-        platform: p.channel === 'instagram' ? 'Instagram' : (p.portals?.name ?? 'News portal'),
+        platform:
+          p.channel === 'portal'
+            ? (p.portals?.name ?? 'News portal')
+            : SOCIAL_CHANNEL_LABELS[p.channel],
         url: p.live_url ?? '',
         publishedAt: p.posted_at,
       })),
-      support: {
-        phone: settingString(support['support.phone']),
-        email: settingString(support['support.email']),
-        whatsapp: settingString(support['support.whatsapp']),
-      },
+      support: { phone, email, whatsapp },
       version: order.report_version + 1,
       generatedAt: new Date().toISOString(),
     };

@@ -3,6 +3,15 @@ import type { StaffAccountInput } from '@prapp/shared';
 
 const request = createRequest({ baseUrl: '' });
 
+// Retain refund identity across retries and reloads until the server confirms completion.
+function refundRequestId(orderId: string, paymentId: string, amountMinor: number, reason: string) {
+  const key = `newsvio-refund:${JSON.stringify([orderId, paymentId, amountMinor, reason])}`;
+  const existing = sessionStorage.getItem(key);
+  const id = existing ?? crypto.randomUUID();
+  sessionStorage.setItem(key, id);
+  return { id, key };
+}
+
 /** Admin/staff API routes (LLD §8.3). Cookies authenticate. */
 export const adminApi = {
   publish: (id: string, allowPartial = false) =>
@@ -17,11 +26,15 @@ export const adminApi = {
       method: 'POST',
       body: { reason },
     }),
-  refund: (id: string, body: { paymentId: string; amountMinor: number; reason: string }) =>
-    request<{ refund: { refundId: string; status: string } }>(`/api/admin/orders/${id}/refund`, {
-      method: 'POST',
-      body,
-    }),
+  refund: async (id: string, body: { paymentId: string; amountMinor: number; reason: string }) => {
+    const operation = refundRequestId(id, body.paymentId, body.amountMinor, body.reason);
+    const result = await request<{ refund: { refundId: string; status: string } }>(
+      `/api/admin/orders/${id}/refund`,
+      { method: 'POST', body: { ...body, requestId: operation.id } },
+    );
+    sessionStorage.removeItem(operation.key);
+    return result;
+  },
   payment: (id: string) => request<RazorpayPanel>(`/api/admin/orders/${id}/payment`),
   createStaff: (body: StaffAccountInput) =>
     request<{ id: string; email: string; role: 'editor' | 'admin' }>('/api/admin/staff', {

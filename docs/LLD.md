@@ -67,6 +67,12 @@ Companion files: `CONTEXT.md` (rules) and `supabase/migrations/20260927000000_in
 
 ## 3. Architecture and hosting
 
+**Hosting direction updated 2026-10-26:** the owner intends to use Hostinger for the
+website/admin and DigitalOcean for the API and private PostgreSQL. The diagram below
+describes the existing implementation. `docs/DEPLOYMENT.md` records the migration gaps;
+the owner selected a full move off Supabase. The auth/storage/worker replacements and
+frontend/API split must be implemented before cutover.
+
 ```
  Expo app ──HTTPS (Bearer JWT)──┐
                                 ├──> Next.js on Vercel  (/api/*, /pay/*, /r/*, website, /admin)
@@ -751,7 +757,7 @@ Order status shown to customers: Draft · Awaiting payment · Received (paid) ·
 
 | Decision | Default |
 |---|---|
-| App name / domain / deep link scheme | placeholder `prapp`; scheme `prapp://` |
+| App name / domain / deep link scheme | newsVio / `newsvio.in`; configured mobile scheme `newsvio://`. Historical `prapp://` examples above need reconciliation before deployment. |
 | Guest fact-check limit | 2/day (the 3rd asks to log in); logged-in 20/day (app_settings) |
 | Phone unique per account? | No (shared numbers allowed) |
 | Portal down | Editor swaps to a similar portal; partial delivery + partial refund only if no replacement |
@@ -765,6 +771,18 @@ Order status shown to customers: Draft · Awaiting payment · Received (paid) ·
 | UI language | English (strings centralised for Hindi later) |
 
 ## 21. Changelog
+- 2026-10-26: Owner requested admin-managed, encrypted Razorpay test/live credentials and
+  Gemini project configurations. Payment intents pin credential versions. Provider guidance
+  led to durable webhook processing, checkout leases, refund reservations with provider
+  idempotency, and atomic rejection/refund obligations. These supersede §9.7's synchronous
+  dispatch/finish-on-error flow and §9.9's separate rejection/refund reservation. See
+  `docs/PAYMENT-RELIABILITY.md` for sources, operating requirements, and verification scope.
+- 2026-10-26: Owner confirmed the product name newsVio and the working directory
+  `/Volumes/ProjectsSSD/prapp` after moving to ProjectsSSD. Recorded the intended
+  Hostinger/DigitalOcean hosting migration in `docs/DEPLOYMENT.md`; no runtime,
+  database, or production configuration changes are included in this documentation update.
 - v1.0 (2026-09-27): initial locked spec. Migration `20260927000000_init.sql` (23 tables, 42 policies), SQL tests 105/105.
 
 - 2026-10-04: User-authorized SEO/GEO improvements: canonical metadata, social cards, curated sitemap, crawler controls, service/organization structured data, and explanatory copy on existing public pages. No changes to payment or fact-check verdict logic. See `docs/SEO-GEO.md`.
+
+- 2026-10-06: User-authorized completion of verbal-system alignment and integration of the six supplied campaign images. GST-inclusive launch pricing is retained. See `VERBAL_SYSTEM.md` §21, `public/USAGE.md` and `docs/MOBILE-UX.md`; existing navigation and business flows are unchanged.

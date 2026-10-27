@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { publicEnv } from '@/lib/env';
 
 export const SITE_DESCRIPTION =
-  'Check WhatsApp forwards with sources, or publish your story through NewsVio’s self-service PR platform for news portals and Instagram in India.';
+  'NewsVio helps you check claims against reliable sources and publish your own story across our news and social network in India.';
 
 // Keep discovery limited to curated pages, not customer records or automated reports.
 export const PUBLIC_SEARCH_PATHS = [
@@ -26,7 +26,7 @@ export function pageMetadata(path: string, title: string, description: string): 
       url: siteUrl('/social-image'),
       width: 1200,
       height: 630,
-      alt: 'NewsVio — Fact checking and self-service PR in India',
+      alt: 'NewsVio: Check the news. Share your story.',
     },
   ];
   return {

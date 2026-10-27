@@ -279,6 +279,9 @@ export function Workspace({
               <li>
                 On Instagram: tag {handle ? `@${handle}` : 'the customer'} and send a collab invite.
               </li>
+              {placements.some((p) => p.channel === 'facebook') ? (
+                <li>On Facebook: post on our page and label it as a paid partnership.</li>
+              ) : null}
             </ul>
           </Section>
         </div>

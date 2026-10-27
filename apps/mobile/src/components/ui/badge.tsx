@@ -6,7 +6,7 @@ import { View } from 'react-native';
 
 // Status label (docs/DESIGN.md): sentence case, sans, small. Tones only for real states.
 const badgeVariants = cva(
-  'shrink-0 flex-row items-center justify-center gap-1.5 self-start overflow-hidden rounded-sm border px-1.5 py-px',
+  'shrink-0 flex-row items-center justify-center gap-1.5 self-start overflow-hidden rounded-sm border px-2 py-0.5',
   {
     variants: {
       variant: {

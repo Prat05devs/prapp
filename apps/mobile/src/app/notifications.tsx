@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { BellOff } from 'lucide-react-native';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, View } from 'react-native';
+import { PressableScale } from '@/components/motion/pressable-scale';
 import { formatIST } from '@prapp/shared';
-import { Icon, Text } from '@/components/ui';
+import { EmptyState, Text } from '@/components/ui';
 import { useFocusedData } from '@/hooks/use-async';
 import { openDeepLink } from '@/lib/links';
 import { api } from '@/lib/api';
@@ -23,27 +24,29 @@ export default function NotificationsScreen() {
   return (
     <FlatList
       className="flex-1 bg-canvas"
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="pb-10"
       data={list.data ?? []}
       keyExtractor={(n) => n.id}
       refreshing={list.loading}
       onRefresh={() => void list.refresh()}
       ListEmptyComponent={
-        <View className="m-5 items-center gap-3 rounded-xl border border-dashed border-input bg-paper px-6 py-12">
-          <Icon as={BellOff} size={20} className="text-slate" />
-          <Text variant="muted">Nothing yet.</Text>
-        </View>
+        list.loading ? null : (
+          <EmptyState
+            icon={BellOff}
+            title="No notifications yet"
+            body="Updates about your orders and fact checks will show up here."
+          />
+        )
       }
-      ItemSeparatorComponent={() => <View className="mx-5 h-px bg-divider" />}
+      ItemSeparatorComponent={() => <View className="ml-9 h-px bg-divider" />}
       renderItem={({ item: n }) => (
-        <Pressable
+        <PressableScale
           onPress={() => void open(n)}
-          className="flex-row gap-3 px-5 py-4 active:bg-subtle"
+          className="flex-row gap-3 px-4 py-4 active:bg-subtle"
         >
           <View
-            className={cn(
-              'mt-2 h-1.5 w-1.5 rounded-full',
-              n.read_at ? 'bg-transparent' : 'bg-brand',
-            )}
+            className={cn('mt-2 h-2 w-2 rounded-full', n.read_at ? 'bg-transparent' : 'bg-brand')}
           />
           <View className="flex-1 gap-0.5">
             <Text
@@ -57,7 +60,7 @@ export default function NotificationsScreen() {
             <Text className="text-body-sm text-body">{n.body}</Text>
             <Text className="mt-1 text-body-sm text-slate">{formatIST(n.created_at)}</Text>
           </View>
-        </Pressable>
+        </PressableScale>
       )}
     />
   );

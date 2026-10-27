@@ -11,9 +11,11 @@ import {
 } from '@react-pdf/renderer';
 import {
   BRAND_NAME,
+  FC_CORRECTION_PROMPT,
   FC_DISCLAIMER,
   FC_TOOL_LABELS,
   FC_VERDICT_LABELS,
+  FC_VERDICT_RESULTS,
   PIB_FACT_CHECK_NOTE,
   formatIST,
   type FactCheckReport,
@@ -106,11 +108,11 @@ export function FactCheckPdf({
   const evidence = report.claims.flatMap((c) => c.sources.filter((x) => !x.isExistingFactCheck));
   const gov = report.claims.some((c) => c.isGovernmentRelated);
   return (
-    <Document title={`Fact check ${report.reportId}`} author={BRAND_NAME}>
+    <Document title={`${BRAND_NAME} fact-check: ${report.reportId}`} author={BRAND_NAME}>
       <Page size="A4" style={s.page}>
         <View style={s.row}>
           <View>
-            <Text style={s.brand}>{BRAND_NAME} fact check</Text>
+            <Text style={s.brand}>{BRAND_NAME} fact-check</Text>
             <Text style={s.muted}>
               {report.reportId} · checked {report.checkedAt ? formatIST(report.checkedAt) : '-'}
             </Text>
@@ -123,6 +125,9 @@ export function FactCheckPdf({
         ))}
         <Text style={[s.verdict, { color: VERDICT_COLOR[verdict] }]}>
           {FC_VERDICT_LABELS[verdict]} · {report.confidence ?? 'low'} confidence
+        </Text>
+        <Text style={{ marginTop: 6 }}>
+          {`${FC_VERDICT_RESULTS[verdict].headline} ${FC_VERDICT_RESULTS[verdict].detail}`}
         </Text>
         {report.summary ? <T style={{ marginTop: 6 }}>{report.summary}</T> : null}
 
@@ -171,14 +176,15 @@ export function FactCheckPdf({
           ))}
         {report.mode === 'reduced' ? (
           <Text style={{ marginTop: 6 }}>
-            Reduced check: our AI tools were at capacity. Full check pending — this report will
-            update.
+            Reduced check: our AI tools were at capacity. A full check is pending, and this report
+            will update.
           </Text>
         ) : null}
         {gov ? <Text style={{ marginTop: 8 }}>{PIB_FACT_CHECK_NOTE}</Text> : null}
         <Text style={s.disclaimer}>{FC_DISCLAIMER}</Text>
+        <Text style={s.disclaimer}>{FC_CORRECTION_PROMPT}</Text>
         <Text style={s.disclaimer}>
-          Verify this report: <Link src={reportUrl}>{reportUrl}</Link>
+          Read the full report: <Link src={reportUrl}>{reportUrl}</Link>
         </Text>
       </Page>
     </Document>

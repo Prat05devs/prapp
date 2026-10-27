@@ -1,8 +1,10 @@
 import { Image } from 'expo-image';
 import { CircleCheck, Upload } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { PressableScale } from '@/components/motion/pressable-scale';
 import type { OrderImage } from '@prapp/api-client';
+import { STORY_FORM_COPY } from '@prapp/shared';
 import { Icon, Text } from '@/components/ui';
 import { api } from '@/lib/api';
 import { COLORS } from '@/lib/theme';
@@ -39,9 +41,9 @@ export function ImageSlots({
 
   return (
     <View className="gap-3">
-      <View className="flex-row items-baseline justify-between">
-        <Text variant="label">Images (1 required, up to 2)</Text>
-        <Text className={`text-body-sm ${images.length ? 'text-verified' : 'text-slate'}`}>
+      <View className="flex-row items-baseline justify-between px-1">
+        <Text className="flex-1 text-label-sm text-slate">{STORY_FORM_COPY.imagesHint}</Text>
+        <Text className={`text-label-sm ${images.length ? 'text-verified' : 'text-slate'}`}>
           {images.length} of 2 added
         </Text>
       </View>
@@ -67,7 +69,7 @@ export function ImageSlots({
                   )}
                   <View className="absolute left-2 top-2 rounded-sm bg-ink/80 px-1.5 py-px">
                     <Text className="font-sans-semibold text-[12px] text-white">
-                      Photo {position}
+                      Image {position}
                     </Text>
                   </View>
                   {busy === position ? (
@@ -84,24 +86,24 @@ export function ImageSlots({
                 </View>
                 {editable ? (
                   <View className="flex-row gap-4 border-t border-divider px-3 py-2">
-                    <Pressable onPress={() => onPick(position)} disabled={busy !== null}>
+                    <PressableScale onPress={() => onPick(position)} disabled={busy !== null}>
                       <Text className="font-sans-semibold text-label-sm text-ink">Replace</Text>
-                    </Pressable>
-                    <Pressable onPress={() => onRemove(image)} disabled={busy !== null}>
+                    </PressableScale>
+                    <PressableScale onPress={() => onRemove(image)} disabled={busy !== null}>
                       <Text className="font-sans-semibold text-label-sm text-slate">Remove</Text>
-                    </Pressable>
+                    </PressableScale>
                   </View>
                 ) : null}
               </View>
             );
           }
           return (
-            <Pressable
+            <PressableScale
               key={position}
               accessibilityRole="button"
               disabled={!editable || busy !== null}
               onPress={() => onPick(position)}
-              className="aspect-[4/3] flex-1 items-center justify-center gap-2 rounded-lg border border-dashed border-input bg-paper p-3 active:border-ink"
+              className="aspect-[4/3] flex-1 items-center justify-center gap-2 rounded-lg border border-dashed border-input bg-paper p-3 active:bg-subtle"
             >
               {busy === position ? (
                 <ActivityIndicator color={COLORS.ink} />
@@ -111,9 +113,9 @@ export function ImageSlots({
                 </View>
               )}
               <Text className="font-sans-semibold text-label-sm text-ink">
-                {busy === position ? 'Uploading…' : `Add photo ${position}`}
+                {busy === position ? 'Uploading…' : `Add image ${position}`}
               </Text>
-            </Pressable>
+            </PressableScale>
           );
         })}
       </View>

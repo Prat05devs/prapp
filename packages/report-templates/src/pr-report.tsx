@@ -59,12 +59,12 @@ export function PrReport({ data }: { data: PrReportData }) {
     data.support.whatsapp && `WhatsApp ${data.support.whatsapp}`,
   ].filter(Boolean);
   return (
-    <Document title={`Publication report ${data.orderNumber}`} author={BRAND_NAME}>
+    <Document title={`Delivery report ${data.orderNumber}`} author={BRAND_NAME}>
       <Page size="A4" style={s.page}>
         <View style={s.header}>
           <Text style={s.brand}>{BRAND_NAME}</Text>
           <View>
-            <Text style={s.title}>Publication report</Text>
+            <Text style={s.title}>Delivery report</Text>
             <Text style={s.muted}>{data.orderNumber}</Text>
             <Text style={s.muted}>Published {formatIST(data.publishedAt)}</Text>
           </View>
@@ -103,7 +103,9 @@ export function PrReport({ data }: { data: PrReportData }) {
         </View>
 
         <Text style={s.note}>
-          Sponsored content published by {BRAND_NAME} on its partner network.
+          Your story was reviewed by our editorial team and published as sponsored content across
+          the {BRAND_NAME} news and social network. Publication does not guarantee reach, rankings,
+          sales or endorsement.
         </Text>
 
         <View style={s.footer} fixed>

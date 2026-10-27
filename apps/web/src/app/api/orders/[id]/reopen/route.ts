@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AppError, handleApi } from '@/server/api';
 import { requireRequestAuth } from '@/server/auth';
 import { reopenOrder } from '@/server/checkout';
-import { razorpayGateway } from '@/server/razorpay';
+import { razorpayRecoveryGateway } from '@/server/razorpay';
 import { createServiceClient } from '@/server/supabase/service';
 
 export const runtime = 'nodejs';
@@ -17,7 +17,7 @@ export const POST = handleApi(
       {
         user: { supabase, userId: user.id },
         service: createServiceClient(),
-        gateway: razorpayGateway(),
+        gateway: razorpayRecoveryGateway(),
       },
       id,
     );

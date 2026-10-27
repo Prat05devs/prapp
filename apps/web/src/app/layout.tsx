@@ -25,7 +25,7 @@ const plexMono = IBM_Plex_Mono({
 // (NEXT_PUBLIC_SITE_URL: https://newsvio.in in production).
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv().NEXT_PUBLIC_SITE_URL),
-  title: 'NewsVio — Fact Checking & Self-Service PR in India',
+  title: 'NewsVio: Check the news. Share your story.',
   description: SITE_DESCRIPTION,
   applicationName: 'NewsVio',
   icons: { icon: '/brand-mark.png', apple: '/brand-mark.png' },

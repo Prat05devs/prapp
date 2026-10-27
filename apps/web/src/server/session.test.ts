@@ -11,6 +11,15 @@ describe('safeNext', () => {
     expect(safeNext('//evil.example')).toBe('/');
     expect(safeNext('/\\evil.example')).toBe('/');
     expect(safeNext(null, '/account')).toBe('/account');
+    for (const path of [
+      '/\t/evil.example',
+      '/\n/evil.example',
+      '/\r/evil.example',
+      '/ \/evil.example',
+      '/orders\\evil',
+    ]) {
+      expect(safeNext(path)).toBe('/');
+    }
   });
 });
 

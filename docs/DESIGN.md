@@ -48,7 +48,9 @@ Rules:
 ## Shape and space
 
 - Radius: 4px (small controls), 6px (buttons, inputs, cards), 10px (large panels), full (avatars,
-  source chips). Nothing larger.
+  source chips). Nothing larger on the web. The mobile app is rounder to match phone controls
+  (10px inputs, 12px buttons and cards, 16px sheets); its layout patterns and wireframes are in
+  `docs/MOBILE-UX.md`.
 - A card is either a white sheet with a hairline border, or a tinted plane with no border. Never
   both, and never with a shadow.
 - Prefer rules (`border-y`, `divide-y`) and definition lists to boxes. Lists of sources, tools,
@@ -66,14 +68,36 @@ Rules:
 
 ## Motion
 
-Only to show a change of state: a progress bar while checking, a spinner on a busy button,
-the FAQ plus turning into a cross. No entrance animations, hover lifts, ping rings or
-scale-on-press. Respect `prefers-reduced-motion`.
+**Web:** only to show a change of state: a progress bar while checking, a spinner on a busy
+button, the FAQ plus turning into a cross. No entrance animations, hover lifts or ping rings.
+
+**Mobile app (changed 9 October 2026):** the client asked for an app that feels alive, with touch
+effects everywhere and photo sliders, so the app now uses motion on purpose. The editorial look
+(type, palette, real content) stays; motion adds the life. Rules:
+
+- **Everything you touch answers back.** Buttons, cards, rows, chips and tabs sink to 0.97 on
+  touch and spring back (`PressableScale`). Main actions give a light haptic; tabs, segments,
+  radio cards and checkboxes give a selection tick.
+- **Things arrive.** A screen's sections fade in and rise 12pt the first time it opens, 50 ms apart,
+  the first 8 only (`ScrollScreen` does this for every screen).
+- **Photo sliders** advance every 4–4.5 s with story-style bars (Home) or dots (Publish), a slow
+  zoom and parallax. Holding pauses them, leaving the screen stops them.
+- **Data draws itself:** progress, the source agreement bar and the order timeline grow from zero
+  to their real value. They never show progress the server hasn't reported.
+- **Loops only while work is real:** the scan animation during a fact check (indeterminate: the API
+  reports checking or done, not which step), and the breathing dot on an order's current step.
+- **The verdict lands** with a pop and a haptic that matches it (success, warning, error).
+- **Reduce Motion** turns entrances, sliders and loops off; presses still give feedback.
+
+Specs and the code map are on the design canvas ("Motion and touch") and in
+`apps/mobile/src/components/motion/`.
 
 ## Content
 
 - Use only real content: real verdict definitions, real sources, real portals, real stories from
-  the admin showcase. No mock "example verdict" cards, invented stats or generated stock photos.
+  the admin showcase. No mock "example verdict" cards or invented stats. Only the client-supplied campaign images
+  documented in `public/USAGE.md` may illustrate publishing scenarios; keep them separate from
+  the real admin showcase.
 - Copy describes what the product does, plainly. No "Free · with sources" pills or hype words.
 
 ## Never
@@ -84,7 +108,11 @@ These are the patterns that made the old design look generated. Don't add them b
 - Mono, uppercase, tracked micro-labels ("01 / PASTE THE FORWARD")
 - Decorative numbering of sections and steps (a real multi-step flow shows "Step 1 of 3" once)
 - Icon-in-a-tinted-square feature cards, three in a row
-- Blurred gradient blobs, image overlays with gradients, glows, floating cards over photos
-- AI-generated photos of newsrooms or people
+- Blurred gradient blobs, glows, coloured shadows, floating cards over photos. The one allowed
+  gradient is the dark scrim under text on an app photo slide, so white type reads on any image
+- Unapproved generated photos of newsrooms or people. The six client-supplied campaign images
+  in `public/USAGE.md` are approved for illustrative scenarios, never as proof of real customers
+  or published stories. On the web, keep live text alongside or below them. In the app's photo
+  sliders text sits on the bottom scrim, clear of faces (public/USAGE.md display guidance).
 - A coloured border on one edge of a card
 - Everything at the same big radius

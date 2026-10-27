@@ -15,6 +15,7 @@ export class FakeRazorpay implements RazorpayGateway {
   payments = new Map<string, RzpPayment>();
   refunds = new Map<string, RzpRefund>();
   calls: string[] = [];
+  refundKeys = new Map<string, string>();
 
   private id(prefix: string) {
     return `${prefix}_${randomBytes(7).toString('hex')}`;
@@ -59,8 +60,13 @@ export class FakeRazorpay implements RazorpayGateway {
     return { ...p };
   }
 
-  async refundPayment(paymentId: string, input: { amount: number; notes: Record<string, string> }) {
+  async refundPayment(
+    paymentId: string,
+    input: { amount: number; notes: Record<string, string>; requestId: string },
+  ) {
     this.calls.push('refundPayment');
+    const previous = this.refundKeys.get(input.requestId);
+    if (previous) return { ...this.refunds.get(previous)! };
     const r: RzpRefund = {
       id: this.id('rfnd'),
       payment_id: paymentId,
@@ -68,6 +74,7 @@ export class FakeRazorpay implements RazorpayGateway {
       ...input,
     };
     this.refunds.set(r.id, r);
+    this.refundKeys.set(input.requestId, r.id);
     return { ...r };
   }
 

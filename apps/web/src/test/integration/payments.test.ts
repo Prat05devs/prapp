@@ -4,12 +4,13 @@ import { handlePaymentCallback } from '@/server/callback';
 import { reopenOrder, startCheckout } from '@/server/checkout';
 import { verifyCheckoutToken } from '@/server/checkout-token';
 import { reconcilePayments } from '@/server/reconcile';
-import { handleRazorpayWebhook } from '@/server/webhook';
+import { handleRazorpayWebhook, processPaymentWebhooks } from '@/server/webhook';
 import { FakeRazorpay, checkoutSignature, webhookSignature } from '@/test/fake-razorpay';
 import {
   checkoutFields,
   createUser,
   orderRow,
+  packageByCode,
   paymentsOf,
   placementsOf,
   razorpayCheckout,
@@ -65,7 +66,9 @@ async function webhook(
     'x-razorpay-signature': webhookSignature(raw, WEBHOOK_SECRET),
     'x-razorpay-event-id': eventId,
   });
-  return handleRazorpayWebhook({ service, gateway: gw }, raw, headers);
+  const response = await handleRazorpayWebhook({ service, gateway: gw }, raw, headers);
+  if (response.status === 200) await processPaymentWebhooks({ service, gateway: gw }, () => false);
+  return response;
 }
 
 describe('checkout (LLD §9.4)', () => {
@@ -137,7 +140,7 @@ describe('free checkout (PAYMENTS_MODE=free, testing phase)', () => {
       .from('notifications')
       .select('type, title')
       .eq('user_id', user.id);
-    expect(notes).toContainEqual({ type: 'order_paid', title: 'Order confirmed' });
+    expect(notes).toContainEqual({ type: 'order_paid', title: 'We received your story' });
   });
 
   it('runs the same checks as a paid checkout', async () => {
@@ -176,7 +179,7 @@ describe('payment link checkout (PAYMENTS_MODE=link, first build)', () => {
       .from('notifications')
       .select('type, title')
       .eq('user_id', user.id);
-    expect(notes).toContainEqual({ type: 'order_paid', title: 'Order received' });
+    expect(notes).toContainEqual({ type: 'order_paid', title: 'We received your story' });
   });
 
   it('editors cannot start the order until an admin has verified the payment', async () => {
@@ -217,8 +220,9 @@ describe('callback (LLD §9.6)', () => {
     expect(order.status).toBe('paid');
     expect(order.deadline_at).not.toBeNull();
     const placements = await placementsOf(orderId);
-    // Story Package: 5 portal slots + 1 Instagram post
+    // Story Package: 5 portal slots + 1 Instagram post + 1 Facebook post
     expect(placements.map((x) => x.channel).sort()).toEqual([
+      'facebook',
       'instagram',
       ...Array<string>(5).fill('portal'),
     ]);
@@ -284,7 +288,7 @@ describe('webhooks (LLD §9.7)', () => {
     const { razorpayOrderId } = await checkout();
     const p = gw.pay(razorpayOrderId);
     const out = await webhook('payment.captured', { payment: { entity: p } });
-    expect(out).toEqual({ status: 200, body: 'ok' });
+    expect(out).toEqual({ status: 200, body: 'queued' });
     expect((await orderRow(orderId)).status).toBe('paid');
   });
 
@@ -298,10 +302,14 @@ describe('webhooks (LLD §9.7)', () => {
     );
     const first = await webhook('payment.captured', { payment: { entity: p } }, `evt_dup_${p.id}`);
     const again = await webhook('payment.captured', { payment: { entity: p } }, `evt_dup_${p.id}`);
-    expect(first.body).toBe('ok');
+    expect(first.body).toBe('queued');
     expect(again.body).toBe('duplicate');
     expect(await paymentsOf(orderId)).toHaveLength(1);
-    expect(await placementsOf(orderId)).toHaveLength(6);
+    // One placement per channel the package buys: its portals plus each social post.
+    const pkg = await packageByCode('starter');
+    const channels =
+      pkg.portal_count + Number(pkg.includes_instagram) + Number(pkg.includes_facebook);
+    expect(await placementsOf(orderId)).toHaveLength(channels);
   });
 
   it('rejects a bad signature', async () => {

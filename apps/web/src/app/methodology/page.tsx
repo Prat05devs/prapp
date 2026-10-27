@@ -47,7 +47,7 @@ export default async function MethodologyPage() {
       <PageHeader
         eyebrow="Methodology"
         title="How we check"
-        lede={`${BRAND_NAME} uses AI-assisted analysis of public evidence. Every report shows the sources found and the tools used, so you can verify the result yourself. Automated analysis can make mistakes.`}
+        lede={`${BRAND_NAME} checks claims against public evidence and shows every source it found and every tool it used, so you can decide what to trust. AI assists the process; evidence and editorial standards guide the result. Automated analysis can make mistakes.`}
       />
 
       <section className="flex flex-col gap-4">
@@ -67,8 +67,9 @@ export default async function MethodologyPage() {
         </dl>
         <p className="flex items-start gap-2 text-body-sm text-slate">
           <Icon name="verified_user" size={16} className="mt-0.5 text-brand" />
-          We never show a verdict without evidence from an official source, a recognised
-          fact-checker or a major news outlet.
+          Verdicts express the strength of the available evidence, not absolute certainty. We never
+          show a verdict without evidence from an official source, a recognised fact-checker or a
+          major news outlet. When the evidence is insufficient, we say so.
         </p>
       </section>
 
@@ -110,21 +111,21 @@ export default async function MethodologyPage() {
       <section className="flex flex-col gap-4">
         <SectionTitle>Report an error or request a correction</SectionTitle>
         <p className="text-body-md text-body">
-          If a verdict, source or claim appears incorrect,{' '}
+          Found an error or a stronger source?{' '}
           <Link href="/support" className="text-brand underline">
-            contact support
+            Send us
           </Link>{' '}
-          with the report link, the disputed statement and a reliable source explaining the issue.
-          Check the publication date and original context of the evidence before relying on a
-          result.
+          the report link, the disputed statement and your supporting source. We correct reports
+          promptly and visibly. Check the publication date and original context of the evidence
+          before relying on a result.
         </p>
       </section>
       <section className="flex flex-col gap-4">
         <SectionTitle>Fact checking and sponsored publishing</SectionTitle>
         <p className="text-body-md text-body">
-          NewsVio also offers paid PR publishing. These placements are labelled as sponsored
-          content. Purchasing a story placement does not purchase a fact-check verdict or turn a
-          promotional claim into verified evidence.
+          NewsVio also offers paid publishing. Paid stories are reviewed by our editorial team and
+          published as sponsored content. Paid publishing never influences a fact-check verdict, and
+          a sponsored story is not verified evidence.
         </p>
       </section>
       <p className="border-t border-hairline pt-5 text-body-sm text-slate">{FC_DISCLAIMER}</p>

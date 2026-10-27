@@ -1,7 +1,9 @@
 import {
+  FC_CORRECTION_PROMPT,
   FC_DISCLAIMER,
   FC_TOOL_LABELS,
   FC_VERDICT_LABELS,
+  FC_VERDICT_RESULTS,
   PIB_FACT_CHECK_NOTE,
   formatIST,
   type FactCheckReport,
@@ -90,10 +92,14 @@ export function ReportView({ report, reportUrl }: { report: FactCheckReport; rep
           <Icon name={VERDICT_ICONS[verdict]} size={26} />
           {FC_VERDICT_LABELS[verdict]}
         </p>
+        <p className="text-body-md text-body">
+          <strong className="font-semibold text-ink">{FC_VERDICT_RESULTS[verdict].headline}</strong>{' '}
+          {FC_VERDICT_RESULTS[verdict].detail}
+        </p>
+        {report.summary ? <p className="text-body-lg text-ink">{report.summary}</p> : null}
         <p className="text-body-sm text-body">
           Confidence: <span className="font-semibold capitalize">{report.confidence ?? 'low'}</span>
         </p>
-        {report.summary ? <p className="text-body-lg text-ink">{report.summary}</p> : null}
       </section>
 
       {existing.length ? (
@@ -186,6 +192,12 @@ export function ReportView({ report, reportUrl }: { report: FactCheckReport; rep
 
       <div className="flex flex-col gap-2 border-t border-hairline pt-5">
         <p className="text-body-sm text-slate">{FC_DISCLAIMER}</p>
+        <p className="text-body-sm text-slate">
+          {FC_CORRECTION_PROMPT}{' '}
+          <a className="text-brand underline" href="/support">
+            Send a correction
+          </a>
+        </p>
         <p className="flex items-center gap-2 text-body-sm break-all text-slate">
           <Icon name="verified_user" size={16} /> Verify this report at{' '}
           <span className="font-mono text-code text-ink">{reportUrl}</span>

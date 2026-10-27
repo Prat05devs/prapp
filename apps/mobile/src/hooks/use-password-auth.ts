@@ -61,7 +61,7 @@ export function usePasswordAuth() {
         }
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong. Try again.');
+      setError(e instanceof Error ? e.message : "We couldn't complete that. Please try again.");
     } finally {
       setPending(false);
     }

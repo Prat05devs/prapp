@@ -1,43 +1,31 @@
-import { Check } from 'lucide-react-native';
 import { View } from 'react-native';
-import { Icon, Text } from '@/components/ui';
+import { GrowBar } from '@/components/motion/grow-bar';
+import { Text } from '@/components/ui';
+import { COLORS } from '@/lib/theme';
 
-const STEPS = ['Write', 'Add photos', 'Review & pay'];
+const STEPS = ['Write your story', 'Add images', 'Review and pay'];
 
-/** Where the customer is in the publish flow (same steps as the web app). */
+/** Where the customer is in the publish flow (same steps as the web app): "Step 1 of 3" once. */
 export function PublishSteps({ current }: { current: 1 | 2 | 3 }) {
   return (
-    <View className="flex-row items-center gap-2">
-      {STEPS.map((label, i) => {
-        const n = i + 1;
-        const done = n < current;
-        const active = n === current;
-        return (
-          <View key={label} className="flex-row items-center gap-2">
-            <View
-              className={`h-6 w-6 items-center justify-center rounded-full ${
-                done ? 'bg-brand-tint' : active ? 'bg-brand' : 'border border-input'
-              }`}
-            >
-              {done ? (
-                <Icon as={Check} size={12} className="text-brand" />
-              ) : (
-                <Text
-                  className={`font-sans-semibold text-[12px] ${active ? 'text-white' : 'text-slate'}`}
-                >
-                  {n}
-                </Text>
-              )}
-            </View>
-            <Text
-              className={`text-body-sm ${active ? 'font-sans-semibold text-ink' : 'text-slate'}`}
-            >
-              {label}
-            </Text>
-            {n < STEPS.length ? <View className="h-px w-3 bg-input" /> : null}
+    <View className="gap-2" accessibilityLabel={`Step ${current} of 3: ${STEPS[current - 1]}`}>
+      <Text className="text-label-sm text-slate">
+        Step {current} of 3 ·{' '}
+        <Text className="font-sans-semibold text-label-sm text-ink">{STEPS[current - 1]}</Text>
+      </Text>
+      <View className="flex-row gap-1.5">
+        {STEPS.map((label, i) => (
+          <View key={label} className="flex-1">
+            {/* finished steps fill in one after another */}
+            <GrowBar
+              value={i < current ? 1 : 0}
+              delay={i * 180}
+              color={COLORS.brand}
+              className="h-1"
+            />
           </View>
-        );
-      })}
+        ))}
+      </View>
     </View>
   );
 }

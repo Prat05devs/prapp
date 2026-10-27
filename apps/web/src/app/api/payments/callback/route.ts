@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { handlePaymentCallback } from '@/server/callback';
-import { razorpayGateway } from '@/server/razorpay';
+import { razorpayRecoveryGateway } from '@/server/razorpay';
 import { createServiceClient } from '@/server/supabase/service';
 
 export const runtime = 'nodejs';
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('t') ?? '';
   const form = await req.formData().catch(() => new FormData());
   const target = await handlePaymentCallback(
-    { service: createServiceClient(), gateway: razorpayGateway() },
+    { service: createServiceClient(), gateway: razorpayRecoveryGateway() },
     token,
     form,
   );

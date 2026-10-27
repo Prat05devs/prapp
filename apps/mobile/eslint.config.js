@@ -27,7 +27,7 @@ module.exports = defineConfig([
       'src/app/reset-password.tsx',
       'src/hooks/use-google-sign-in.ts',
       'src/hooks/use-sign-out.ts',
-      'src/app/(tabs)/profile.tsx',
+      'src/app/(tabs)/profile/index.tsx',
     ],
     rules: {
       'no-restricted-imports': [

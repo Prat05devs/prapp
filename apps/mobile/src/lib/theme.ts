@@ -13,8 +13,14 @@ export const COLORS = {
   slate: '#6b655b',
   faint: '#8f8879',
   brand: '#1d3d63',
+  brandTint: '#e9eef4',
   verified: '#1e6b45',
   danger: '#b3261e',
+  /** verdict panel backgrounds: each status colour's tint (tailwind *.tint) */
+  verifiedTint: '#e5f0e9',
+  warnTint: '#f6ead2',
+  dangerTint: '#f7e2df',
+  neutralTint: '#f1eee7',
   warn: '#8a5300',
 } as const;
 
@@ -38,3 +44,21 @@ export const STACK_HEADER = {
   headerTitleStyle: { fontFamily: 'SourceSerif4_600SemiBold', fontSize: 18, color: COLORS.ink },
   headerBackButtonDisplayMode: 'minimal',
 } as const;
+
+/**
+ * A tab's root screen: iOS large title that collapses into the bar on scroll (Android shows the
+ * regular bar). The screen's ScrollView needs contentInsetAdjustmentBehavior="automatic".
+ */
+export const LARGE_HEADER = {
+  ...STACK_HEADER,
+  headerLargeTitleEnabled: true,
+  headerLargeTitleShadowVisible: false,
+  headerLargeStyle: { backgroundColor: COLORS.canvas },
+  headerLargeTitleStyle: { fontFamily: 'SourceSerif4_700Bold', fontSize: 32, color: COLORS.ink },
+} as const;
+
+/**
+ * A tab's root screen: no native bar. The screen draws its own compact header inside the scroll
+ * (ScrollScreen's `header`), so content starts right under the status bar (docs/MOBILE-UX.md).
+ */
+export const TAB_ROOT = { headerShown: false } as const;

@@ -1,7 +1,7 @@
 'use client';
 
 import type { CataloguePackage } from '@prapp/api-client';
-import { formatMoney } from '@prapp/shared';
+import { formatMoney, offerChannelsSentence } from '@prapp/shared';
 import { Label, RadioGroup, RadioGroupItem } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
@@ -50,19 +50,18 @@ export function PackagePicker({
                   </span>
                 </span>
                 <span className="text-body-sm text-slate">
-                  {p.portalCount} high-DA news portal{p.portalCount === 1 ? '' : 's'}
-                  {p.includesInstagram ? ' + 1 Instagram collaboration post' : ''} · live within{' '}
-                  {p.turnaroundHours} h
+                  {offerChannelsSentence(p)}. Live within {p.turnaroundHours} hours of payment, once
+                  approved by our editorial team.
                 </span>
-                {p.description ? (
-                  <span className="text-body-sm text-slate">{p.description}</span>
-                ) : null}
               </span>
             </Label>
           );
         })}
       </RadioGroup>
-      <p className="text-body-sm text-slate">Prices include all taxes.</p>
+      <p className="text-body-sm text-slate">
+        Prices include GST. Portal availability can change; the final inclusions are shown before
+        you pay.
+      </p>
       {error ? <p className="text-body-sm text-danger">{error}</p> : null}
     </div>
   );

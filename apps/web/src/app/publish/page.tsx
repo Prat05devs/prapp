@@ -3,6 +3,7 @@ import { JsonLd } from '@/components/site/json-ld';
 import { SearchFaq } from '@/components/site/search-faq';
 import { PUBLISH_QUESTIONS } from '@/lib/search-content';
 import { pageMetadata, serviceSchema } from '@/lib/seo';
+import { offerPrice } from '@prapp/shared';
 
 import { fetchCatalogue } from '@prapp/api-client';
 import { PublishSteps } from '@/components/orders/publish-steps';
@@ -16,7 +17,7 @@ import { PublishForm } from './publish-form';
 export const metadata = pageMetadata(
   '/publish',
   'Self-Service PR & News Portal Publishing in India',
-  'Publish your announcements on news portals through NewsVio. Explore self-service PR packages with Instagram options, editorial review and live-link reports.',
+  'Your story, published without the agency process. Publish on news portals, Instagram and Facebook through NewsVio, with editorial review and a PDF report of every live link.',
 );
 
 // Open to guests: they can write the story and pick a package; saving asks them to log in
@@ -38,14 +39,18 @@ export default async function PublishPage({ searchParams }: PageProps<'/publish'
         data={serviceSchema(
           '/publish',
           'Self-service PR publishing in India',
-          'Paid sponsored story publishing across our news portal network, with Instagram options according to the selected package and a delivery report with live links.',
+          'Sponsored story publishing across the NewsVio news and social network after editorial review, with a PDF delivery report of every live link.',
         )}
       />
       <div className="flex flex-col gap-6 border-b border-hairline pb-8">
         <PageHeader
-          eyebrow="Publish your story"
-          title="Publish your story on news portals and Instagram"
-          lede="Do your own PR with NewsVio. Submit your announcement for editorial review and sponsored publishing across our news portal network. Choose your package below for pricing, Instagram inclusion and turnaround."
+          eyebrow="Do your own PR"
+          title={
+            packages[0]
+              ? `Put your story in the news from ${offerPrice(packages[0])}.`
+              : 'Put your story in the news.'
+          }
+          lede="Write your story, add 1–2 images and pay online. After editorial approval, we publish it and send you every live link."
         />
         <PublishSteps current={1} />
       </div>
@@ -54,10 +59,11 @@ export default async function PublishPage({ searchParams }: PageProps<'/publish'
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
             <span className="flex flex-col gap-1">
               <span className="text-label-md text-ink">
-                Our publishing network: {portals.length} news portals
+                One network. More places for your story: {portals.length} news portals
               </span>
               <span className="text-body-sm text-slate">
-                Our team selects portals for your story according to your package. See the network.
+                Your package sets the number of placements; our team selects suitable available
+                portals for your story.
               </span>
             </span>
             <span className="text-label-sm text-brand group-open:hidden">Show</span>
@@ -83,13 +89,15 @@ export default async function PublishPage({ searchParams }: PageProps<'/publish'
           resume={params.resume === '1'}
         />
       ) : (
-        <Notice>No packages are available right now. Please check back soon.</Notice>
+        <Notice>
+          No packages are available right now. Check back soon, or request a custom plan.
+        </Notice>
       )}
       <SearchFaq title="Questions about PR publishing in India" questions={PUBLISH_QUESTIONS} />
       <p className="text-body-sm text-body">
-        Need help choosing a package?{' '}
+        Need wider distribution?{' '}
         <Link href="/support" className="text-brand underline">
-          Contact our publishing support team
+          Request a custom plan
         </Link>
         . Read the{' '}
         <Link href="/terms" className="text-brand underline">

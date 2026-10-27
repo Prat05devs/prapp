@@ -4,3 +4,7 @@ export * from './money.ts';
 export * from './time.ts';
 export * from './schemas/index.ts';
 export * from './trust.ts';
+export * from './offer.ts';
+export * from './campaigns.ts';
+export * from './settings.ts';
+export * from './schemas/integrations.ts';

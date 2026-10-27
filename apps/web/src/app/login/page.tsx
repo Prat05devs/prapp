@@ -8,7 +8,7 @@ const REASONS: Record<string, string> = {
   'fact-check':
     "You've used today's free checks. Log in or create a free account to keep checking.",
   publish:
-    'Log in or create an account to save your story, add photos and pay. Your story is kept.',
+    'Log in or create an account to save your story, add images and pay. Your story is kept.',
 };
 
 export default async function LoginPage({ searchParams }: PageProps<'/login'>) {

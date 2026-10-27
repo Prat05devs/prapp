@@ -7,7 +7,7 @@ import * as React from 'react';
 import { View } from 'react-native';
 
 // React Native Reusables alert with semantic tones (same as the web Notice).
-const alertVariants = cva('relative w-full rounded-md border p-4', {
+const alertVariants = cva('relative w-full rounded-lg border p-4', {
   variants: {
     variant: {
       default: 'border-hairline bg-subtle',

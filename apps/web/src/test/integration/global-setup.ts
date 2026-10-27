@@ -70,6 +70,8 @@ async function cleanupIntegrationData() {
   const orderIdList = [...orderIds];
   const orderImagePaths = new Set<string>();
   for (const orderIdChunk of chunks(orderIdList)) {
+    const requests = await service.from('refund_requests').delete().in('order_id', orderIdChunk);
+    if (requests.error) throw requests.error;
     const { data, error } = await service
       .from('order_images')
       .select('storage_path')
@@ -234,10 +236,11 @@ async function ensureTestPackage() {
       {
         code: TEST_PACKAGE,
         name: 'Integration test package',
-        description: 'Two portals + Instagram (tests only)',
+        description: 'Two portals + Instagram + Facebook (tests only)',
         price_inr_paise: 49900,
         portal_count: 2,
         includes_instagram: true,
+        includes_facebook: true,
         sort_order: 99,
         is_active: true,
       },

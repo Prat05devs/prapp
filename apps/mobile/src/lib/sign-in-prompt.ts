@@ -5,9 +5,9 @@ import type { AuthMode } from '@/hooks/use-password-auth';
 export const SIGN_IN_REASONS = {
   'fact-check':
     "You've used today's free checks. Log in or create a free account to keep checking.",
-  publish: 'Log in or create an account to save your story, add photos and pay.',
-  orders: 'Log in to see your orders and their delivery reports.',
-  notifications: 'Log in to get updates about your orders and fact checks.',
+  publish: 'Log in or create an account to save your story, add images and pay.',
+  orders: 'Log in to track your stories, from editorial review to live links.',
+  notifications: 'Log in to get updates about your stories and fact-checks.',
 } as const;
 
 export type SignInReason = keyof typeof SIGN_IN_REASONS;

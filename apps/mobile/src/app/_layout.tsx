@@ -20,7 +20,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { ActionButton, Centered, Text } from '@/components/ui';
-import { NAV_THEME, STACK_HEADER } from '@/lib/theme';
+import { COLORS, LARGE_HEADER, NAV_THEME } from '@/lib/theme';
 import { openDeepLink } from '@/lib/links';
 import { AuthProvider, useAuth } from '@/providers/auth-provider';
 
@@ -30,7 +30,7 @@ void SplashScreen.preventAutoHideAsync();
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (
     <Centered>
-      <Text variant="h2">Something went wrong</Text>
+      <Text variant="h2">This screen couldn&apos;t load</Text>
       <Text variant="muted" className="text-center">
         {error.message}
       </Text>
@@ -110,6 +110,16 @@ function RootNavigator() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen
+        name="how-we-check"
+        options={{
+          presentation: 'formSheet',
+          sheetAllowedDetents: [0.6, 1],
+          sheetGrabberVisible: true,
+          sheetCornerRadius: 16,
+          contentStyle: { backgroundColor: COLORS.canvas },
+        }}
+      />
       <Stack.Protected guard={!session}>
         <Stack.Screen name="(auth)" options={{ presentation: 'modal' }} />
       </Stack.Protected>
@@ -122,7 +132,7 @@ function RootNavigator() {
       <Stack.Protected guard={ready}>
         <Stack.Screen
           name="notifications"
-          options={{ ...STACK_HEADER, headerShown: true, title: 'Notifications' }}
+          options={{ ...LARGE_HEADER, headerShown: true, title: 'Notifications' }}
         />
         <Stack.Screen name="payment-result" />
       </Stack.Protected>

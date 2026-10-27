@@ -4,7 +4,7 @@ import { buttonVariants } from '@/components/ui';
 import { getCurrentUser } from '@/server/session';
 import { NavLink } from './nav-link';
 
-export function BrandMark() {
+function BrandMark() {
   return (
     <Link href="/" className="flex shrink-0 items-center">
       <span className="font-display text-[22px] leading-none font-bold text-ink">{BRAND_NAME}</span>
@@ -20,7 +20,7 @@ export async function SiteHeader() {
       <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6 md:h-16 md:flex-nowrap md:py-0">
         <BrandMark />
         <nav className="order-last -mx-1 flex w-full gap-1 overflow-x-auto md:order-none md:mx-0 md:ml-4 md:w-auto">
-          <NavLink href="/fact-check">Fact check</NavLink>
+          <NavLink href="/fact-check">Check a claim</NavLink>
           <NavLink href="/publish">Publish your story</NavLink>
           {me ? <NavLink href="/orders">Orders</NavLink> : null}
           <NavLink href="/methodology">How we check</NavLink>

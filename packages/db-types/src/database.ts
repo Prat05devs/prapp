@@ -24,6 +24,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"checkout_leases": {
+                  Row: {
+                    "expires_at": string,"order_id": string,"token": string
+                  }
+                  Insert: {
+                    "expires_at": string,"order_id": string,"token": string
+                  }
+                  Update: {
+                    "expires_at"?: string,"order_id"?: string,"token"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "checkout_leases_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: true
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"device_tokens": {
                   Row: {
                     "created_at": string,"expo_push_token": string,"id": string,"last_seen_at": string,"platform": Database["public"]['Enums']["device_platform"],"user_id": string
@@ -114,6 +133,75 @@ isOneToOne: false
                     {
       foreignKeyName: "fact_checks_user_id_fkey"
       columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"integration_active": {
+                  Row: {
+                    "credential_id": string,"provider": string,"updated_at": string,"updated_by": string | null
+                  }
+                  Insert: {
+                    "credential_id": string,"provider": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "credential_id"?: string,"provider"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "integration_active_credential_id_fkey"
+      columns: ["credential_id"]
+isOneToOne: false
+      referencedRelation: "integration_credentials"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "integration_active_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"integration_audit": {
+                  Row: {
+                    "action": string,"actor_id": string | null,"created_at": string,"credential_id": string,"id": number,"provider": string
+                  }
+                  Insert: {
+                    "action": string,"actor_id"?: string | null,"created_at"?: string,"credential_id": string,"id"?: never,"provider": string
+                  }
+                  Update: {
+                    "action"?: string,"actor_id"?: string | null,"created_at"?: string,"credential_id"?: string,"id"?: never,"provider"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "integration_audit_actor_id_fkey"
+      columns: ["actor_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "integration_audit_credential_id_fkey"
+      columns: ["credential_id"]
+isOneToOne: false
+      referencedRelation: "integration_credentials"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"integration_credentials": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"encrypted_secret": string,"environment": string,"id": string,"key_hint": string,"label": string,"metadata": NonNullable<Json>,"project_id": string | null,"provider": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"encrypted_secret": string,"environment": string,"id"?: string,"key_hint": string,"label": string,"metadata"?: NonNullable<Json>,"project_id"?: string | null,"provider": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"encrypted_secret"?: string,"environment"?: string,"id"?: string,"key_hint"?: string,"label"?: string,"metadata"?: NonNullable<Json>,"project_id"?: string | null,"provider"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "integration_credentials_created_by_fkey"
+      columns: ["created_by"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -289,29 +377,35 @@ isOneToOne: false
                   ]
                 },"packages": {
                   Row: {
-                    "code": string,"created_at": string,"description": string | null,"id": string,"includes_instagram": boolean,"is_active": boolean,"name": string,"portal_count": number,"price_inr_paise": number,"price_usd_cents": number | null,"sort_order": number,"turnaround_hours": number,"updated_at": string
+                    "code": string,"created_at": string,"description": string | null,"id": string,"includes_facebook": boolean,"includes_instagram": boolean,"is_active": boolean,"name": string,"portal_count": number,"price_inr_paise": number,"price_usd_cents": number | null,"sort_order": number,"turnaround_hours": number,"updated_at": string
                   }
                   Insert: {
-                    "code": string,"created_at"?: string,"description"?: string | null,"id"?: string,"includes_instagram"?: boolean,"is_active"?: boolean,"name": string,"portal_count": number,"price_inr_paise": number,"price_usd_cents"?: number | null,"sort_order"?: number,"turnaround_hours"?: number,"updated_at"?: string
+                    "code": string,"created_at"?: string,"description"?: string | null,"id"?: string,"includes_facebook"?: boolean,"includes_instagram"?: boolean,"is_active"?: boolean,"name": string,"portal_count": number,"price_inr_paise": number,"price_usd_cents"?: number | null,"sort_order"?: number,"turnaround_hours"?: number,"updated_at"?: string
                   }
                   Update: {
-                    "code"?: string,"created_at"?: string,"description"?: string | null,"id"?: string,"includes_instagram"?: boolean,"is_active"?: boolean,"name"?: string,"portal_count"?: number,"price_inr_paise"?: number,"price_usd_cents"?: number | null,"sort_order"?: number,"turnaround_hours"?: number,"updated_at"?: string
+                    "code"?: string,"created_at"?: string,"description"?: string | null,"id"?: string,"includes_facebook"?: boolean,"includes_instagram"?: boolean,"is_active"?: boolean,"name"?: string,"portal_count"?: number,"price_inr_paise"?: number,"price_usd_cents"?: number | null,"sort_order"?: number,"turnaround_hours"?: number,"updated_at"?: string
                   }
                   Relationships: [
                     
                   ]
                 },"payment_intents": {
                   Row: {
-                    "amount_minor": number,"created_at": string,"currency": string,"id": string,"livemode": boolean,"order_id": string,"package_snapshot": NonNullable<Json>,"razorpay_order_id": string,"status": string,"updated_at": string
+                    "amount_minor": number,"created_at": string,"credential_id": string | null,"currency": string,"id": string,"livemode": boolean,"order_id": string,"package_snapshot": NonNullable<Json>,"razorpay_order_id": string,"status": string,"updated_at": string
                   }
                   Insert: {
-                    "amount_minor": number,"created_at"?: string,"currency": string,"id"?: string,"livemode": boolean,"order_id": string,"package_snapshot": NonNullable<Json>,"razorpay_order_id": string,"status"?: string,"updated_at"?: string
+                    "amount_minor": number,"created_at"?: string,"credential_id"?: string | null,"currency": string,"id"?: string,"livemode": boolean,"order_id": string,"package_snapshot": NonNullable<Json>,"razorpay_order_id": string,"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "amount_minor"?: number,"created_at"?: string,"currency"?: string,"id"?: string,"livemode"?: boolean,"order_id"?: string,"package_snapshot"?: NonNullable<Json>,"razorpay_order_id"?: string,"status"?: string,"updated_at"?: string
+                    "amount_minor"?: number,"created_at"?: string,"credential_id"?: string | null,"currency"?: string,"id"?: string,"livemode"?: boolean,"order_id"?: string,"package_snapshot"?: NonNullable<Json>,"razorpay_order_id"?: string,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "payment_intents_credential_id_fkey"
+      columns: ["credential_id"]
+isOneToOne: false
+      referencedRelation: "integration_credentials"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "payment_intents_order_id_fkey"
       columns: ["order_id"]
 isOneToOne: false
@@ -382,6 +476,37 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"refund_requests": {
+                  Row: {
+                    "actor_id": string | null,"amount_minor": number,"completed_at": string | null,"created_at": string,"id": string,"order_id": string,"payment_id": string,"razorpay_refund_id": string | null,"reason": string
+                  }
+                  Insert: {
+                    "actor_id"?: string | null,"amount_minor": number,"completed_at"?: string | null,"created_at"?: string,"id": string,"order_id": string,"payment_id": string,"razorpay_refund_id"?: string | null,"reason": string
+                  }
+                  Update: {
+                    "actor_id"?: string | null,"amount_minor"?: number,"completed_at"?: string | null,"created_at"?: string,"id"?: string,"order_id"?: string,"payment_id"?: string,"razorpay_refund_id"?: string | null,"reason"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "refund_requests_actor_id_fkey"
+      columns: ["actor_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "refund_requests_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "refund_requests_payment_id_fkey"
+      columns: ["payment_id"]
+isOneToOne: false
+      referencedRelation: "payments"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"refunds": {
                   Row: {
@@ -473,13 +598,13 @@ isOneToOne: false
                   ]
                 },"webhook_events": {
                   Row: {
-                    "error": string | null,"event_id": string,"event_type": string,"payload": NonNullable<Json>,"processed_at": string | null,"received_at": string
+                    "attempts": number,"error": string | null,"event_id": string,"event_type": string,"lock_token": string | null,"locked_at": string | null,"next_attempt_at": string,"payload": NonNullable<Json>,"processed_at": string | null,"received_at": string
                   }
                   Insert: {
-                    "error"?: string | null,"event_id": string,"event_type": string,"payload": NonNullable<Json>,"processed_at"?: string | null,"received_at"?: string
+                    "attempts"?: number,"error"?: string | null,"event_id": string,"event_type": string,"lock_token"?: string | null,"locked_at"?: string | null,"next_attempt_at"?: string,"payload": NonNullable<Json>,"processed_at"?: string | null,"received_at"?: string
                   }
                   Update: {
-                    "error"?: string | null,"event_id"?: string,"event_type"?: string,"payload"?: NonNullable<Json>,"processed_at"?: string | null,"received_at"?: string
+                    "attempts"?: number,"error"?: string | null,"event_id"?: string,"event_type"?: string,"lock_token"?: string | null,"locked_at"?: string | null,"next_attempt_at"?: string,"payload"?: NonNullable<Json>,"processed_at"?: string | null,"received_at"?: string
                   }
                   Relationships: [
                     
@@ -495,6 +620,9 @@ isOneToOne: false
                            },
 "admin_clear_attention":
 { Args: { "p_note": string,"p_order_id": string }; Returns: undefined
+                           },
+"admin_reject_and_reserve_refund":
+{ Args: { "p_order_id": string,"p_reason": string }; Returns: string
                            },
 "admin_reject_order":
 { Args: { "p_order_id": string,"p_reason": string }; Returns: undefined
@@ -534,6 +662,9 @@ isOneToOne: false
                            },
 "staff_swap_placement":
 { Args: { "p_new_portal_id": string,"p_placement_id": string,"p_reason": string }; Returns: string
+                           },
+"svc_activate_integration":
+{ Args: { "p_actor": string,"p_id": string }; Returns: undefined
                            },
 "svc_apply_payment":
 { Args: { "p_amount_minor": number,"p_captured_at"?: string,"p_currency": string,"p_error_code"?: string,"p_error_description"?: string,"p_method"?: string,"p_raw"?: Json,"p_razorpay_order_id": string,"p_razorpay_payment_id": string,"p_status": Database["public"]['Enums']["payment_status"] }; Returns: string
@@ -581,8 +712,33 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"svc_claim_webhook":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "attempts": number,
+"error": string | null,
+"event_id": string,
+"event_type": string,
+"lock_token": string | null,
+"locked_at": string | null,
+"next_attempt_at": string,
+"payload": NonNullable<Json>,
+"processed_at": string | null,
+"received_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "webhook_events"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "svc_complete_fact_check":
 { Args: { "p_id": string,"p_result": Json }; Returns: undefined
+                           },
+"svc_complete_refund_request":
+{ Args: { "p_id": string,"p_refund_id": string }; Returns: undefined
+                           },
+"svc_complete_webhook":
+{ Args: { "p_error"?: string,"p_event_id": string,"p_lock_token": string }; Returns: undefined
                            },
 "svc_confirm_free_order":
 { Args: { "p_order_id": string,"p_package_snapshot": Json }; Returns: {
@@ -675,10 +831,51 @@ isOneToOne: false
 "svc_consume_quota":
 { Args: { "p_key": string,"p_limit": number,"p_scope": string }; Returns: boolean
                            },
+"svc_create_checkout_intent":
+{ Args: { "p_amount_minor": number,"p_credential_id"?: string,"p_currency": string,"p_lease_token": string,"p_livemode": boolean,"p_order_id": string,"p_package_snapshot": Json,"p_razorpay_order_id": string }; Returns: {
+              "amount_minor": number,
+"created_at": string,
+"credential_id": string | null,
+"currency": string,
+"id": string,
+"livemode": boolean,
+"order_id": string,
+"package_snapshot": NonNullable<Json>,
+"razorpay_order_id": string,
+"status": string,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payment_intents"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"svc_create_configured_payment_intent":
+{ Args: { "p_amount_minor": number,"p_credential_id": string,"p_currency": string,"p_livemode": boolean,"p_order_id": string,"p_package_snapshot": Json,"p_razorpay_order_id": string }; Returns: {
+              "amount_minor": number,
+"created_at": string,
+"credential_id": string | null,
+"currency": string,
+"id": string,
+"livemode": boolean,
+"order_id": string,
+"package_snapshot": NonNullable<Json>,
+"razorpay_order_id": string,
+"status": string,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payment_intents"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "svc_create_payment_intent":
 { Args: { "p_amount_minor": number,"p_currency": string,"p_livemode": boolean,"p_order_id": string,"p_package_snapshot": Json,"p_razorpay_order_id": string }; Returns: {
               "amount_minor": number,
 "created_at": string,
+"credential_id": string | null,
 "currency": string,
 "id": string,
 "livemode": boolean,
@@ -706,6 +903,9 @@ isOneToOne: false
 "svc_finish_webhook":
 { Args: { "p_error"?: string,"p_event_id": string }; Returns: undefined
                            },
+"svc_lock_checkout":
+{ Args: { "p_order_id": string,"p_token": string,"p_user_id": string }; Returns: boolean
+                           },
 "svc_provider_usage_ratio":
 { Args: { "p_model": string,"p_provider": string }; Returns: number
                            },
@@ -718,8 +918,32 @@ isOneToOne: false
 "svc_reopen_order":
 { Args: { "p_order_id": string }; Returns: undefined
                            },
+"svc_reserve_refund":
+{ Args: { "p_actor": string,"p_amount_minor": number,"p_id": string,"p_order_id": string,"p_payment_id": string,"p_reason": string }; Returns: {
+              "actor_id": string | null,
+"amount_minor": number,
+"completed_at": string | null,
+"created_at": string,
+"id": string,
+"order_id": string,
+"payment_id": string,
+"razorpay_refund_id": string | null,
+"reason": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "refund_requests"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"svc_save_integration":
+{ Args: { "p_actor": string,"p_encrypted_secret": string,"p_environment": string,"p_key_hint": string,"p_label": string,"p_metadata": Json,"p_project_id": string,"p_provider": string }; Returns: string
+                           },
 "svc_set_report":
 { Args: { "p_order_id": string,"p_path"?: string,"p_status": Database["public"]['Enums']["report_status"] }; Returns: undefined
+                           },
+"svc_unlock_checkout":
+{ Args: { "p_order_id": string,"p_token": string }; Returns: undefined
                            },
 "svc_use_provider":
 { Args: { "p_default_quota"?: number,"p_model": string,"p_provider": string }; Returns: boolean
@@ -732,7 +956,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "actor_type": "user"|"staff"|"system"|"razorpay","app_role": "user"|"editor"|"admin","device_platform": "ios"|"android"|"web","fc_input_type": "text"|"url"|"image","fc_mode": "full"|"reduced","fc_status": "queued"|"processing"|"done"|"failed","fc_verdict": "likely_false"|"misleading"|"likely_true"|"unverified","order_status": "draft"|"pending_payment"|"paid"|"in_progress"|"changes_requested"|"published"|"rejected"|"refunded"|"cancelled"|"expired","payment_status": "created"|"authorized"|"captured"|"failed"|"refunded"|"partially_refunded","placement_channel": "portal"|"instagram","placement_status": "pending"|"live"|"failed"|"swapped","refund_status": "pending"|"processed"|"failed","report_status": "not_started"|"generating"|"ready"|"failed","source_tier": "tier1"|"tier2"|"unknown"
+            "actor_type": "user"|"staff"|"system"|"razorpay","app_role": "user"|"editor"|"admin","device_platform": "ios"|"android"|"web","fc_input_type": "text"|"url"|"image","fc_mode": "full"|"reduced","fc_status": "queued"|"processing"|"done"|"failed","fc_verdict": "likely_false"|"misleading"|"likely_true"|"unverified","order_status": "draft"|"pending_payment"|"paid"|"in_progress"|"changes_requested"|"published"|"rejected"|"refunded"|"cancelled"|"expired","payment_status": "created"|"authorized"|"captured"|"failed"|"refunded"|"partially_refunded","placement_channel": "portal"|"instagram"|"facebook","placement_status": "pending"|"live"|"failed"|"swapped","refund_status": "pending"|"processed"|"failed","report_status": "not_started"|"generating"|"ready"|"failed","source_tier": "tier1"|"tier2"|"unknown"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -848,7 +1072,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "actor_type": ["user", "staff", "system", "razorpay"],"app_role": ["user", "editor", "admin"],"device_platform": ["ios", "android", "web"],"fc_input_type": ["text", "url", "image"],"fc_mode": ["full", "reduced"],"fc_status": ["queued", "processing", "done", "failed"],"fc_verdict": ["likely_false", "misleading", "likely_true", "unverified"],"order_status": ["draft", "pending_payment", "paid", "in_progress", "changes_requested", "published", "rejected", "refunded", "cancelled", "expired"],"payment_status": ["created", "authorized", "captured", "failed", "refunded", "partially_refunded"],"placement_channel": ["portal", "instagram"],"placement_status": ["pending", "live", "failed", "swapped"],"refund_status": ["pending", "processed", "failed"],"report_status": ["not_started", "generating", "ready", "failed"],"source_tier": ["tier1", "tier2", "unknown"]
+            "actor_type": ["user", "staff", "system", "razorpay"],"app_role": ["user", "editor", "admin"],"device_platform": ["ios", "android", "web"],"fc_input_type": ["text", "url", "image"],"fc_mode": ["full", "reduced"],"fc_status": ["queued", "processing", "done", "failed"],"fc_verdict": ["likely_false", "misleading", "likely_true", "unverified"],"order_status": ["draft", "pending_payment", "paid", "in_progress", "changes_requested", "published", "rejected", "refunded", "cancelled", "expired"],"payment_status": ["created", "authorized", "captured", "failed", "refunded", "partially_refunded"],"placement_channel": ["portal", "instagram", "facebook"],"placement_status": ["pending", "live", "failed", "swapped"],"refund_status": ["pending", "processed", "failed"],"report_status": ["not_started", "generating", "ready", "failed"],"source_tier": ["tier1", "tier2", "unknown"]
           }
         }
 } as const

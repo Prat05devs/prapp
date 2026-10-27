@@ -2,7 +2,12 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { ApiError } from '@prapp/api-client';
-import type { FactCheckReport, FactCheckSubmitInput } from '@prapp/shared';
+import {
+  FC_FAILURE_FALLBACK,
+  FC_FAILURE_MESSAGES,
+  type FactCheckReport,
+  type FactCheckSubmitInput,
+} from '@prapp/shared';
 import { api } from '@/lib/api';
 import { deviceId } from '@/lib/device-id';
 import { prepareImage } from '@/lib/images';
@@ -41,10 +46,7 @@ export function useFactCheck() {
           if (r.status === 'failed') {
             setError({
               code: r.error ?? 'failed',
-              message:
-                r.error === 'no_text_in_image'
-                  ? "We couldn't find any text in this image."
-                  : 'We could not check this. Please try again.',
+              message: (r.error && FC_FAILURE_MESSAGES[r.error]) ?? FC_FAILURE_FALLBACK,
             });
           }
           return;
@@ -85,7 +87,10 @@ export function useFactCheck() {
           ? { code: e.code, message: e.message }
           : {
               code: 'internal_error',
-              message: e instanceof Error ? e.message : 'Something went wrong.',
+              message:
+                e instanceof Error
+                  ? e.message
+                  : "We couldn't complete this check. Please try again.",
             },
       );
     }

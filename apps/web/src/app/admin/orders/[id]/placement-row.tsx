@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { SOCIAL_CHANNEL_DOMAINS, SOCIAL_CHANNEL_LABELS } from '@prapp/shared';
 import { Button, ErrorText, Input } from '@/components/ui';
 import { useStaffAction } from '@/hooks/use-staff-action';
 import type { AdminOrder } from '@/lib/admin/queries';
@@ -9,7 +10,7 @@ import { adminApi } from '@/lib/admin/api';
 type Placement = AdminOrder['placements'][number];
 type Portal = { id: string; name: string; domain: string };
 
-/** One portal / Instagram slot: paste link, pick a portal, mark down, replace (LLD §10.2). */
+/** One portal / Instagram / Facebook slot: paste link, pick a portal, mark down, replace (LLD §10.2). */
 export function PlacementRow({
   placement: p,
   portals,
@@ -26,7 +27,9 @@ export function PlacementRow({
   const [showFail, setShowFail] = useState(false);
 
   const name =
-    p.channel === 'instagram' ? 'Instagram' : (p.portal?.name ?? 'Empty slot: choose a portal');
+    p.channel === 'portal'
+      ? (p.portal?.name ?? 'Empty slot: choose a portal')
+      : SOCIAL_CHANNEL_LABELS[p.channel];
   const swapped = p.status === 'swapped';
   const needsPortal = p.channel === 'portal' && (!p.portal_id || p.status === 'failed');
 
@@ -68,7 +71,7 @@ export function PlacementRow({
                       }),
                     (r) =>
                       r.data === true
-                        ? `Link domain doesn't match ${p.channel === 'instagram' ? 'instagram.com' : p.portal?.domain}. Double-check.`
+                        ? `Link domain doesn't match ${p.channel === 'portal' ? p.portal?.domain : SOCIAL_CHANNEL_DOMAINS[p.channel]}. Double-check.`
                         : undefined,
                   )
                 }

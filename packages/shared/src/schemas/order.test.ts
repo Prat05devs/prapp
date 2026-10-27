@@ -108,8 +108,8 @@ describe('checkoutReadiness', () => {
     });
     expect(r.ready).toBe(false);
     expect(r.problems).toEqual([
-      'Add at least one image.',
-      'Please accept the declaration to continue.',
+      'Add at least 1 supporting image.',
+      'Confirm the editorial declaration to continue.',
       'Add your name and phone number to continue.',
     ]);
   });

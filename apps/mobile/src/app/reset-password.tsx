@@ -2,7 +2,7 @@ import { customerPasswordSchema } from '@prapp/shared';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActionButton, ErrorText, Field, PageHeader, Screen } from '@/components/ui';
+import { ActionButton, ErrorText, Field, ModalScreen, ModalTitle } from '@/components/ui';
 import { startRecoverySession } from '@/lib/auth-link';
 import { useAuth } from '@/providers/auth-provider';
 import { supabase } from '@/lib/supabase';
@@ -42,8 +42,8 @@ export default function ResetPasswordScreen() {
   }
 
   return (
-    <Screen>
-      <PageHeader title="Set a new password" lede="Choose a password you'll use to log in." />
+    <ModalScreen>
+      <ModalTitle title="Set a new password" lede="Choose a password you'll use to log in." />
       {ready ? (
         <>
           <Field
@@ -67,6 +67,6 @@ export default function ResetPasswordScreen() {
           onPress={() => router.replace(session ? '/' : '/sign-in')}
         />
       ) : null}
-    </Screen>
+    </ModalScreen>
   );
 }

@@ -45,15 +45,19 @@ export function PaymentBanner({
 
   if (!unpaid) {
     return (
-      <Notice tone="success" title={free ? 'Order confirmed' : 'Payment received'}>
-        Your story will be published within 24 hours.
+      <Notice tone="success" title="Your story is with our editorial team.">
+        {free
+          ? 'We have received your submission.'
+          : 'We have received your submission and payment.'}{' '}
+        We will review the story before publication and notify you when the links are live.
       </Notice>
     );
   }
   if (payment === 'failed') {
     return (
-      <Notice tone="danger" title="Payment failed">
-        {reason ? `${reason}. ` : ''}No money was taken. You can try again.
+      <Notice tone="danger" title="Payment was not completed">
+        {reason ? `${reason}. ` : ''}No charge was confirmed. Try again or choose another payment
+        method.
       </Notice>
     );
   }
@@ -61,7 +65,7 @@ export function PaymentBanner({
     <div aria-live="polite">
       <Notice title={timedOut ? 'Still confirming your payment' : 'Confirming your payment…'}>
         {timedOut
-          ? 'We are still confirming your payment with the bank. This page will update once it is confirmed; if money was taken, the order is safe.'
+          ? 'We are still confirming your payment with the bank. This page updates once it is confirmed. If money was taken, your order is safe.'
           : null}
       </Notice>
     </div>

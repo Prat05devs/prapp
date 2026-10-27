@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { handleApi } from '@/server/api';
-import { razorpayGateway } from '@/server/razorpay';
+import { razorpayRecoveryGateway } from '@/server/razorpay';
 import { orderIdParam } from '@/server/route-params';
 import { requireStaff } from '@/server/staff';
 import { createServiceClient } from '@/server/supabase/service';
@@ -13,7 +13,7 @@ export const GET = handleApi(
     const id = orderIdParam((await ctx.params).id);
     await requireStaff(req, 'admin');
     const service = createServiceClient();
-    const gw = razorpayGateway();
+    const activeGateway = razorpayRecoveryGateway();
     const [{ data: intents }, { data: dbPayments }, { data: dbRefunds }] = await Promise.all([
       service
         .from('payment_intents')
@@ -34,6 +34,7 @@ export const GET = handleApi(
     const out = [];
     for (const intent of intents ?? []) {
       try {
+        const gw = await activeGateway.resolveOrder!(intent.razorpay_order_id);
         const [order, payments] = await Promise.all([
           gw.fetchOrder(intent.razorpay_order_id),
           gw.fetchOrderPayments(intent.razorpay_order_id),

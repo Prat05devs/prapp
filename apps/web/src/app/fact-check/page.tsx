@@ -13,7 +13,7 @@ import { FactChecker } from './fact-checker';
 export const metadata = pageMetadata(
   '/fact-check',
   'Free WhatsApp Fact Checker in India',
-  'Check WhatsApp forwards, news links and screenshots in Hindi or English with NewsVio. Get an AI-assisted verdict with sources and clear limitations.',
+  'Check a WhatsApp forward, news link or screenshot in Hindi or English. See the verdict, the evidence and every source, then share the result.',
 );
 
 export default async function FactCheckPage() {
@@ -25,13 +25,13 @@ export default async function FactCheckPage() {
         data={serviceSchema(
           '/fact-check',
           'AI-assisted fact checking',
-          'Check messages, news links and screenshots against public sources. Free within daily usage limits.',
+          'Check a claim against recognised fact-checkers, live reporting and official sources. Every verdict comes with its sources. Free within daily limits.',
         )}
       />
       <PageHeader
-        eyebrow="Free fact check"
-        title="Check WhatsApp forwards, news and screenshots"
-        lede="Paste a message, a link or a screenshot. We check it against public sources."
+        eyebrow="Free fact-check"
+        title="Before you forward it, check it."
+        lede="Check a claim. See the evidence. Share the result."
       />
       <FactChecker
         siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL}
@@ -40,7 +40,7 @@ export default async function FactCheckPage() {
       />
       <SearchFaq title="How to check a message before sharing" questions={FACT_CHECK_QUESTIONS} />
       <Link href="/methodology" className="text-label-md text-brand underline">
-        Read our fact-checking methodology and corrections guidance
+        How we check, and how to send a correction
       </Link>
     </Page>
   );

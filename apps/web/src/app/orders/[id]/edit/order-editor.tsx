@@ -74,7 +74,7 @@ export function OrderEditor({
       </header>
 
       {isChangesRequested ? (
-        <Notice tone="warn" title="Our team asked for changes">
+        <Notice tone="warn" title="Your story needs a few changes before publication">
           <p>{order.changesRequestedReason}</p>
         </Notice>
       ) : null}
@@ -85,7 +85,7 @@ export function OrderEditor({
           <Card>
             <StoryFields value={ed.content} onChange={ed.update} errors={ed.fieldErrors} />
           </Card>
-          <StepHeading title="Photos" />
+          <StepHeading title="Supporting images" aside="1–2 images" />
           <ImageSlots
             orderId={order.id}
             images={ed.images}
@@ -100,7 +100,7 @@ export function OrderEditor({
         <div className="flex flex-col gap-5 lg:sticky lg:top-24 lg:col-span-5">
           <StepHeading
             title="Package"
-            aside={ed.packageLocked ? 'Locked after payment' : 'All taxes included'}
+            aside={ed.packageLocked ? 'Locked after payment' : 'GST included'}
           />
           <PackagePicker
             packages={packages}
@@ -111,7 +111,7 @@ export function OrderEditor({
           />
 
           <Card tone="subtle" as="section" className="flex flex-col gap-4">
-            <h2 className="text-label-md text-ink">Review</h2>
+            <h2 className="text-label-md text-ink">Review your package before you pay</h2>
             <CheckRow
               checked={ed.content.featureConsent ?? false}
               onChange={(featureConsent) => ed.update({ featureConsent })}
@@ -136,7 +136,7 @@ export function OrderEditor({
             ) : null}
             {!isChangesRequested && selected ? (
               <div className="flex items-center justify-between gap-3 border-t border-hairline pt-4">
-                <span className="text-label-md text-ink">Total</span>
+                <span className="text-label-md text-ink">Total, GST included</span>
                 {freeCheckout ? (
                   <span className="flex items-baseline gap-2">
                     <s className="text-body-sm text-slate">

@@ -1,6 +1,7 @@
 'use client';
 
 import type { OrderImage } from '@prapp/api-client';
+import { STORY_FORM_COPY } from '@prapp/shared';
 import { Icon } from '@/components/icon';
 import { useSignedUrls } from '@/hooks/use-signed-urls';
 
@@ -29,7 +30,7 @@ export function ImageSlots({
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-label-md text-ink">Images (1 required, up to 2)</h2>
+        <h2 className="text-body-sm text-slate">{STORY_FORM_COPY.imagesHint}</h2>
         <span className={`tabular text-body-sm ${filled ? 'text-verified' : 'text-slate'}`}>
           {filled} of {slots.length} added
         </span>
@@ -64,7 +65,7 @@ export function ImageSlots({
                   <div className="aspect-video w-full bg-elevated" />
                 )}
                 <span className="absolute top-3 left-3 rounded-sm bg-ink/80 px-1.5 py-px text-label-sm text-white">
-                  Photo {position}
+                  Image {position}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3 px-4 py-3">
@@ -105,7 +106,7 @@ export function ImageSlots({
                 />
               </span>
               <span className="text-label-md text-ink">
-                {busy === position ? 'Uploading…' : `Add photo ${position}`}
+                {busy === position ? 'Uploading…' : `Add image ${position}`}
               </span>
               <span className="text-body-sm text-slate">JPG, PNG or WebP</span>
               {editable ? pickInput : null}

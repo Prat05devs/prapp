@@ -59,7 +59,3 @@ export async function pickImage(opts: { base64?: boolean } = {}): Promise<Picked
     base64: saved.base64,
   };
 }
-
-export async function readBytes(uri: string): Promise<ArrayBuffer> {
-  return new File(uri).arrayBuffer();
-}

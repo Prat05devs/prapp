@@ -28,7 +28,7 @@ interface WebhookEvent {
   };
 }
 
-export type WebhookOutcome = { status: 200 | 400; body: string };
+export type WebhookOutcome = { status: 200 | 400 | 503; body: string };
 
 /** POST /api/webhooks/razorpay (LLD §9.7). */
 export async function handleRazorpayWebhook(
@@ -37,17 +37,25 @@ export async function handleRazorpayWebhook(
   headers: Headers,
 ): Promise<WebhookOutcome> {
   const signature = headers.get('x-razorpay-signature') ?? '';
-  if (!verifyWebhookSignature(raw, signature, razorpayEnv().RAZORPAY_WEBHOOK_SECRET)) {
-    return { status: 400, body: 'invalid signature' };
-  }
+  if (!/^[0-9a-f]{64}$/.test(signature)) return { status: 400, body: 'invalid signature' };
+  const eventId = headers.get('x-razorpay-event-id');
+  if (!eventId || eventId.length > 200) return { status: 400, body: 'invalid event id' };
   let evt: WebhookEvent;
   try {
     evt = JSON.parse(raw) as WebhookEvent;
   } catch {
     return { status: 400, body: 'invalid json' };
   }
-  const eventId = headers.get('x-razorpay-event-id');
-  if (!eventId) return { status: 400, body: 'missing event id' };
+  if (!evt || typeof evt.event !== 'string' || !evt.payload || typeof evt.payload !== 'object') {
+    return { status: 400, body: 'invalid event' };
+  }
+  const gateway = deps.gateway;
+  const secrets = gateway.webhookSecrets
+    ? await gateway.webhookSecrets()
+    : [gateway.webhookSecret ?? razorpayEnv().RAZORPAY_WEBHOOK_SECRET];
+  if (!secrets.some((secret) => verifyWebhookSignature(raw, signature, secret))) {
+    return { status: 400, body: 'invalid signature' };
+  }
 
   const { data: first, error } = await deps.service.rpc('svc_record_webhook', {
     p_event_id: eventId,
@@ -57,23 +65,41 @@ export async function handleRazorpayWebhook(
   if (error) {
     // Could not even record it: let Razorpay retry.
     console.error('webhook: record failed', error.message);
-    return { status: 400, body: 'retry' };
+    return { status: 503, body: 'retry' };
   }
   if (!first) return { status: 200, body: 'duplicate' };
 
-  let failure: string | null = null;
-  try {
-    await dispatch(deps, evt);
-  } catch (e) {
-    failure = e instanceof Error ? e.message : String(e);
-    console.error('webhook: processing failed', { eventId, type: evt.event, failure });
+  return { status: 200, body: 'queued' };
+}
+
+/** A durable DB claim survives process restarts; expired claims are reclaimed after 2 min. */
+export async function processPaymentWebhooks(
+  deps: { service: ServiceSupabase; gateway: RazorpayGateway },
+  timeUp: () => boolean,
+) {
+  let processed = 0;
+  let failed = 0;
+  while (!timeUp()) {
+    const { data: job, error } = await deps.service.rpc('svc_claim_webhook');
+    if (error) throw new Error('webhook_queue_unavailable');
+    if (!job?.event_id || !job.lock_token) break;
+    let failure: string | undefined;
+    try {
+      await dispatch(deps, job.payload as unknown as WebhookEvent);
+      processed++;
+    } catch {
+      failure = 'provider_or_database_error';
+      failed++;
+      console.error('webhook processing failed', { eventId: job.event_id });
+    }
+    const done = await deps.service.rpc('svc_complete_webhook', {
+      p_event_id: job.event_id,
+      p_lock_token: job.lock_token,
+      p_error: failure,
+    });
+    if (done.error) throw new Error('webhook_completion_unavailable');
   }
-  await deps.service.rpc('svc_finish_webhook', {
-    p_event_id: eventId,
-    p_error: failure ?? undefined,
-  });
-  // Always 200 after recording: reconciliation repairs anything that failed (LLD §9.7).
-  return { status: 200, body: failure ? 'recorded with error' : 'ok' };
+  return { processed, failed };
 }
 
 function isOurs(evt: WebhookEvent): boolean {
@@ -95,7 +121,12 @@ async function dispatch(
     // payment id instead (svc_apply_refund ignores payments that are not ours).
     const r = evt.payload.refund?.entity;
     if (!r) return;
-    await applyRazorpayRefund(deps.service, r, noteValue(r.notes, 'reason') ?? 'refund');
+    const gateway = deps.gateway.resolvePayment
+      ? await deps.gateway.resolvePayment(r.payment_id)
+      : deps.gateway;
+    const fresh = await gateway.fetchRefund(r.id);
+    if (fresh.payment_id !== r.payment_id) throw new Error('refund_payment_mismatch');
+    await applyRazorpayRefund(deps.service, fresh, noteValue(fresh.notes, 'reason') ?? 'refund');
     return;
   }
 
@@ -121,6 +152,11 @@ async function dispatch(
   if (type.startsWith('payment.') || type === 'order.paid') {
     const p = evt.payload.payment?.entity;
     if (!p) return;
-    await applyRazorpayPayment(deps.service, deps.gateway, p);
+    const gateway = deps.gateway.resolveOrder
+      ? await deps.gateway.resolveOrder(p.order_id)
+      : deps.gateway;
+    const fresh = await gateway.fetchPayment(p.id);
+    if (fresh.order_id !== p.order_id) throw new Error('payment_order_mismatch');
+    await applyRazorpayPayment(deps.service, gateway, fresh);
   }
 }

@@ -63,6 +63,7 @@ const TABLES = {
         price_usd_cents: int.min(50).nullable(),
         portal_count: int.min(0),
         includes_instagram: z.boolean(),
+        includes_facebook: z.boolean(),
         turnaround_hours: int.min(1).max(240),
         is_active: z.boolean(),
         sort_order: int,

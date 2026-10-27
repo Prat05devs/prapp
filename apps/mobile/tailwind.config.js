@@ -94,14 +94,15 @@ module.exports = {
         'label-sm': size(13, 18),
         code: size(13, 19),
       },
-      // Three steps only (docs/DESIGN.md): 4 small, 6 controls and cards, 10 large panels.
+      // Mobile radii (docs/MOBILE-UX.md): rounder than the web because phone controls are.
+      // 6 badges, 10 inputs, 12 buttons, cards and groups, 16 sheets and hero cards.
       borderRadius: {
-        sm: '4px',
-        md: '6px',
-        lg: '6px',
-        xl: '10px',
-        '2xl': '10px',
-        '3xl': '10px',
+        sm: '6px',
+        md: '10px',
+        lg: '12px',
+        xl: '12px',
+        '2xl': '16px',
+        '3xl': '16px',
       },
       borderWidth: {
         hairline: hairlineWidth(),

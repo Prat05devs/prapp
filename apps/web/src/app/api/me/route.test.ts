@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { errorMessage } from '@prapp/shared';
 import { fakeSupabase, stubPublicEnv } from '@/test/fake-supabase';
 
 const mocks = vi.hoisted(() => ({
@@ -62,7 +63,7 @@ describe('GET /api/me', () => {
     const res = await GET(new Request('http://localhost/api/me'));
     expect(res.status).toBe(401);
     expect(await res.json()).toEqual({
-      error: { code: 'not_authenticated', message: 'Please sign in to continue.' },
+      error: { code: 'not_authenticated', message: errorMessage('not_authenticated') },
     });
   });
 

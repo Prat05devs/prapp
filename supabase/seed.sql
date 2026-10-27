@@ -5,8 +5,8 @@ insert into public.portals (name, domain, homepage_url, da_score, category, sort
   ('Portal Three', 'portal-three.example', 'https://portal-three.example', 50, 'local', 3)
 on conflict (domain) do nothing;
 
-insert into public.packages (code, name, description, price_inr_paise, price_usd_cents, portal_count, includes_instagram, sort_order) values
-  ('starter', 'Story Package', 'Your story on 5 high-DA news portals + 1 Instagram collaboration post', 49900, 500, 5, true, 1)
+insert into public.packages (code, name, description, price_inr_paise, price_usd_cents, portal_count, includes_instagram, includes_facebook, sort_order) values
+  ('starter', 'Story Package', 'Your story on 5 news portals, 1 Instagram collaboration post and 1 Facebook page post', 49900, 500, 5, true, true, 1)
 on conflict (code) do nothing;
 
 insert into public.package_portals (package_id, portal_id)

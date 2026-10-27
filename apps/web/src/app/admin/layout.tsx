@@ -17,6 +17,7 @@ const LINKS: { href: string; label: string; icon: IconName; admin?: boolean }[] 
   { href: '/admin/packages', label: 'Packages', icon: 'inventory_2', admin: true },
   { href: '/admin/staff', label: 'Staff', icon: 'group', admin: true },
   { href: '/admin/settings', label: 'Settings', icon: 'settings', admin: true },
+  { href: '/admin/integrations', label: 'Integrations', icon: 'settings', admin: true },
   { href: '/admin/trusted-sources', label: 'Trusted sources', icon: 'verified_user', admin: true },
 ];
 

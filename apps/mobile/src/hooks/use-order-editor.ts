@@ -75,7 +75,7 @@ export function useCreateDraft() {
     const input = waiting.current;
     waiting.current = null;
     void save(input);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run when the account becomes ready
+    // run when the account becomes ready
   }, [ready]);
 
   // Closed sign-in without logging in: forget the pending save, keep what they typed.

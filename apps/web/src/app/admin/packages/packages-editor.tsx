@@ -17,6 +17,7 @@ type Draft = {
   priceUsd: string;
   portal_count: string;
   includes_instagram: boolean;
+  includes_facebook: boolean;
   turnaround_hours: string;
   is_active: boolean;
   sort_order: string;
@@ -48,6 +49,7 @@ export function PackagesEditor({
             priceUsd: p.price_usd_cents ? String(p.price_usd_cents / 100) : '',
             portal_count: String(p.portal_count),
             includes_instagram: p.includes_instagram,
+            includes_facebook: p.includes_facebook,
             turnaround_hours: String(p.turnaround_hours),
             is_active: p.is_active,
             sort_order: String(p.sort_order),
@@ -61,6 +63,7 @@ export function PackagesEditor({
             priceUsd: '',
             portal_count: '2',
             includes_instagram: true,
+            includes_facebook: true,
             turnaround_hours: '24',
             is_active: true,
             sort_order: '0',
@@ -81,6 +84,7 @@ export function PackagesEditor({
           price_usd_cents: d.priceUsd ? majorToMinor(d.priceUsd) : null,
           portal_count: Number(d.portal_count),
           includes_instagram: d.includes_instagram,
+          includes_facebook: d.includes_facebook,
           turnaround_hours: Number(d.turnaround_hours),
           is_active: d.is_active,
           sort_order: Number(d.sort_order) || 0,
@@ -130,7 +134,7 @@ export function PackagesEditor({
               onChange={(e) => set({ description: e.target.value })}
             />
           </Field>
-          <Field label="Price (₹, incl. taxes)">
+          <Field label="Price (₹, GST included)">
             <Input
               value={draft.priceInr}
               inputMode="decimal"
@@ -171,7 +175,15 @@ export function PackagesEditor({
               checked={draft.includes_instagram}
               onChange={(e) => set({ includes_instagram: e.target.checked })}
             />
-            Includes our Instagram page
+            Includes an Instagram collaboration post
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={draft.includes_facebook}
+              onChange={(e) => set({ includes_facebook: e.target.checked })}
+            />
+            Includes a Facebook page post
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -219,6 +231,7 @@ export function PackagesEditor({
             <th>Price</th>
             <th>Portals</th>
             <th>Instagram</th>
+            <th>Facebook</th>
             <th>Turnaround</th>
             <th>Active</th>
             <th />
@@ -232,6 +245,7 @@ export function PackagesEditor({
               <td>{formatMoney(p.price_inr_paise)}</td>
               <td>{p.portal_count}</td>
               <td>{p.includes_instagram ? 'yes' : 'no'}</td>
+              <td>{p.includes_facebook ? 'yes' : 'no'}</td>
               <td>{p.turnaround_hours} h</td>
               <td>{p.is_active ? 'yes' : 'no'}</td>
               <td>

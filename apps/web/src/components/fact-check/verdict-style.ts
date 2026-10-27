@@ -1,4 +1,4 @@
-import type { FcVerdict } from '@prapp/shared';
+import { FC_VERDICT_DEFINITIONS, type FcVerdict } from '@prapp/shared';
 import type { IconName } from '@/components/icon';
 import type { BadgeTone } from '@/components/ui';
 
@@ -32,10 +32,7 @@ export const VERDICT_ICONS: Record<FcVerdict, IconName> = {
   unverified: 'info',
 };
 
-/** What each verdict means, in the order we explain them (methodology, home page). */
-export const VERDICT_MEANINGS: [FcVerdict, string][] = [
-  ['likely_false', 'Reliable sources contradict the claim.'],
-  ['misleading', 'Partly true, missing context, or old media presented as new.'],
-  ['likely_true', 'Reliable sources confirm the claim.'],
-  ['unverified', 'We did not find enough reliable evidence either way.'],
-];
+/** What each verdict means, in the order we explain them (VERBAL_SYSTEM.md §10, shared copy). */
+export const VERDICT_MEANINGS: [FcVerdict, string][] = (
+  ['likely_false', 'misleading', 'likely_true', 'unverified'] as const
+).map((v) => [v, FC_VERDICT_DEFINITIONS[v]]);

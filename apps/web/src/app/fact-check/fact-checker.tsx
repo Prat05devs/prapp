@@ -3,7 +3,13 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { FactCheckHistoryItem } from '@prapp/shared';
-import { FC_TOOL_LABELS, FC_VERDICT_LABELS, formatIST } from '@prapp/shared';
+import {
+  FC_SIGNED_IN_LIMIT_MESSAGE,
+  FC_SLOW_MESSAGE,
+  FC_TOOL_LABELS,
+  FC_VERDICT_LABELS,
+  formatIST,
+} from '@prapp/shared';
 import { ReportView } from '@/components/fact-check/report-view';
 import { VERDICT_TONES } from '@/components/fact-check/verdict-style';
 import { Icon, type IconName } from '@/components/icon';
@@ -82,7 +88,7 @@ export function FactChecker({
       {!showResult ? (
         <div className="rounded-xl border border-hairline bg-paper p-4 text-left sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-label-md text-ink">What do you want to check?</h2>
+            <h2 className="text-label-md text-ink">What would you like to check?</h2>
             <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
               <TabsList className="self-start sm:self-auto">
                 {MODES.map((m) => (
@@ -104,7 +110,7 @@ export function FactChecker({
               <textarea
                 aria-label="Message to check"
                 className="block min-h-36 w-full resize-y bg-transparent p-4 text-body-md leading-relaxed text-ink outline-none placeholder:text-faint"
-                placeholder="Paste the message or forward you want to check"
+                placeholder="Paste the message, link or claim you want to check"
                 value={text}
                 maxLength={TEXT_MAX}
                 onChange={(e) => setText(e.target.value)}
@@ -124,7 +130,7 @@ export function FactChecker({
                   <Icon name={file ? 'check' : 'upload'} size={20} />
                 </span>
                 <span className="text-label-md text-ink">
-                  {file ? file.name : 'Choose a screenshot'}
+                  {file ? file.name : 'Upload screenshot'}
                 </span>
                 <span className="text-body-sm text-slate">
                   {file ? 'Choose a different one' : 'JPG, PNG or WebP, up to 5 MB'}
@@ -145,7 +151,7 @@ export function FactChecker({
           ) : null}
 
           <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-body-sm text-slate">Every answer links to its sources.</p>
+            <p className="text-body-sm text-slate">Every verdict comes with its sources.</p>
             <Button variant="accent" size="lg" disabled={busy} onClick={submit}>
               {busy ? (
                 <>
@@ -153,16 +159,16 @@ export function FactChecker({
                 </>
               ) : (
                 <>
-                  Check it <Icon name="arrow_forward" size={16} />
+                  Check this claim <Icon name="arrow_forward" size={16} />
                 </>
               )}
             </Button>
           </div>
           {!compact ? (
             <p className="mt-4 text-body-sm text-slate">
-              Free. We check with public sources and tell you which tools we used.{' '}
+              Free. We show the sources behind every verdict and the tools we used.{' '}
               <Link className="text-ink underline underline-offset-2" href="/methodology">
-                How it works
+                How we check
               </Link>
             </p>
           ) : null}
@@ -176,7 +182,7 @@ export function FactChecker({
         >
           <div className="flex items-center justify-between gap-3">
             <span className="flex items-center gap-2 text-label-md text-ink">
-              <LiveDot /> Checking sources
+              <LiveDot /> Searching fact checks, live reports and official sources…
             </span>
           </div>
           <div className="h-1 overflow-hidden rounded-full bg-elevated">
@@ -184,7 +190,7 @@ export function FactChecker({
           </div>
           <p className="text-body-sm text-slate">This usually takes under a minute.</p>
           <div className="flex flex-col gap-1.5">
-            <p className="text-label-sm text-ink">What we&apos;re running</p>
+            <p className="text-label-sm text-ink">What we&apos;re checking</p>
             <ul className="flex flex-col gap-1 text-body-sm text-body">
               {STEPS[mode].map((tool) => (
                 <li key={tool} className="flex items-center gap-2.5">
@@ -198,10 +204,8 @@ export function FactChecker({
       ) : null}
 
       {fc.phase === 'slow' ? (
-        <Notice title="This is taking longer than usual">
-          <span aria-live="polite">
-            Your report will be ready shortly{signedIn ? ' in your history below' : ''}.
-          </span>
+        <Notice title="This check is taking longer than usual">
+          <span aria-live="polite">{FC_SLOW_MESSAGE}</span>
         </Notice>
       ) : null}
 
@@ -209,7 +213,11 @@ export function FactChecker({
         <Notice
           tone={fc.error.code === 'fact_check_limit_reached' && !signedIn ? 'info' : 'danger'}
         >
-          <span role="alert">{fc.error.message}</span>
+          <span role="alert">
+            {fc.error.code === 'fact_check_limit_reached' && signedIn
+              ? FC_SIGNED_IN_LIMIT_MESSAGE
+              : fc.error.message}
+          </span>
           {fc.error.code === 'fact_check_limit_reached' && !signedIn ? (
             <span className="mt-2 flex flex-wrap gap-2">
               <Link
@@ -233,13 +241,16 @@ export function FactChecker({
         <div className="flex flex-col gap-6 rounded-xl border border-hairline bg-paper p-5 text-left sm:p-8">
           <ReportView report={fc.report} reportUrl={reportUrl} />
           <div className="flex flex-col gap-4 rounded-md bg-subtle p-4">
+            <p className="text-body-sm text-body">
+              Help someone check the full context. Share this result with its sources.
+            </p>
             <CheckRow checked={fc.report.isPublic} onChange={(v) => void fc.setPublic(v)}>
               Anyone with the link can see this report
             </CheckRow>
-            {fc.report.isPublic ? <ShareBar url={reportUrl} title="Fact check" /> : null}
+            {fc.report.isPublic ? <ShareBar url={reportUrl} title="NewsVio fact-check" /> : null}
           </div>
           <Button variant="outline" className="self-start" onClick={fc.reset}>
-            <Icon name="arrow_back" /> Check something else
+            <Icon name="arrow_back" /> Check another claim
           </Button>
         </div>
       ) : null}
@@ -265,7 +276,7 @@ export function FactChecker({
                     className="inline-flex items-center gap-1 text-label-sm text-brand hover:text-brand-deep"
                     href={`/r/${h.reportId}`}
                   >
-                    Open <Icon name="north_east" size={14} />
+                    View sources <Icon name="north_east" size={14} />
                   </Link>
                 ) : null}
               </li>

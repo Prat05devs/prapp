@@ -30,7 +30,8 @@ export default async function OrdersPage() {
           <div className="flex flex-col gap-1">
             <p className="text-label-md text-ink">No orders yet</p>
             <p className="text-body-sm text-slate">
-              Publish your story on our news portals within 24 hours.
+              Write your story, add 1–2 images and pay online. We publish approved stories and send
+              you every live link.
             </p>
           </div>
           <Link href="/publish" className={buttonVariants({ variant: 'accent' })}>

@@ -3,7 +3,12 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import type { CataloguePackage } from '@prapp/api-client';
-import { FEATURE_CONSENT_TEXT, formatMoney, type OrderContentInput } from '@prapp/shared';
+import {
+  FEATURE_CONSENT_TEXT,
+  SPONSORED_DISCLOSURE,
+  formatMoney,
+  type OrderContentInput,
+} from '@prapp/shared';
 import { Icon } from '@/components/icon';
 import { PackagePicker } from '@/components/orders/package-picker';
 import { StoryFields } from '@/components/orders/story-fields';
@@ -36,7 +41,7 @@ function takeDraft(): OrderContentInput | null {
 }
 
 /**
- * Guests fill in everything; "Save and add images" needs an account, so that's where we ask
+ * Guests fill in everything; "Add images" needs an account, so that's where we ask
  * them to log in (and add name + phone if missing). The story comes back with them and, with
  * `resume`, the save carries on by itself.
  */
@@ -114,7 +119,7 @@ export function PublishForm({
       </div>
 
       <div className="flex flex-col gap-5 lg:sticky lg:top-24 lg:col-span-5">
-        <StepHeading title="Pick a package" aside="All taxes included" />
+        <StepHeading title="Choose your package" aside="GST included" />
         <PackagePicker
           packages={packages}
           value={content.packageId}
@@ -129,7 +134,7 @@ export function PublishForm({
               <dd className="text-ink">{selected?.name ?? '-'}</dd>
             </div>
             <div className="flex justify-between gap-3 border-t border-hairline pt-3">
-              <dt className="text-label-md text-ink">Total</dt>
+              <dt className="text-label-md text-ink">Total, GST included</dt>
               <dd className="font-display text-headline-sm text-ink">
                 {selected ? formatMoney(selected.priceInrPaise, 'INR') : '-'}
               </dd>
@@ -137,14 +142,15 @@ export function PublishForm({
           </dl>
           <ErrorText>{error}</ErrorText>
           <Button type="submit" variant="accent" size="lg" disabled={pending}>
-            Save and add images <Icon name="arrow_forward" />
+            Add images <Icon name="arrow_forward" />
           </Button>
           <p className="flex items-start gap-2 text-body-sm text-slate">
             <Icon name="info" size={16} />
             {account === 'guest'
-              ? "Next you'll log in or create an account, then add photos and pay."
-              : 'You pay after adding photos and reviewing your story.'}
+              ? "Next you'll log in or create an account, then add images and pay."
+              : 'You review your package and pay after adding images.'}
           </p>
+          <p className="text-[12px] leading-4 text-slate">{SPONSORED_DISCLOSURE}</p>
         </Card>
       </div>
     </form>

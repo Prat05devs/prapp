@@ -6,7 +6,8 @@ cd "$(dirname "$0")/.."
 name="prapp-sqltest-$$"
 docker run -d --rm --name "$name" -e POSTGRES_HOST_AUTH_METHOD=trust \
   -v "$PWD:/work:ro" -w /work postgres:16 >/dev/null
-trap 'docker rm -f "$name" >/dev/null 2>&1 || true' EXIT
+# -v also removes the image's anonymous data volume; without it every run leaks ~45 MB.
+trap 'docker rm -fv "$name" >/dev/null 2>&1 || true' EXIT
 for _ in $(seq 1 30); do
   docker exec "$name" pg_isready -U postgres -q && break
   sleep 1

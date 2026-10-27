@@ -1,7 +1,7 @@
 import 'server-only';
 import type { PaymentResultStatus } from '@prapp/shared';
 import { verifyCheckoutToken } from '@/server/checkout-token';
-import { razorpayEnv } from '@/server/env';
+import { checkoutTokenSecret, razorpayEnv } from '@/server/env';
 import { applyRazorpayPayment, type ApplyResult } from '@/server/payments';
 import { paymentResultUrl } from '@/server/payment-redirect';
 import { verifyPaymentSignature, type RazorpayGateway } from '@/server/razorpay';
@@ -38,8 +38,7 @@ export async function handlePaymentCallback(
   token: string,
   form: FormData,
 ): Promise<string> {
-  const env = razorpayEnv();
-  const check = verifyCheckoutToken(token, env.CHECKOUT_TOKEN_SECRET);
+  const check = verifyCheckoutToken(token, checkoutTokenSecret());
   // An expired token is fine here: the payment may finish after 30 minutes (slow UPI).
   if (!check.ok && check.reason === 'invalid') return `${publicEnv().NEXT_PUBLIC_SITE_URL}/orders`;
   const { orderId, intentId, r } = check.payload!;
@@ -51,6 +50,9 @@ export async function handlePaymentCallback(
     .maybeSingle();
   if (!intent || intent.order_id !== orderId) return paymentResultUrl(r, orderId, 'pending');
 
+  const gateway = deps.gateway.resolveOrder
+    ? await deps.gateway.resolveOrder(intent.razorpay_order_id)
+    : deps.gateway;
   const paymentId = form.get('razorpay_payment_id');
   if (typeof paymentId !== 'string' || !paymentId) {
     // Failure: error[code], error[description], error[metadata]={"payment_id","order_id"}
@@ -58,9 +60,9 @@ export async function handlePaymentCallback(
     const meta = parseErrorMetadata(form.get('error[metadata]'));
     if (meta.payment_id) {
       try {
-        const p = await deps.gateway.fetchPayment(meta.payment_id);
+        const p = await gateway.fetchPayment(meta.payment_id);
         if (p.order_id === intent.razorpay_order_id)
-          await applyRazorpayPayment(deps.service, deps.gateway, p);
+          await applyRazorpayPayment(deps.service, gateway, p);
       } catch (e) {
         console.error(
           'callback: could not record failed payment',
@@ -79,17 +81,22 @@ export async function handlePaymentCallback(
   const signature = form.get('razorpay_signature');
   if (
     typeof signature !== 'string' ||
-    !verifyPaymentSignature(intent.razorpay_order_id, paymentId, signature, env.RAZORPAY_KEY_SECRET)
+    !verifyPaymentSignature(
+      intent.razorpay_order_id,
+      paymentId,
+      signature,
+      gateway.keySecret ?? razorpayEnv().RAZORPAY_KEY_SECRET,
+    )
   ) {
     console.warn('callback: bad signature', { orderId, paymentId });
     return paymentResultUrl(r, orderId, 'pending');
   }
 
   try {
-    const payment = await deps.gateway.fetchPayment(paymentId);
+    const payment = await gateway.fetchPayment(paymentId);
     if (payment.order_id !== intent.razorpay_order_id)
       return paymentResultUrl(r, orderId, 'pending');
-    const result = await applyRazorpayPayment(deps.service, deps.gateway, payment);
+    const result = await applyRazorpayPayment(deps.service, gateway, payment);
     return paymentResultUrl(
       r,
       orderId,

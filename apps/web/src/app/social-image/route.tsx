@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og';
+import { BRAND_DESCRIPTOR, BRAND_LINE, TRUST_LINE } from '@prapp/shared';
 
 export const dynamic = 'force-static';
 
@@ -18,10 +19,10 @@ export function GET() {
     >
       <div style={{ fontSize: 42, fontWeight: 700 }}>NewsVio</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <div style={{ fontSize: 66, fontWeight: 700 }}>Check the facts. Share your story.</div>
-        <div style={{ fontSize: 30 }}>Fact checking with sources. Self-service PR in India.</div>
+        <div style={{ fontSize: 66, fontWeight: 700 }}>{BRAND_LINE}</div>
+        <div style={{ fontSize: 30 }}>{BRAND_DESCRIPTOR}</div>
       </div>
-      <div style={{ fontSize: 25 }}>News portals · Instagram · Live publication links</div>
+      <div style={{ fontSize: 25 }}>{TRUST_LINE}</div>
     </div>,
     { width: 1200, height: 630 },
   );

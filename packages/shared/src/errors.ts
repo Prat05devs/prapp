@@ -2,18 +2,18 @@
 // exception message; the API returns them as { error: { code, message } }.
 
 export const ERROR_MESSAGES = {
-  not_authenticated: 'Please sign in to continue.',
+  not_authenticated: 'Log in to continue.',
   not_authorized: "You don't have access to this.",
   profile_incomplete: 'Add your name and phone number to continue.',
   too_many_orders_today: "You've created too many orders today. Try again tomorrow.",
-  package_unavailable: "This package isn't available right now. Pick another.",
+  package_unavailable: "This package isn't available right now. Choose another one.",
   package_locked_after_payment: "The package can't be changed after payment.",
   order_locked: "This order can't be edited right now.",
   order_not_found: 'Order not found.',
-  invalid_storage_path: 'You can upload up to 2 images.',
-  too_many_images: 'You can upload up to 2 images.',
-  image_required: 'Add at least one image.',
-  declaration_required: 'Please accept the declaration to continue.',
+  invalid_storage_path: "This image didn't upload. Try a JPG or PNG under 5 MB.",
+  too_many_images: 'You can add up to 2 images.',
+  image_required: 'Add at least 1 supporting image.',
+  declaration_required: 'Confirm the editorial declaration to continue.',
   order_not_payable: "This order can't be paid.",
   payment_already_made: "We've already received a payment for this order.",
   order_not_reopenable: "This order can't be edited now.",
@@ -49,17 +49,19 @@ export const ERROR_MESSAGES = {
   invalid_push_token: 'Invalid push token.',
   account_has_active_orders:
     "You have an active order. You can delete your account once it's completed.",
-  fact_check_limit_reached: "You've used today's free checks. Sign in for more, or try tomorrow.",
-  no_text_in_image: "We couldn't find any text in this image.",
-  checkout_link_expired: 'This payment link expired. Tap Pay again.',
+  fact_check_limit_reached:
+    "You've used today's free checks. Log in to keep checking, or come back tomorrow.",
+  no_text_in_image:
+    "We couldn't read enough text from this image. Upload a clearer screenshot or type the claim.",
+  checkout_link_expired: 'This payment link has expired. Start the payment again from your order.',
   // DECISION: the catalogue has no generic codes for bad input, rate limits or
   // unexpected failures; the API needs them, so they are added here.
   staff_email_taken:
     'An account with this email already exists. Search for it below and change its role instead.',
   user_not_staff: 'Passwords can only be set for team accounts (editors and admins).',
   validation_failed: 'Please check the highlighted fields.',
-  rate_limited: 'Too many requests. Please wait a moment and try again.',
-  internal_error: 'Something went wrong. Please try again.',
+  rate_limited: 'Too many requests. Wait a moment and try again.',
+  internal_error: "We couldn't complete that request. Please try again.",
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_MESSAGES;

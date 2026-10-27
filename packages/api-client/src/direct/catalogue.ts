@@ -7,7 +7,7 @@ export async function fetchCatalogue(db: Db) {
     db
       .from('packages')
       .select(
-        'id, code, name, description, price_inr_paise, price_usd_cents, portal_count, includes_instagram, turnaround_hours',
+        'id, code, name, description, price_inr_paise, price_usd_cents, portal_count, includes_instagram, includes_facebook, turnaround_hours',
       )
       .eq('is_active', true)
       .order('sort_order')
